@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { type CMSArticle, getCMSProvider } from '@/services/cms';
 import ImageUploader from '@/components/admin/ImageUploader';
 import { deriveAiSeoSignals, stripHtmlToText, truncateText } from '@/lib/utils';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const SITE_URL = 'https://rampurnews.com';
 
@@ -36,6 +37,7 @@ const ArticleEditor = () => {
   const { data: tags } = useTags();
   const createArticle = useCreateArticle();
   const updateArticle = useUpdateArticle();
+  const { user: sessionUser } = useAdminAuth();
 
   const [formData, setFormData] = useState<Partial<CMSArticle>>({
     title: '',
@@ -180,6 +182,10 @@ const ArticleEditor = () => {
   };
 
   const handleSubmit = async (status?: 'draft' | 'published') => {
+    if (status === 'published' && sessionUser?.role !== 'admin') {
+      toast.error('केवल एडमिन ही लेख प्रकाशित कर सकते हैं');
+      return;
+    }
     if (!formData.title || !formData.category || !formData.content || !formData.author) {
       toast.error('शीर्षक, श्रेणी, लेखक और सामग्री आवश्यक हैं');
       return;
@@ -257,7 +263,7 @@ const ArticleEditor = () => {
           </Button>
           <Button 
             onClick={() => handleSubmit('published')}
-            disabled={isSaving}
+            disabled={isSaving || sessionUser?.role !== 'admin'}
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />

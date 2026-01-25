@@ -66,7 +66,7 @@ export default function ArticlesList() {
         await deleteArticle.mutateAsync(id);
         toast.success('लेख हटा दिया गया');
       } catch (error) {
-        toast.error('लेख हटाने में त्रुटि');
+        toast.error(error instanceof Error ? error.message : 'लेख हटाने में त्रुटि');
       }
     }
   };
@@ -79,7 +79,7 @@ export default function ArticlesList() {
       });
       toast.success(article.isFeatured ? 'फीचर्ड हटाया गया' : 'फीचर्ड किया गया');
     } catch (error) {
-      toast.error('अपडेट करने में त्रुटि');
+      toast.error(error instanceof Error ? error.message : 'अपडेट करने में त्रुटि');
     }
   };
 
@@ -91,7 +91,7 @@ export default function ArticlesList() {
       });
       toast.success(article.isBreaking ? 'ब्रेकिंग हटाया गया' : 'ब्रेकिंग किया गया');
     } catch (error) {
-      toast.error('अपडेट करने में त्रुटि');
+      toast.error(error instanceof Error ? error.message : 'अपडेट करने में त्रुटि');
     }
   };
 

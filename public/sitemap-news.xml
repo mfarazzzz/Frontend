@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <!-- 
+    Google News Sitemap - Auto-generated
+    Contains news articles from the last 48 hours
+    Last updated: 2026-01-04T00:00:00Z
+  -->
+
+  <url>
+    <loc>https://rampurnews.com/sports/india-wins-test-series-australia</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog, Breaking</news:genres>
+      <news:publication_date>2026-01-03T18:00:00Z</news:publication_date>
+      <news:title>भारत ने जीता टेस्ट सीरीज, ऑस्ट्रेलिया को हराया</news:title>
+      <news:keywords>खेल, रामपुर, उत्तर प्रदेश, ताज़ा खबर, क्रिकेट, टेस्ट सीरीज</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/901/640/360</image:loc>
+      <image:caption>भारत ने जीता टेस्ट सीरीज, ऑस्ट्रेलिया को हराया</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/entertainment/shahrukh-khan-new-movie-trailer</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T17:00:00Z</news:publication_date>
+      <news:title>शाहरुख खान की नई फिल्म का ट्रेलर हुआ रिलीज</news:title>
+      <news:keywords>मनोरंजन, रामपुर, उत्तर प्रदेश, ताज़ा खबर, बॉलीवुड, शाहरुख खान</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/801/640/360</image:loc>
+      <image:caption>शाहरुख खान की नई फिल्म का ट्रेलर हुआ रिलीज</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/business/stock-market-rally-sensex-high</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T16:00:00Z</news:publication_date>
+      <news:title>शेयर बाजार में तेजी, सेंसेक्स ने छुआ नया उच्चतम स्तर</news:title>
+      <news:keywords>व्यापार, रामपुर, उत्तर प्रदेश, ताज़ा खबर, शेयर बाजार, सेंसेक्स</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/701/640/360</image:loc>
+      <image:caption>शेयर बाजार में तेजी, सेंसेक्स ने छुआ नया उच्चतम स्तर</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/education-jobs/upsc-prelims-results-announced</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T15:00:00Z</news:publication_date>
+      <news:title>UPSC की प्रारंभिक परीक्षा के नतीजे घोषित</news:title>
+      <news:keywords>शिक्षा और नौकरियां, रामपुर, उत्तर प्रदेश, ताज़ा खबर, UPSC, सरकारी नौकरी</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/601/640/360</image:loc>
+      <image:caption>UPSC की प्रारंभिक परीक्षा के नतीजे घोषित</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/crime/police-busts-robbery-gang</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T14:00:00Z</news:publication_date>
+      <news:title>पुलिस ने किया लुटेरों के गिरोह का पर्दाफाश</news:title>
+      <news:keywords>अपराध, रामपुर, उत्तर प्रदेश, ताज़ा खबर, पुलिस, गिरफ्तारी</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/501/640/360</image:loc>
+      <image:caption>पुलिस ने किया लुटेरों के गिरोह का पर्दाफाश</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/entertainment/bigg-boss-new-twist</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T14:30:00Z</news:publication_date>
+      <news:title>बिग बॉस में नया ट्विस्ट, दर्शक हुए हैरान</news:title>
+      <news:keywords>मनोरंजन, रामपुर, उत्तर प्रदेश, ताज़ा खबर, बिग बॉस, टीवी</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/802/640/360</image:loc>
+      <image:caption>बिग बॉस में नया ट्विस्ट, दर्शक हुए हैरान</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/politics/assembly-election-alliance-talks</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T13:00:00Z</news:publication_date>
+      <news:title>विधानसभा चुनाव से पहले गठबंधन की चर्चा तेज</news:title>
+      <news:keywords>राजनीति, रामपुर, उत्तर प्रदेश, ताज़ा खबर, चुनाव, गठबंधन</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/401/640/360</image:loc>
+      <image:caption>विधानसभा चुनाव से पहले गठबंधन की चर्चा तेज</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/education-jobs/up-teacher-recruitment-10000</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T12:30:00Z</news:publication_date>
+      <news:title>उत्तर प्रदेश में निकली 10,000 शिक्षक भर्ती</news:title>
+      <news:keywords>शिक्षा और नौकरियां, रामपुर, उत्तर प्रदेश, ताज़ा खबर, शिक्षक भर्ती</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/602/640/360</image:loc>
+      <image:caption>उत्तर प्रदेश में निकली 10,000 शिक्षक भर्ती</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/national/parliament-new-labor-law</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog, Breaking</news:genres>
+      <news:publication_date>2026-01-03T12:00:00Z</news:publication_date>
+      <news:title>संसद में पारित हुआ नया श्रम कानून, करोड़ों मजदूरों को मिलेगा लाभ</news:title>
+      <news:keywords>देश, रामपुर, उत्तर प्रदेश, ताज़ा खबर, संसद, श्रम कानून</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/301/640/360</image:loc>
+      <image:caption>संसद में पारित हुआ नया श्रम कानून</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/crime/cyber-fraud-accused-arrested</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T11:30:00Z</news:publication_date>
+      <news:title>साइबर ठगी के आरोपी को किया गिरफ्तार</news:title>
+      <news:keywords>अपराध, रामपुर, उत्तर प्रदेश, ताज़ा खबर, साइबर ठगी</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/502/640/360</image:loc>
+      <image:caption>साइबर ठगी के आरोपी को किया गिरफ्तार</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/up/up-new-education-policy</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T11:00:00Z</news:publication_date>
+      <news:title>उत्तर प्रदेश सरकार ने नई शिक्षा नीति को दी मंजूरी</news:title>
+      <news:keywords>उत्तर प्रदेश, रामपुर, ताज़ा खबर, शिक्षा नीति</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/201/640/360</image:loc>
+      <image:caption>उत्तर प्रदेश सरकार ने नई शिक्षा नीति को दी मंजूरी</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/national/india-us-trade-agreement</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T10:45:00Z</news:publication_date>
+      <news:title>भारत और अमेरिका के बीच नई व्यापार संधि पर हस्ताक्षर</news:title>
+      <news:keywords>देश, रामपुर, उत्तर प्रदेश, ताज़ा खबर, व्यापार संधि</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/302/640/360</image:loc>
+      <image:caption>भारत और अमेरिका के बीच नई व्यापार संधि</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/rampur/rampur-new-road-project</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T10:30:00Z</news:publication_date>
+      <news:title>रामपुर में नई सड़क परियोजना का उद्घाटन, यातायात में होगा सुधार</news:title>
+      <news:keywords>रामपुर, उत्तर प्रदेश, ताज़ा खबर, सड़क परियोजना, विकास</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/101/640/360</image:loc>
+      <image:caption>रामपुर में नई सड़क परियोजना का उद्घाटन</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/business/petrol-diesel-price-relief</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T10:00:00Z</news:publication_date>
+      <news:title>पेट्रोल-डीजल के दामों में राहत की उम्मीद</news:title>
+      <news:keywords>व्यापार, रामपुर, उत्तर प्रदेश, ताज़ा खबर, पेट्रोल, डीजल</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/702/640/360</image:loc>
+      <image:caption>पेट्रोल-डीजल के दामों में राहत की उम्मीद</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/rampur/rampur-farmers-irrigation</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T09:15:00Z</news:publication_date>
+      <news:title>रामपुर के किसानों को मिलेगी नई सिंचाई योजना का लाभ</news:title>
+      <news:keywords>रामपुर, उत्तर प्रदेश, ताज़ा खबर, किसान, सिंचाई</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/102/640/360</image:loc>
+      <image:caption>रामपुर के किसानों को मिलेगी नई सिंचाई योजना का लाभ</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/politics/central-minister-public-interaction</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T09:00:00Z</news:publication_date>
+      <news:title>केंद्रीय मंत्री ने किया जनता से संवाद</news:title>
+      <news:keywords>राजनीति, रामपुर, उत्तर प्रदेश, ताज़ा खबर, केंद्रीय मंत्री</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/402/640/360</image:loc>
+      <image:caption>केंद्रीय मंत्री ने किया जनता से संवाद</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://rampurnews.com/up/lucknow-metro-new-route</loc>
+    <news:news>
+      <news:publication>
+        <news:name>रामपुर न्यूज़</news:name>
+        <news:language>hi</news:language>
+      </news:publication>
+      <news:genres>Blog</news:genres>
+      <news:publication_date>2026-01-03T08:30:00Z</news:publication_date>
+      <news:title>लखनऊ मेट्रो का नया रूट जल्द होगा शुरू</news:title>
+      <news:keywords>उत्तर प्रदेश, रामपुर, ताज़ा खबर, लखनऊ मेट्रो</news:keywords>
+    </news:news>
+    <image:image>
+      <image:loc>https://picsum.photos/seed/202/640/360</image:loc>
+      <image:caption>लखनऊ मेट्रो का नया रूट जल्द होगा शुरू</image:caption>
+    </image:image>
+  </url>
+
+</urlset>

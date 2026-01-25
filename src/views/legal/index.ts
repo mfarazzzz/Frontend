@@ -1,0 +1,11 @@
+export { default as AboutUs } from './AboutUs';
+export { default as EditorialPolicy } from './EditorialPolicy';
+export { default as CorrectionsPolicy } from './CorrectionsPolicy';
+export { default as OwnershipDisclosure } from './OwnershipDisclosure';
+export { default as PrivacyPolicy } from './PrivacyPolicy';
+export { default as TermsConditions } from './TermsConditions';
+export { default as Disclaimer } from './Disclaimer';
+export { default as ContactUs } from './ContactUs';
+export { default as GrievanceRedressal } from './GrievanceRedressal';
+const LegalIndex = () => null;
+export default LegalIndex;

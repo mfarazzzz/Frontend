@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" 
+  xmlns:atom="http://www.w3.org/2005/Atom"
+  xmlns:media="http://search.yahoo.com/mrss/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>रामपुर न्यूज़</title>
+    <link>https://rampurnews.com</link>
+    <description>रामपुर न्यूज़ - रामपुर जिले और उत्तर प्रदेश की ताज़ा, विश्वसनीय खबरें। Breaking News, Local Updates, Education, Sports, Entertainment.</description>
+    <language>hi-IN</language>
+    <copyright>Copyright 2026 रामपुर न्यूज़</copyright>
+    <lastBuildDate>Sat, 04 Jan 2026 00:00:00 GMT</lastBuildDate>
+    <managingEditor>editor@rampurnews.com (रामपुर न्यूज़)</managingEditor>
+    <webMaster>webmaster@rampurnews.com (रामपुर न्यूज़)</webMaster>
+    <generator>Rampur News CMS</generator>
+    <docs>https://www.rssboard.org/rss-specification</docs>
+    <ttl>60</ttl>
+    <image>
+      <url>https://rampurnews.com/logo.png</url>
+      <title>रामपुर न्यूज़</title>
+      <link>https://rampurnews.com</link>
+      <width>768</width>
+      <height>768</height>
+    </image>
+    <atom:link href="https://rampurnews.com/feed.xml" rel="self" type="application/rss+xml" />
+
+    <item>
+      <title>भारत ने जीता टेस्ट सीरीज, ऑस्ट्रेलिया को हराया</title>
+      <link>https://rampurnews.com/sports/india-wins-test-series-australia</link>
+      <description>टीम इंडिया ने शानदार प्रदर्शन करते हुए ऑस्ट्रेलिया को उन्हीं की धरती पर हराया।</description>
+      <author>अभिषेक राय</author>
+      <category>खेल</category>
+      <pubDate>Sat, 03 Jan 2026 18:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/sports/india-wins-test-series-australia</guid>
+      <enclosure url="https://picsum.photos/seed/901/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>शाहरुख खान की नई फिल्म का ट्रेलर हुआ रिलीज</title>
+      <link>https://rampurnews.com/entertainment/shahrukh-khan-new-movie-trailer</link>
+      <description>बॉलीवुड के किंग खान की आगामी फिल्म का ट्रेलर ने तोड़े सारे रिकॉर्ड।</description>
+      <author>पूजा सिन्हा</author>
+      <category>मनोरंजन</category>
+      <pubDate>Sat, 03 Jan 2026 17:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/entertainment/shahrukh-khan-new-movie-trailer</guid>
+      <enclosure url="https://picsum.photos/seed/801/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>शेयर बाजार में तेजी, सेंसेक्स ने छुआ नया उच्चतम स्तर</title>
+      <link>https://rampurnews.com/business/stock-market-rally-sensex-high</link>
+      <description>भारतीय शेयर बाजार में जबरदस्त तेजी, सेंसेक्स ने बनाया नया रिकॉर्ड।</description>
+      <author>धीरज बंसल</author>
+      <category>व्यापार</category>
+      <pubDate>Sat, 03 Jan 2026 16:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/business/stock-market-rally-sensex-high</guid>
+      <enclosure url="https://picsum.photos/seed/701/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>UPSC की प्रारंभिक परीक्षा के नतीजे घोषित</title>
+      <link>https://rampurnews.com/education-jobs/upsc-prelims-results-announced</link>
+      <description>संघ लोक सेवा आयोग ने सिविल सेवा प्रारंभिक परीक्षा के परिणाम जारी किए।</description>
+      <author>प्रभात शुक्ला</author>
+      <category>शिक्षा और नौकरियां</category>
+      <pubDate>Sat, 03 Jan 2026 15:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/education-jobs/upsc-prelims-results-announced</guid>
+      <enclosure url="https://picsum.photos/seed/601/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>पुलिस ने किया लुटेरों के गिरोह का पर्दाफाश</title>
+      <link>https://rampurnews.com/crime/police-busts-robbery-gang</link>
+      <description>रामपुर पुलिस ने अंतरजिला लुटेरों के गिरोह को गिरफ्तार किया, लाखों का माल बरामद।</description>
+      <author>विनोद कुमार</author>
+      <category>अपराध</category>
+      <pubDate>Sat, 03 Jan 2026 14:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/crime/police-busts-robbery-gang</guid>
+      <enclosure url="https://picsum.photos/seed/501/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>विधानसभा चुनाव से पहले गठबंधन की चर्चा तेज</title>
+      <link>https://rampurnews.com/politics/assembly-election-alliance-talks</link>
+      <description>आगामी विधानसभा चुनावों के मद्देनजर विभिन्न दलों में गठबंधन की बातचीत शुरू हो गई है।</description>
+      <author>मनोज पांडेय</author>
+      <category>राजनीति</category>
+      <pubDate>Sat, 03 Jan 2026 13:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/politics/assembly-election-alliance-talks</guid>
+      <enclosure url="https://picsum.photos/seed/401/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>उत्तर प्रदेश में निकली 10,000 शिक्षक भर्ती</title>
+      <link>https://rampurnews.com/education-jobs/up-teacher-recruitment-10000</link>
+      <description>राज्य सरकार ने प्राथमिक विद्यालयों के लिए शिक्षकों की बड़ी भर्ती की घोषणा की।</description>
+      <author>मीना कुमारी</author>
+      <category>शिक्षा और नौकरियां</category>
+      <pubDate>Sat, 03 Jan 2026 12:30:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/education-jobs/up-teacher-recruitment-10000</guid>
+      <enclosure url="https://picsum.photos/seed/602/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>संसद में पारित हुआ नया श्रम कानून, करोड़ों मजदूरों को मिलेगा लाभ</title>
+      <link>https://rampurnews.com/national/parliament-new-labor-law</link>
+      <description>केंद्र सरकार ने नए श्रम कानून को संसद में पारित कराया, जिससे करोड़ों श्रमिकों को फायदा होगा।</description>
+      <author>अनुराग त्रिपाठी</author>
+      <category>देश</category>
+      <pubDate>Sat, 03 Jan 2026 12:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/national/parliament-new-labor-law</guid>
+      <enclosure url="https://picsum.photos/seed/301/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>साइबर ठगी के आरोपी को किया गिरफ्तार</title>
+      <link>https://rampurnews.com/crime/cyber-fraud-accused-arrested</link>
+      <description>पुलिस ने ऑनलाइन ठगी करने वाले आरोपी को पकड़ा, कई लोगों से ठगे थे लाखों रुपये।</description>
+      <author>अजय राठौर</author>
+      <category>अपराध</category>
+      <pubDate>Sat, 03 Jan 2026 11:30:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/crime/cyber-fraud-accused-arrested</guid>
+      <enclosure url="https://picsum.photos/seed/502/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>उत्तर प्रदेश सरकार ने नई शिक्षा नीति को दी मंजूरी</title>
+      <link>https://rampurnews.com/up/up-new-education-policy</link>
+      <description>मुख्यमंत्री ने राज्य की नई शिक्षा नीति को मंजूरी दी, जिससे लाखों छात्रों को फायदा होगा।</description>
+      <author>सुनीता यादव</author>
+      <category>उत्तर प्रदेश</category>
+      <pubDate>Sat, 03 Jan 2026 11:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/up/up-new-education-policy</guid>
+      <enclosure url="https://picsum.photos/seed/201/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>भारत और अमेरिका के बीच नई व्यापार संधि पर हस्ताक्षर</title>
+      <link>https://rampurnews.com/national/india-us-trade-agreement</link>
+      <description>दोनों देशों ने द्विपक्षीय व्यापार को बढ़ावा देने के लिए नई संधि पर हस्ताक्षर किए।</description>
+      <author>नेहा गुप्ता</author>
+      <category>देश</category>
+      <pubDate>Sat, 03 Jan 2026 10:45:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/national/india-us-trade-agreement</guid>
+      <enclosure url="https://picsum.photos/seed/302/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>रामपुर में नई सड़क परियोजना का उद्घाटन, यातायात में होगा सुधार</title>
+      <link>https://rampurnews.com/rampur/rampur-new-road-project</link>
+      <description>जिला प्रशासन ने शहर के मुख्य मार्ग पर नई सड़क परियोजना का शुभारंभ किया। इससे लाखों लोगों को राहत मिलेगी।</description>
+      <author>राकेश शर्मा</author>
+      <category>रामपुर</category>
+      <pubDate>Sat, 03 Jan 2026 10:30:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/rampur/rampur-new-road-project</guid>
+      <enclosure url="https://picsum.photos/seed/101/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>पेट्रोल-डीजल के दामों में राहत की उम्मीद</title>
+      <link>https://rampurnews.com/business/petrol-diesel-price-relief</link>
+      <description>अंतरराष्ट्रीय बाजार में कच्चे तेल की कीमतों में गिरावट से राहत की उम्मीद।</description>
+      <author>कविता अग्रवाल</author>
+      <category>व्यापार</category>
+      <pubDate>Sat, 03 Jan 2026 10:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/business/petrol-diesel-price-relief</guid>
+      <enclosure url="https://picsum.photos/seed/702/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>रामपुर के किसानों को मिलेगी नई सिंचाई योजना का लाभ</title>
+      <link>https://rampurnews.com/rampur/rampur-farmers-irrigation</link>
+      <description>राज्य सरकार ने रामपुर जिले के किसानों के लिए विशेष सिंचाई योजना की घोषणा की है।</description>
+      <author>प्रीति वर्मा</author>
+      <category>रामपुर</category>
+      <pubDate>Sat, 03 Jan 2026 09:15:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/rampur/rampur-farmers-irrigation</guid>
+      <enclosure url="https://picsum.photos/seed/102/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>केंद्रीय मंत्री ने किया जनता से संवाद</title>
+      <link>https://rampurnews.com/politics/central-minister-public-interaction</link>
+      <description>केंद्रीय मंत्री ने जनता की समस्याओं को सुना और समाधान का आश्वासन दिया।</description>
+      <author>सीमा राजपूत</author>
+      <category>राजनीति</category>
+      <pubDate>Sat, 03 Jan 2026 09:00:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/politics/central-minister-public-interaction</guid>
+      <enclosure url="https://picsum.photos/seed/402/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+    <item>
+      <title>लखनऊ मेट्रो का नया रूट जल्द होगा शुरू</title>
+      <link>https://rampurnews.com/up/lucknow-metro-new-route</link>
+      <description>लखनऊ मेट्रो की नई लाइन अगले महीने से यात्रियों के लिए खुल जाएगी।</description>
+      <author>विकास सिंह</author>
+      <category>उत्तर प्रदेश</category>
+      <pubDate>Sat, 03 Jan 2026 08:30:00 GMT</pubDate>
+      <guid isPermaLink="true">https://rampurnews.com/up/lucknow-metro-new-route</guid>
+      <enclosure url="https://picsum.photos/seed/202/640/360" type="image/jpeg" />
+      <source url="https://rampurnews.com/feed.xml">रामपुर न्यूज़</source>
+    </item>
+
+  </channel>
+</rss>

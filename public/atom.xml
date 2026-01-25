@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="hi">
+  <id>https://rampurnews.com/</id>
+  <title type="text">रामपुर न्यूज़</title>
+  <subtitle type="text">रामपुर न्यूज़ - रामपुर जिले और उत्तर प्रदेश की ताज़ा, विश्वसनीय खबरें। Breaking News, Local Updates, Education, Sports, Entertainment.</subtitle>
+  <link href="https://rampurnews.com" rel="alternate" type="text/html" />
+  <link href="https://rampurnews.com/atom.xml" rel="self" type="application/atom+xml" />
+  <updated>2026-01-04T00:00:00Z</updated>
+  <author>
+    <name>रामपुर न्यूज़</name>
+    <uri>https://rampurnews.com</uri>
+    <email>editor@rampurnews.com</email>
+  </author>
+  <generator uri="https://rampurnews.com" version="1.0">Rampur News CMS</generator>
+  <icon>https://rampurnews.com/favicon.ico</icon>
+  <logo>https://rampurnews.com/logo.png</logo>
+  <rights>Copyright 2026 रामपुर न्यूज़</rights>
+
+  <entry>
+    <id>https://rampurnews.com/sports/india-wins-test-series-australia</id>
+    <title type="text">भारत ने जीता टेस्ट सीरीज, ऑस्ट्रेलिया को हराया</title>
+    <link href="https://rampurnews.com/sports/india-wins-test-series-australia" rel="alternate" type="text/html" />
+    <published>2026-01-03T18:00:00Z</published>
+    <updated>2026-01-03T18:00:00Z</updated>
+    <author>
+      <name>अभिषेक राय</name>
+    </author>
+    <category term="sports" label="खेल" />
+    <summary type="text">टीम इंडिया ने शानदार प्रदर्शन करते हुए ऑस्ट्रेलिया को उन्हीं की धरती पर हराया।</summary>
+    <content type="html">&lt;img src="https://picsum.photos/seed/901/640/360" alt="भारत ने जीता टेस्ट सीरीज" /&gt;&lt;p&gt;टीम इंडिया ने शानदार प्रदर्शन करते हुए ऑस्ट्रेलिया को उन्हीं की धरती पर हराया।&lt;/p&gt;</content>
+    <link href="https://picsum.photos/seed/901/640/360" rel="enclosure" type="image/jpeg" />
+  </entry>
+
+  <entry>
+    <id>https://rampurnews.com/entertainment/shahrukh-khan-new-movie-trailer</id>
+    <title type="text">शाहरुख खान की नई फिल्म का ट्रेलर हुआ रिलीज</title>
+    <link href="https://rampurnews.com/entertainment/shahrukh-khan-new-movie-trailer" rel="alternate" type="text/html" />
+    <published>2026-01-03T17:00:00Z</published>
+    <updated>2026-01-03T17:00:00Z</updated>
+    <author>
+      <name>पूजा सिन्हा</name>
+    </author>
+    <category term="entertainment" label="मनोरंजन" />
+    <summary type="text">बॉलीवुड के किंग खान की आगामी फिल्म का ट्रेलर ने तोड़े सारे रिकॉर्ड।</summary>
+    <content type="html">&lt;img src="https://picsum.photos/seed/801/640/360" alt="शाहरुख खान ट्रेलर" /&gt;&lt;p&gt;बॉलीवुड के किंग खान की आगामी फिल्म का ट्रेलर ने तोड़े सारे रिकॉर्ड।&lt;/p&gt;</content>
+    <link href="https://picsum.photos/seed/801/640/360" rel="enclosure" type="image/jpeg" />
+  </entry>
+
+  <entry>
+    <id>https://rampurnews.com/business/stock-market-rally-sensex-high</id>
+    <title type="text">शेयर बाजार में तेजी, सेंसेक्स ने छुआ नया उच्चतम स्तर</title>
+    <link href="https://rampurnews.com/business/stock-market-rally-sensex-high" rel="alternate" type="text/html" />
+    <published>2026-01-03T16:00:00Z</published>
+    <updated>2026-01-03T16:00:00Z</updated>
+    <author>
+      <name>धीरज बंसल</name>
+    </author>
+    <category term="business" label="व्यापार" />
+    <summary type="text">भारतीय शेयर बाजार में जबरदस्त तेजी, सेंसेक्स ने बनाया नया रिकॉर्ड।</summary>
+    <content type="html">&lt;img src="https://picsum.photos/seed/701/640/360" alt="शेयर बाजार" /&gt;&lt;p&gt;भारतीय शेयर बाजार में जबरदस्त तेजी, सेंसेक्स ने बनाया नया रिकॉर्ड।&lt;/p&gt;</content>
+    <link href="https://picsum.photos/seed/701/640/360" rel="enclosure" type="image/jpeg" />
+  </entry>
+
+  <entry>
+    <id>https://rampurnews.com/rampur/rampur-new-road-project</id>
+    <title type="text">रामपुर में नई सड़क परियोजना का उद्घाटन, यातायात में होगा सुधार</title>
+    <link href="https://rampurnews.com/rampur/rampur-new-road-project" rel="alternate" type="text/html" />
+    <published>2026-01-03T10:30:00Z</published>
+    <updated>2026-01-03T10:30:00Z</updated>
+    <author>
+      <name>राकेश शर्मा</name>
+    </author>
+    <category term="rampur" label="रामपुर" />
+    <summary type="text">जिला प्रशासन ने शहर के मुख्य मार्ग पर नई सड़क परियोजना का शुभारंभ किया। इससे लाखों लोगों को राहत मिलेगी।</summary>
+    <content type="html">&lt;img src="https://picsum.photos/seed/101/640/360" alt="रामपुर सड़क परियोजना" /&gt;&lt;p&gt;जिला प्रशासन ने शहर के मुख्य मार्ग पर नई सड़क परियोजना का शुभारंभ किया। इससे लाखों लोगों को राहत मिलेगी।&lt;/p&gt;</content>
+    <link href="https://picsum.photos/seed/101/640/360" rel="enclosure" type="image/jpeg" />
+  </entry>
+
+  <entry>
+    <id>https://rampurnews.com/national/parliament-new-labor-law</id>
+    <title type="text">संसद में पारित हुआ नया श्रम कानून, करोड़ों मजदूरों को मिलेगा लाभ</title>
+    <link href="https://rampurnews.com/national/parliament-new-labor-law" rel="alternate" type="text/html" />
+    <published>2026-01-03T12:00:00Z</published>
+    <updated>2026-01-03T12:00:00Z</updated>
+    <author>
+      <name>अनुराग त्रिपाठी</name>
+    </author>
+    <category term="national" label="देश" />
+    <summary type="text">केंद्र सरकार ने नए श्रम कानून को संसद में पारित कराया, जिससे करोड़ों श्रमिकों को फायदा होगा।</summary>
+    <content type="html">&lt;img src="https://picsum.photos/seed/301/640/360" alt="श्रम कानून" /&gt;&lt;p&gt;केंद्र सरकार ने नए श्रम कानून को संसद में पारित कराया, जिससे करोड़ों श्रमिकों को फायदा होगा।&lt;/p&gt;</content>
+    <link href="https://picsum.photos/seed/301/640/360" rel="enclosure" type="image/jpeg" />
+  </entry>
+
+  <entry>
+    <id>https://rampurnews.com/up/up-new-education-policy</id>
+    <title type="text">उत्तर प्रदेश सरकार ने नई शिक्षा नीति को दी मंजूरी</title>
+    <link href="https://rampurnews.com/up/up-new-education-policy" rel="alternate" type="text/html" />
+    <published>2026-01-03T11:00:00Z</published>
+    <updated>2026-01-03T11:00:00Z</updated>
+    <author>
+      <name>सुनीता यादव</name>
+    </author>
+    <category term="up" label="उत्तर प्रदेश" />
+    <summary type="text">मुख्यमंत्री ने राज्य की नई शिक्षा नीति को मंजूरी दी, जिससे लाखों छात्रों को फायदा होगा।</summary>
+    <content type="html">&lt;img src="https://picsum.photos/seed/201/640/360" alt="शिक्षा नीति" /&gt;&lt;p&gt;मुख्यमंत्री ने राज्य की नई शिक्षा नीति को मंजूरी दी, जिससे लाखों छात्रों को फायदा होगा।&lt;/p&gt;</content>
+    <link href="https://picsum.photos/seed/201/640/360" rel="enclosure" type="image/jpeg" />
+  </entry>
+
+  <entry>
+    <id>https://rampurnews.com/crime/police-busts-robbery-gang</id>
+    <title type="text">पुलिस ने किया लुटेरों के गिरोह का पर्दाफाश</title>
+    <link href="https://rampurnews.com/crime/police-busts-robbery-gang" rel="alternate" type="text/html" />
+    <published>2026-01-03T14:00:00Z</published>
+    <updated>2026-01-03T14:00:00Z</updated>
+    <author>
+      <name>विनोद कुमार</name>
+    </author>
+    <category term="crime" label="अपराध" />
+    <summary type="text">रामपुर पुलिस ने अंतरजिला लुटेरों के गिरोह को गिरफ्तार किया, लाखों का माल बरामद।</summary>
+    <content type="html">&lt;img src="https://picsum.photos/seed/501/640/360" alt="पुलिस कार्रवाई" /&gt;&lt;p&gt;रामपुर पुलिस ने अंतरजिला लुटेरों के गिरोह को गिरफ्तार किया, लाखों का माल बरामद।&lt;/p&gt;</content>
+    <link href="https://picsum.photos/seed/501/640/360" rel="enclosure" type="image/jpeg" />
+  </entry>
+
+  <entry>
+    <id>https://rampurnews.com/politics/assembly-election-alliance-talks</id>
+    <title type="text">विधानसभा चुनाव से पहले गठबंधन की चर्चा तेज</title>
+    <link href="https://rampurnews.com/politics/assembly-election-alliance-talks" rel="alternate" type="text/html" />
+    <published>2026-01-03T13:00:00Z</published>
+    <updated>2026-01-03T13:00:00Z</updated>
+    <author>
+      <name>मनोज पांडेय</name>
+    </author>
+    <category term="politics" label="राजनीति" />
+    <summary type="text">आगामी विधानसभा चुनावों के मद्देनजर विभिन्न दलों में गठबंधन की बातचीत शुरू हो गई है।</summary>
+    <content type="html">&lt;img src="https://picsum.photos/seed/401/640/360" alt="चुनाव गठबंधन" /&gt;&lt;p&gt;आगामी विधानसभा चुनावों के मद्देनजर विभिन्न दलों में गठबंधन की बातचीत शुरू हो गई है।&lt;/p&gt;</content>
+    <link href="https://picsum.photos/seed/401/640/360" rel="enclosure" type="image/jpeg" />
+  </entry>
+
+</feed>

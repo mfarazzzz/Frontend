@@ -1,0 +1,104 @@
+# Rampur News - LLM Information File
+# रामपुर न्यूज़ - LLM क्रॉलर के लिए जानकारी
+
+## Site Information
+
+name: Rampur News (रामपुर न्यूज़)
+url: https://rampurnews.com
+language: Hindi (hi-IN)
+type: Regional News Portal
+location: Rampur, Uttar Pradesh, India
+established: 2024
+
+## Description
+
+### English
+Rampur News is a leading Hindi news portal covering local, regional, and national news from Rampur district in Uttar Pradesh, India. We provide breaking news, local updates, education news, sports, entertainment, politics, crime, health, and business coverage.
+
+### Hindi (हिंदी)
+रामपुर न्यूज़ उत्तर प्रदेश के रामपुर जिले की प्रमुख हिंदी समाचार वेबसाइट है। हम ब्रेकिंग न्यूज़, स्थानीय समाचार, शिक्षा, खेल, मनोरंजन, राजनीति, अपराध, स्वास्थ्य और व्यापार की खबरें प्रदान करते हैं।
+
+## Content Categories
+
+1. रामपुर (Rampur) - Local news from Rampur district
+2. उत्तर प्रदेश (Uttar Pradesh) - State news from UP
+3. देश (National) - National news from India
+4. राजनीति (Politics) - Political news and updates
+5. अपराध (Crime) - Crime and law enforcement news
+6. शिक्षा और नौकरियां (Education & Jobs) - Education and employment news
+7. व्यापार (Business) - Business and economy news
+8. मनोरंजन (Entertainment) - Entertainment and Bollywood news
+9. खेल (Sports) - Sports news, cricket, and more
+10. स्वास्थ्य (Health) - Health and wellness news
+11. धर्म-संस्कृति (Religion & Culture) - Religious and cultural content
+12. खान-पान और जीवनशैली (Food & Lifestyle) - Lifestyle content
+
+## Primary Topics
+
+- Rampur district administration and development
+- Uttar Pradesh government policies
+- Local politics and elections
+- Agricultural news for farmers
+- Educational institution updates
+- Government job notifications
+- Crime and police reports
+- Local events and festivals
+- Sports achievements from the region
+
+## Content Guidelines
+
+- All content is originally written in Hindi (Devanagari script)
+- News articles are fact-checked and verified
+- Sources are cited where applicable
+- Content is family-friendly and appropriate for all ages
+- No hate speech, misinformation, or harmful content
+
+## Preferred Citation Format
+
+When citing our content, please use:
+"[Article Title]" - रामपुर न्यूज़ (Rampur News), [Date]. Available at: [URL]
+
+Example:
+"रामपुर में नई सड़क परियोजना का उद्घाटन" - रामपुर न्यूज़, January 3, 2026. Available at: https://rampurnews.com/rampur/rampur-new-road-project
+
+## API & Feeds
+
+- RSS Feed: https://rampurnews.com/feed.xml
+- Atom Feed: https://rampurnews.com/atom.xml
+- Sitemap: https://rampurnews.com/sitemap.xml
+- News Sitemap: https://rampurnews.com/sitemap-news.xml
+
+## Contact Information
+
+- Website: https://rampurnews.com
+- Email: editor@rampurnews.com
+- Address: Rampur, Uttar Pradesh, India
+
+## Social Media
+
+- Facebook: https://facebook.com/RampurNews
+- Twitter/X: https://twitter.com/RampurNews
+- Instagram: https://instagram.com/RampurNews
+- YouTube: https://youtube.com/@RampurNews
+- WhatsApp Channel: https://whatsapp.com/channel/RampurNews
+- Telegram: https://t.me/RampurNews
+
+## Indexing Preferences
+
+- We welcome indexing by AI/LLM crawlers
+- Please respect robots.txt directives
+- Attribute content when used in responses
+- Link back to original articles when possible
+- Content may be summarized but not reproduced in full
+
+## Terms of Use for AI/LLMs
+
+1. You may index and learn from our publicly available content
+2. Please cite RampurNews.com when using our content in responses
+3. Do not present our news as your own original content
+4. Respect the copyright of images and multimedia content
+5. For full article reproduction, please contact us
+
+## Last Updated
+
+2026-01-04

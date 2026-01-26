@@ -20,28 +20,7 @@ export { createWordPressProvider } from './wordpressProvider';
 const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
   const baseUrl = (config.baseUrl || '').replace(/\/+$/, '');
   const isStrapi = config.provider === 'strapi';
-  const canUseStrapiAdminWithApiKey = isStrapi && !!config.apiKey && typeof window === 'undefined';
-  const hasAdminSession = () => {
-    if (typeof window === 'undefined') return false;
-    try {
-      const raw = window.localStorage.getItem('admin_auth');
-      if (!raw) return false;
-      const parsed = JSON.parse(raw) as { expiresAt?: number } | null;
-      if (typeof parsed?.expiresAt === 'number') {
-        return parsed.expiresAt > Date.now();
-      }
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const canUseStrapiAdmin = () => {
-    if (!isStrapi) return false;
-    if (canUseStrapiAdminWithApiKey) return true;
-    if (typeof window === 'undefined') return false;
-    return hasAdminSession();
-  };
+  const canUseStrapiAdmin = isStrapi && !!config.apiKey && typeof window === 'undefined';
 
   const buildUrl = (path: string, params?: Record<string, string | number | boolean | undefined>) => {
     if (isStrapi && typeof window !== 'undefined') {
@@ -208,7 +187,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
   const getArticles = async (params?: ArticleQueryParams): Promise<PaginatedResponse<CMSArticle>> => {
     const query = buildArticleQuery(params);
-    const shouldTryAdmin = canUseStrapiAdmin();
+    const shouldTryAdmin = canUseStrapiAdmin;
     const path = shouldTryAdmin ? '/articles/admin' : '/articles';
 
     const tryFetch = async (
@@ -229,7 +208,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     let result: PaginatedResponse<CMSArticle> | null = null;
     try {
       if (shouldTryAdmin) {
-        result = await tryFetch('/articles/admin', canUseStrapiAdminWithApiKey, false, false);
+        result = await tryFetch('/articles/admin', true, false, false);
       } else {
         result = await tryFetch(path, false, undefined, false);
       }
@@ -275,7 +254,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getArticleById(id: string): Promise<CMSArticle | null> {
-      const shouldTryAdmin = canUseStrapiAdmin();
+      const shouldTryAdmin = canUseStrapiAdmin;
       const path = shouldTryAdmin ? `/articles/admin/${id}` : `/articles/${id}`;
 
       const tryFetch = async (
@@ -295,7 +274,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
       try {
         if (shouldTryAdmin) {
-          return await tryFetch(`/articles/admin/${id}`, canUseStrapiAdminWithApiKey, false, false);
+          return await tryFetch(`/articles/admin/${id}`, true, false, false);
         }
         return await tryFetch(path, false, undefined, false);
       } catch (error) {
@@ -323,7 +302,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getArticleBySlug(slug: string): Promise<CMSArticle | null> {
-      const shouldTryAdmin = canUseStrapiAdmin();
+      const shouldTryAdmin = canUseStrapiAdmin;
       const path = shouldTryAdmin
         ? `/articles/admin/slug/${encodeURIComponent(slug)}`
         : `/articles/slug/${encodeURIComponent(slug)}`;
@@ -345,12 +324,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
       try {
         if (shouldTryAdmin) {
-          return await tryFetch(
-            `/articles/admin/slug/${encodeURIComponent(slug)}`,
-            canUseStrapiAdminWithApiKey,
-            false,
-            false,
-          );
+          return await tryFetch(`/articles/admin/slug/${encodeURIComponent(slug)}`, true, false, false);
         }
         return await tryFetch(path, false, undefined, false);
       } catch (error) {
@@ -381,7 +355,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const init: RequestInit = {
         method: 'POST',
         headers: {
-          ...getAuthHeaders(false),
+          ...getAuthHeaders(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(article),
@@ -389,7 +363,22 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
       let result: CMSArticle | null = null;
       if (isStrapi) {
-        result = await fetchJson<CMSArticle>(buildUrl('/articles'), init);
+        try {
+          result = await fetchJson<CMSArticle>(buildProxyUrl('/articles'), {
+            ...init,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          if (
+            config.apiKey &&
+            error instanceof HttpError &&
+            (error.status === 401 || error.status === 403 || error.status === 404)
+          ) {
+            result = await fetchJson<CMSArticle>(buildUrl('/articles'), init);
+          } else {
+            throw error;
+          }
+        }
       } else {
         result = await fetchJson<CMSArticle>(buildUrl('/articles'), init);
       }
@@ -403,7 +392,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const init: RequestInit = {
         method: 'PATCH',
         headers: {
-          ...getAuthHeaders(false),
+          ...getAuthHeaders(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(article),
@@ -411,7 +400,22 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
       let result: CMSArticle | null = null;
       if (isStrapi) {
-        result = await fetchJson<CMSArticle>(buildUrl(`/articles/${id}`), init);
+        try {
+          result = await fetchJson<CMSArticle>(buildProxyUrl(`/articles/${id}`), {
+            ...init,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          if (
+            config.apiKey &&
+            error instanceof HttpError &&
+            (error.status === 401 || error.status === 403 || error.status === 404)
+          ) {
+            result = await fetchJson<CMSArticle>(buildUrl(`/articles/${id}`), init);
+          } else {
+            throw error;
+          }
+        }
       } else {
         result = await fetchJson<CMSArticle>(buildUrl(`/articles/${id}`), init);
       }
@@ -423,14 +427,33 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
     async deleteArticle(id: string): Promise<void> {
       if (isStrapi) {
-        await fetchJson<null>(
-          buildUrl(`/articles/${id}`),
-          {
-            method: 'DELETE',
-          },
-          { allowNotFound: false },
-        );
-        return;
+        try {
+          await fetchJson<null>(
+            buildProxyUrl(`/articles/${id}`),
+            {
+              method: 'DELETE',
+            },
+            { allowNotFound: false },
+          );
+          return;
+        } catch (error) {
+          if (
+            config.apiKey &&
+            error instanceof HttpError &&
+            (error.status === 401 || error.status === 403 || error.status === 404)
+          ) {
+            await fetchJson<null>(
+              buildUrl(`/articles/${id}`),
+              {
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+              },
+              { allowNotFound: false },
+            );
+            return;
+          }
+          throw error;
+        }
       }
 
       await fetchJson<null>(
@@ -513,7 +536,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const result = await fetchJson<CMSCategory>(buildUrl('/categories'), {
         method: 'POST',
         headers: {
-          ...getAuthHeaders(false),
+          ...getAuthHeaders(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(category),
@@ -528,7 +551,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const result = await fetchJson<CMSCategory>(buildUrl(`/categories/${id}`), {
         method: 'PATCH',
         headers: {
-          ...getAuthHeaders(false),
+          ...getAuthHeaders(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(category),
@@ -544,7 +567,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         buildUrl(`/categories/${id}`),
         {
           method: 'DELETE',
-          headers: getAuthHeaders(false),
+          headers: getAuthHeaders(),
         },
         { allowNotFound: false },
       );
@@ -598,7 +621,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const result = await fetchJson<CMSAuthor>(buildUrl('/authors'), {
         method: 'POST',
         headers: {
-          ...getAuthHeaders(false),
+          ...getAuthHeaders(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(author),
@@ -613,7 +636,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const result = await fetchJson<CMSAuthor>(buildUrl(`/authors/${id}`), {
         method: 'PATCH',
         headers: {
-          ...getAuthHeaders(false),
+          ...getAuthHeaders(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(author),
@@ -629,7 +652,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         buildUrl(`/authors/${id}`),
         {
           method: 'DELETE',
-          headers: getAuthHeaders(false),
+          headers: getAuthHeaders(),
         },
         { allowNotFound: false },
       );
@@ -704,7 +727,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
           buildUrl('/upload'),
           {
             method: 'POST',
-            headers: getAuthHeaders(false),
+            headers: getAuthHeaders(),
             body: formData,
           },
           { allowNotFound: false },
@@ -720,7 +743,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const tryMediaWrapper = async () => {
         const result = await fetchJson<CMSMedia>(buildUrl('/media'), {
           method: 'POST',
-          headers: getAuthHeaders(false),
+          headers: getAuthHeaders(),
           body: formData,
         });
         return result;
@@ -746,7 +769,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
           buildUrl(`/upload/files/${encodeURIComponent(id)}`),
           {
             method: 'DELETE',
-            headers: getAuthHeaders(false),
+            headers: getAuthHeaders(),
           },
           { allowNotFound: false },
         );
@@ -755,7 +778,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const tryMediaWrapperDelete = async () => {
         await fetchJson<null>(buildUrl(`/media/${encodeURIComponent(id)}`), {
           method: 'DELETE',
-          headers: getAuthHeaders(false),
+          headers: getAuthHeaders(),
         });
       };
 
@@ -815,7 +838,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const result = await fetchJson<CMSSettings>(buildUrl('/settings'), {
         method: 'PATCH',
         headers: {
-          ...getAuthHeaders(false),
+          ...getAuthHeaders(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(settings),

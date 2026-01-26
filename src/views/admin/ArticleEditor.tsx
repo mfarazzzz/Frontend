@@ -21,7 +21,6 @@ import { toast } from 'sonner';
 import { type CMSArticle, getCMSProvider } from '@/services/cms';
 import ImageUploader from '@/components/admin/ImageUploader';
 import { deriveAiSeoSignals, stripHtmlToText, truncateText } from '@/lib/utils';
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const SITE_URL = 'https://rampurnews.com';
 
@@ -37,7 +36,6 @@ const ArticleEditor = () => {
   const { data: tags } = useTags();
   const createArticle = useCreateArticle();
   const updateArticle = useUpdateArticle();
-  const { user: sessionUser } = useAdminAuth();
 
   const [formData, setFormData] = useState<Partial<CMSArticle>>({
     title: '',
@@ -182,10 +180,6 @@ const ArticleEditor = () => {
   };
 
   const handleSubmit = async (status?: 'draft' | 'published') => {
-    if (status === 'published' && sessionUser?.role !== 'admin') {
-      toast.error('केवल एडमिन ही लेख प्रकाशित कर सकते हैं');
-      return;
-    }
     if (!formData.title || !formData.category || !formData.content || !formData.author) {
       toast.error('शीर्षक, श्रेणी, लेखक और सामग्री आवश्यक हैं');
       return;
@@ -236,10 +230,10 @@ const ArticleEditor = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-        <div className="flex items-start gap-3 sm:items-center sm:gap-4">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.push('/admin/articles')}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -252,20 +246,18 @@ const ArticleEditor = () => {
             </p>
           </div>
         </div>
-        <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end md:w-auto">
+        <div className="flex gap-2">
           <Button 
             variant="outline" 
             onClick={() => handleSubmit('draft')}
             disabled={isSaving}
-            className="w-full sm:w-auto"
           >
             <Save className="w-4 h-4 mr-2" />
             ड्राफ्ट सहेजें
           </Button>
           <Button 
             onClick={() => handleSubmit('published')}
-            disabled={isSaving || sessionUser?.role !== 'admin'}
-            className="w-full sm:w-auto"
+            disabled={isSaving}
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -278,7 +270,7 @@ const ArticleEditor = () => {
       </div>
 
       <Tabs defaultValue="content" className="space-y-6">
-        <TabsList className="flex flex-wrap h-auto">
+        <TabsList>
           <TabsTrigger value="content">सामग्री</TabsTrigger>
           <TabsTrigger value="seo">SEO</TabsTrigger>
           <TabsTrigger value="settings">सेटिंग्स</TabsTrigger>

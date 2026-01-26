@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminSessionSecret, verifyAdminSessionToken } from "@/lib/adminSession";
+import { verifyAdminSessionToken } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
 
@@ -32,7 +32,7 @@ const getStrapiApiBaseUrl = () => {
 
 const getSession = (request: NextRequest) => {
   const token = request.cookies.get("admin_session")?.value;
-  const secret = getAdminSessionSecret();
+  const secret = process.env.ADMIN_SESSION_SECRET;
   if (!token || !secret) return null;
   return verifyAdminSessionToken(token, secret);
 };
@@ -62,8 +62,6 @@ const buildHeaders = (request: NextRequest, includeAuth: boolean, jwt: string | 
   headers.delete("content-length");
   headers.delete("cookie");
   headers.delete("authorization");
-  headers.delete("origin");
-  headers.delete("referer");
 
   if (includeAuth && jwt) {
     headers.set("Authorization", `Bearer ${jwt}`);
@@ -91,19 +89,11 @@ const proxy = async (request: NextRequest, path: string[]) => {
   const headers = buildHeaders(request, !!session, jwt);
   const body = method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
 
-  let upstream: Response;
-  try {
-    upstream = await fetch(targetUrl.toString(), {
-      method,
-      headers,
-      body: body ? Buffer.from(body) : undefined,
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Upstream request failed" },
-      { status: 502 },
-    );
-  }
+  const upstream = await fetch(targetUrl.toString(), {
+    method,
+    headers,
+    body: body ? Buffer.from(body) : undefined,
+  });
 
   const responseHeaders = new Headers(upstream.headers);
   responseHeaders.delete("set-cookie");
@@ -141,3 +131,4 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   const { path } = await context.params;
   return proxy(request, path);
 }
+

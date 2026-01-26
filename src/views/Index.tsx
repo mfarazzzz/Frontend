@@ -6,7 +6,6 @@ import BreakingNewsSlider from "@/components/BreakingNewsSlider";
 import CategorySection from "@/components/CategorySection";
 import Sidebar from "@/components/Sidebar";
 import NewsCard from "@/components/NewsCard";
-import SEO from "@/components/SEO";
 import { useArticlesByCategory, useFeaturedArticles } from "@/hooks/useCMS";
 
 type CMSCategorySectionProps = {
@@ -40,14 +39,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEO
-        title="रामपुर की ताज़ा खबरें"
-        description="रामपुर न्यूज़ - रामपुर जिले और उत्तर प्रदेश की ताज़ा, विश्वसनीय खबरें। राजनीति, अपराध, शिक्षा, खेल, मनोरंजन और स्थानीय समाचार।"
-        canonical="/"
-        ogType="website"
-        isHomepage={true}
-      />
-
       <Header />
       <BreakingNewsTicker />
 

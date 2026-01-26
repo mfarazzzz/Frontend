@@ -1,4 +1,4 @@
-import Head from "next/head";
+// import Head from "next/head";
 
 interface ArticleData {
   publishedTime?: string;
@@ -290,6 +290,7 @@ const SEO = ({
         publisher: {
           "@type": "NewsMediaOrganization",
           "@id": `${siteUrl}/#organization`,
+          name: siteName,
         },
       }
     : null;
@@ -320,124 +321,8 @@ const SEO = ({
       }
     : null;
 
-  return (
-    <Head>
-      <title>{fullTitle}</title>
-      <meta name="description" content={description} />
-      <link rel="canonical" href={canonicalUrl} />
-      <meta name="keywords" content={allKeywords.join(", ")} />
-      
-      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-      <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1" />
-      <meta name="googlebot-news" content="index, follow" />
-      <meta name="bingbot" content="index, follow" />
-      
-      <meta name="ai-content-declaration" content="human-written" />
-      <meta name="perplexity-indexable" content="true" />
-      
-      <meta httpEquiv="content-language" content="hi-IN" />
-      <meta name="language" content="Hindi" />
-      <meta name="geo.region" content="IN-UP" />
-      <meta name="geo.placename" content="Rampur, Uttar Pradesh" />
-      
-      <meta property="og:site_name" content={siteName} />
-      <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
-      <meta property="og:type" content={ogType} />
-      <meta property="og:url" content={canonicalUrl} />
-      <meta property="og:image" content={ogImage} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
-      <meta property="og:image:alt" content={title} />
-      <meta property="og:locale" content="hi_IN" />
-      <meta property="og:locale:alternate" content="en_IN" />
-      
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:site" content="@RampurNews" />
-      <meta name="twitter:creator" content="@RampurNews" />
-      <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={ogImage} />
-      <meta name="twitter:image:alt" content={title} />
-      
-      {article && (
-        <>
-          <meta property="article:published_time" content={article.publishedTime} />
-          {article.modifiedTime && (
-            <meta property="article:modified_time" content={article.modifiedTime} />
-          )}
-          {article.author && (
-            <meta property="article:author" content={article.author} />
-          )}
-          {article.section && (
-            <meta property="article:section" content={article.section} />
-          )}
-          <meta property="article:publisher" content="https://www.facebook.com/profile.php?id=61586930678729" />
-          <meta property="article:opinion" content="false" />
-        </>
-      )}
-      
-      <meta name="news_keywords" content={allKeywords.slice(0, 10).join(", ")} />
-      <meta name="original-source" content={canonicalUrl} />
-      <meta name="syndication-source" content={canonicalUrl} />
-      {googleSiteVerification ? (
-        <meta name="google-site-verification" content={googleSiteVerification} />
-      ) : null}
-      
-      <meta name="mobile-web-app-capable" content="yes" />
-      <meta name="apple-mobile-web-app-capable" content="yes" />
-      <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-      <meta name="apple-mobile-web-app-title" content="रामपुर न्यूज़" />
-      <meta name="application-name" content="Rampur News" />
-      <meta name="theme-color" content="#DC2626" />
-      <meta name="msapplication-TileColor" content="#DC2626" />
-      
-      {isAMP && <link rel="amphtml" href={`${canonicalUrl}?amp=1`} />}
-      
-      <link rel="alternate" type="application/rss+xml" title="रामपुर न्यूज़ RSS" href={`${siteUrl}/feed.xml`} />
-      <link rel="alternate" type="application/atom+xml" title="रामपुर न्यूज़ Atom" href={`${siteUrl}/atom.xml`} />
-      
-      {isHomepage && (
-        <script type="application/ld+json">
-          {JSON.stringify(websiteSchema)}
-        </script>
-      )}
-      
-      <script type="application/ld+json">
-        {JSON.stringify(organizationSchema)}
-      </script>
-      
-      {newsArticleSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(newsArticleSchema)}
-        </script>
-      )}
-      
-      {speakableSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(speakableSchema)}
-        </script>
-      )}
-      
-      {breadcrumbSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(breadcrumbSchema)}
-        </script>
-      )}
-      
-      {collectionPageSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(collectionPageSchema)}
-        </script>
-      )}
-      
-      {faqSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(faqSchema)}
-        </script>
-      )}
-    </Head>
-  );
+  // Prevent next/head crash in App Router
+  return null;
 };
 
 export default SEO;

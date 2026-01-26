@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminSessionToken } from "@/lib/adminSession";
+import { createAdminSessionToken, getAdminSessionSecret } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
 
@@ -40,11 +40,11 @@ const normalizeRoleType = (value: unknown) => {
 
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
-  const sessionSecret = process.env.ADMIN_SESSION_SECRET;
+  const sessionSecret = getAdminSessionSecret();
 
   if (!sessionSecret) {
     return NextResponse.json(
-      { error: "Admin session secret is not configured" },
+      { error: "ADMIN_SESSION_SECRET कॉन्फ़िगर नहीं है (या कम-से-कम 16 अक्षर नहीं)।" },
       { status: 500 },
     );
   }

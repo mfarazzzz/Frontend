@@ -62,3 +62,21 @@ export const verifyAdminSessionToken = (token: string, secret: string) => {
     return null;
   }
 };
+
+export const getAdminSessionSecret = () => {
+  const candidates = [
+    process.env.ADMIN_SESSION_SECRET,
+    process.env.NEXTAUTH_SECRET,
+    process.env.AUTH_SECRET,
+    process.env.SESSION_SECRET,
+    process.env.JWT_SECRET,
+  ];
+
+  for (const value of candidates) {
+    if (typeof value !== "string") continue;
+    const trimmed = value.trim();
+    if (trimmed.length >= 16) return trimmed;
+  }
+
+  return null;
+};

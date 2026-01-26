@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAdminSessionToken } from "@/lib/adminSession";
+import { getAdminSessionSecret, verifyAdminSessionToken } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
 
@@ -40,7 +40,7 @@ const normalizeRoleType = (value: unknown) => {
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get("admin_session")?.value;
-  const secret = process.env.ADMIN_SESSION_SECRET;
+  const secret = getAdminSessionSecret();
   if (!token || !secret) {
     return NextResponse.json({ user: null }, { status: 401 });
   }
@@ -103,4 +103,3 @@ export async function GET(request: NextRequest) {
     });
   }
 }
-

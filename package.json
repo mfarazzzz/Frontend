@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
+    "postbuild": "node --input-type=module -e \"import fs from 'node:fs'; import path from 'node:path'; const copyDir = (from, to) => { if (!fs.existsSync(from)) return; fs.mkdirSync(path.dirname(to), { recursive: true }); fs.cpSync(from, to, { recursive: true }); }; copyDir('.next/static', '.next/standalone/.next/static'); copyDir('public', '.next/standalone/public');\"",
     "start": "next start",
+    "start:standalone": "node .next/standalone/server.js",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

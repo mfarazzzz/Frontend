@@ -23,6 +23,11 @@ import {
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
+type AdminSidebarProps = {
+  variant?: 'desktop' | 'mobile';
+  onNavigate?: () => void;
+};
+
 interface NavItem {
   title: string;
   titleHindi: string;
@@ -42,67 +47,78 @@ const navItems: NavItem[] = [
   { title: 'Settings', titleHindi: 'सेटिंग्स', href: '/admin/settings', icon: Settings },
 ];
 
-const AdminSidebar = () => {
+const AdminSidebar = ({ variant = 'desktop', onNavigate }: AdminSidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAdminAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const isMobile = variant === 'mobile';
 
   const handleLogout = () => {
     logout();
     router.push('/admin/login');
+    onNavigate?.();
   };
 
-  const isActive = (path: string) => pathname === path;
-
+  const shouldCollapse = !isMobile && collapsed;
+  const navigate = (href: string) => {
+    router.push(href);
+    onNavigate?.();
+  };
 
   return (
     <aside className={cn(
-      "h-screen bg-card border-r border-border flex flex-col transition-all duration-300",
-      collapsed ? "w-16" : "w-64"
+      "h-full bg-card border-r border-border flex flex-col transition-all duration-300",
+      shouldCollapse ? "w-16" : "w-64"
     )}>
       {/* Header */}
       <div className={cn(
         "h-16 border-b border-border flex items-center px-4",
-        collapsed ? "justify-center" : "justify-between"
+        shouldCollapse ? "justify-center" : "justify-between"
       )}>
-        {!collapsed && (
-          <Link href="/admin" className="flex items-center gap-2">
+        {!shouldCollapse && (
+          <Link
+            href="/admin"
+            className="flex items-center gap-2"
+            onClick={() => onNavigate?.()}
+          >
             <Newspaper className="w-6 h-6 text-primary" />
             <span className="font-bold text-lg">CMS</span>
           </Link>
         )}
-        {collapsed && (
+        {shouldCollapse && (
           <Newspaper className="w-6 h-6 text-primary" />
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          className={cn("h-8 w-8", collapsed && "absolute -right-3 bg-background border shadow-sm")}
-        >
-          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </Button>
+        {!isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCollapsed(!collapsed)}
+            className={cn("h-8 w-8", collapsed && "absolute -right-3 bg-background border shadow-sm")}
+          >
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </Button>
+        )}
       </div>
 
       {/* Quick Action */}
-      {!collapsed && (
+      {!shouldCollapse && (
         <div className="p-4">
           <Button 
             className="w-full gap-2" 
-            onClick={() => router.push('/admin/articles/new')}
+            onClick={() => navigate('/admin/articles/new')}
           >
             <Plus className="w-4 h-4" />
             नया लेख
           </Button>
         </div>
       )}
-      {collapsed && (
+      {shouldCollapse && (
         <div className="p-2">
           <Button 
             size="icon"
             className="w-full" 
-            onClick={() => router.push('/admin/articles/new')}
+            onClick={() => navigate('/admin/articles/new')}
           >
             <Plus className="w-4 h-4" />
           </Button>
@@ -125,12 +141,13 @@ const AdminSidebar = () => {
                   active 
                     ? "bg-primary text-primary-foreground" 
                     : "hover:bg-muted text-muted-foreground hover:text-foreground",
-                  collapsed && "justify-center"
+                  shouldCollapse && "justify-center"
                 )}
-                title={collapsed ? item.titleHindi : undefined}
+                title={shouldCollapse ? item.titleHindi : undefined}
+                onClick={() => onNavigate?.()}
               >
                 <item.icon className="w-5 h-5 shrink-0" />
-                {!collapsed && (
+                {!shouldCollapse && (
                   <span className="text-sm font-medium">{item.titleHindi}</span>
                 )}
               </Link>
@@ -142,9 +159,9 @@ const AdminSidebar = () => {
       {/* User Section */}
       <div className={cn(
         "border-t border-border p-4",
-        collapsed && "p-2"
+        shouldCollapse && "p-2"
       )}>
-        {!collapsed && user && (
+        {!shouldCollapse && user && (
           <div className="mb-3 px-2">
             <p className="text-sm font-medium truncate">{user.name}</p>
             <p className="text-xs text-muted-foreground truncate">{user.email}</p>
@@ -153,24 +170,24 @@ const AdminSidebar = () => {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            size={collapsed ? "icon" : "default"}
-            className={cn("gap-2", !collapsed && "w-full")}
-            onClick={() => router.push('/')}
+            size={shouldCollapse ? "icon" : "default"}
+            className={cn("gap-2", !shouldCollapse && "w-full")}
+            onClick={() => navigate('/')}
             title="साइट देखें"
           >
             <Newspaper className="w-4 h-4" />
-            {!collapsed && "साइट देखें"}
+            {!shouldCollapse && "साइट देखें"}
           </Button>
         </div>
         <Button
           variant="ghost"
-          size={collapsed ? "icon" : "default"}
-          className={cn("gap-2 mt-2 text-destructive hover:text-destructive", !collapsed && "w-full")}
+          size={shouldCollapse ? "icon" : "default"}
+          className={cn("gap-2 mt-2 text-destructive hover:text-destructive", !shouldCollapse && "w-full")}
           onClick={handleLogout}
           title="लॉगआउट"
         >
           <LogOut className="w-4 h-4" />
-          {!collapsed && "लॉगआउट"}
+          {!shouldCollapse && "लॉगआउट"}
         </Button>
       </div>
     </aside>

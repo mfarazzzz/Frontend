@@ -42,6 +42,7 @@ import {
   Shirt, Store, Landmark, PartyPopper, Moon, Pencil, Newspaper,
   MapPin, Building, Briefcase, Film, Trophy, Heart, Church, Eye
 } from 'lucide-react';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import ContentEditDialog from '@/components/admin/ContentEditDialog';
 import ImageUploader from '@/components/admin/ImageUploader';
 import BulkImportExport from '@/components/admin/BulkImportExport';
@@ -824,6 +825,7 @@ const AddNewsForm = ({ category, onSuccess }: AddNewsFormProps) => {
     isBreaking: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user: sessionUser } = useAdminAuth();
   const createArticle = useCreateArticle();
 
   const generateSlug = (title: string) => {
@@ -844,7 +846,7 @@ const AddNewsForm = ({ category, onSuccess }: AddNewsFormProps) => {
       const title = (formData.title || '').trim();
       const slug = (formData.slug || '').trim() || generateSlug(title) || `article-${Date.now()}`;
       const excerpt = (formData.excerpt || '').trim();
-      const content = (formData.content || '').trim();
+      const content = ((formData.content || '').trim() || excerpt).trim();
 
       const publishedDate = formData.publishedDate
         ? new Date(formData.publishedDate).toISOString()
@@ -855,6 +857,7 @@ const AddNewsForm = ({ category, onSuccess }: AddNewsFormProps) => {
         .split(',')
         .map((k) => k.trim())
         .filter(Boolean);
+      const status = sessionUser?.role === 'admin' ? 'published' : 'draft';
 
       await createArticle.mutateAsync({
         title,
@@ -867,7 +870,7 @@ const AddNewsForm = ({ category, onSuccess }: AddNewsFormProps) => {
         categoryHindi,
         author: (formData.author || 'Admin').trim(),
         publishedDate,
-        status: 'published',
+        status,
         isFeatured: formData.isFeatured || false,
         isBreaking: formData.isBreaking || false,
         seoTitle: title,
@@ -877,8 +880,8 @@ const AddNewsForm = ({ category, onSuccess }: AddNewsFormProps) => {
 
       toast.success('समाचार जोड़ा गया');
       onSuccess();
-    } catch {
-      toast.error('त्रुटि हुई');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'त्रुटि हुई');
     } finally {
       setIsSubmitting(false);
     }
@@ -933,12 +936,13 @@ const AddNewsForm = ({ category, onSuccess }: AddNewsFormProps) => {
       </div>
 
       <div className="space-y-2">
-        <Label>पूर्ण विवरण</Label>
+        <Label>पूर्ण विवरण *</Label>
         <Textarea 
           value={formData.content || ''}
           onChange={(e) => updateField('content', e.target.value)} 
           placeholder="समाचार का पूर्ण विवरण..."
           rows={6}
+          required
         />
       </div>
 

@@ -1,6 +1,14 @@
 import type { Metadata } from "next";
+import { Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+
+const notoSansDevanagari = Noto_Sans_Devanagari({
+  subsets: ["devanagari", "latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-noto-sans-devanagari",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://rampurnews.com"),
@@ -64,7 +72,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="hi" suppressHydrationWarning>
-      <body className="min-h-screen bg-background" suppressHydrationWarning>
+      <body className={`min-h-screen bg-background ${notoSansDevanagari.variable} font-sans`} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

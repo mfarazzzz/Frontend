@@ -16,6 +16,7 @@
       "dom",
       "dom.iterable",
       "esnext",
+      "es2020",
       "es5"
     ],
     "types": ["node"],
@@ -44,6 +45,10 @@
   ],
   "exclude": [
     "node_modules",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
   ]
 }

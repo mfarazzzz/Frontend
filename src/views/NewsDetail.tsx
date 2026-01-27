@@ -144,7 +144,8 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
 
   const articleUrl = `/${category}/${slug}`;
   const readingTime = article.readTime || getReadingTime(article.content, article.excerpt);
-  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}${articleUrl}` : articleUrl;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
+  const shareUrl = `${siteUrl}${articleUrl}`;
   const embedUrl = article.videoType === "youtube" && article.videoUrl ? getYouTubeEmbedUrl(article.videoUrl) : "";
 
   const contentWithInternalLinks = (() => {

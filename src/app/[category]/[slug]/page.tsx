@@ -70,6 +70,7 @@ export async function generateMetadata(props: {
         card: "summary",
         title,
         description,
+        
       },
     };
   }
@@ -218,8 +219,13 @@ export default async function Page(props: { params: Promise<PageParams> }) {
     : `${SITE_URL}${canonicalPath}`;
   const categoryLabelHindi = getCategoryHindi(category);
 
+  // Safe schema injection
   const schemaFromCms =
-    canInjectSchema && article && article.schemaJson && typeof article.schemaJson === "object" && !Array.isArray(article.schemaJson)
+    canInjectSchema && 
+    article && 
+    article.schemaJson && 
+    typeof article.schemaJson === "object" && 
+    !Array.isArray(article.schemaJson)
       ? (article.schemaJson as { [key: string]: unknown })
       : null;
 

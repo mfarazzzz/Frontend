@@ -19,7 +19,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        hindi: ["'Noto Sans Devanagari'", "sans-serif"],
+        hindi: ["var(--font-noto-sans-devanagari)", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

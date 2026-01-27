@@ -220,7 +220,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
 
   const schemaFromCms =
     canInjectSchema && article && article.schemaJson && typeof article.schemaJson === "object" && !Array.isArray(article.schemaJson)
-      ? (article.schemaJson as Record<string, unknown>)
+      ? (article.schemaJson as { [key: string]: unknown })
       : null;
 
   const newsArticleSchema = schemaFromCms

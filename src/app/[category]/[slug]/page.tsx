@@ -1,4 +1,3 @@
-// @ts-nocheck
 import NewsDetail from "@/views/NewsDetail";
 import type { Metadata } from "next";
 import type { CMSArticle } from "@/services/cms";
@@ -45,7 +44,14 @@ type PageParams = {
 export async function generateMetadata(props: {
   params: Promise<PageParams>;
 }): Promise<Metadata> {
-  const { category, slug } = await props.params;
+  const params = await props.params;
+  if (!params || !params.category || !params.slug) {
+    return {
+      title: "खबर नहीं मिली | रामपुर न्यूज़",
+      description: "यह खबर मौजूद नहीं है या हटा दी गई है।",
+    };
+  }
+  const { category, slug } = params;
   const isValidCategory = VALID_NEWS_CATEGORIES.includes(category);
   const canonicalPath = isValidCategory ? `/${category}/${slug}` : `/${slug}`;
 
@@ -175,7 +181,11 @@ export async function generateMetadata(props: {
 }
 
 export default async function Page(props: { params: Promise<PageParams> }) {
-  const { category, slug } = await props.params;
+  const params = await props.params;
+  if (!params || !params.category || !params.slug) {
+    return <div>Invalid parameters</div>;
+  }
+  const { category, slug } = params;
   const isValidCategory = VALID_NEWS_CATEGORIES.includes(category);
   const canonicalPath = isValidCategory ? `/${category}/${slug}` : `/${slug}`;
 

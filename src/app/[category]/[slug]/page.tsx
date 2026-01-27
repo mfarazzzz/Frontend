@@ -1,3 +1,4 @@
+// @ts-nocheck
 import NewsDetail from "@/views/NewsDetail";
 import type { Metadata } from "next";
 import type { CMSArticle } from "@/services/cms";

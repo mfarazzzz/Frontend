@@ -2,13 +2,15 @@
 import { useParams, Link } from "@/lib/router-compat";
 import { VALID_NEWS_CATEGORIES, getCategoryHindi } from "@/lib/utils";
 import { ArrowLeft, Clock, Share2, User } from "lucide-react";
+import { lazy, Suspense } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import Sidebar from "@/components/Sidebar";
 import ShareButtons from "@/components/ShareButtons";
 import NewsCard from "@/components/NewsCard";
 import { Button } from "@/components/ui/button";
 import { useArticleBySlug, useArticlesByCategory } from "@/hooks/useCMS";
+
+const Sidebar = lazy(() => import("@/components/Sidebar"));
 
 const formatDateHindi = (dateString: string): string => {
   const date = new Date(dateString);
@@ -74,9 +76,8 @@ interface NextParams {
 }
 
 const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
-  const routerParams = useParams<{ category: string; slug: string }>();
-  const category = nextParams?.category ?? routerParams?.category ?? "";
-  const slug = nextParams?.slug ?? routerParams?.slug ?? "";
+  const category = nextParams?.category ?? "";
+  const slug = nextParams?.slug ?? "";
   const isValidCategory = VALID_NEWS_CATEGORIES.includes(category);
 
   const { data: article, isLoading: isArticleLoading } = useArticleBySlug(isValidCategory ? slug : "");
@@ -240,6 +241,8 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
                   alt={article.title}
                   className="w-full h-auto object-cover"
                   loading="eager"
+                  width="800"
+                  height="450"
                 />
                 <meta itemProp="thumbnailUrl" content={article.image} />
               </figure>
@@ -334,7 +337,9 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
 
           {/* Sidebar */}
           <aside className="lg:col-span-1">
-            <Sidebar />
+            <Suspense fallback={<div className="animate-pulse bg-muted h-96 rounded-lg" />}>
+              <Sidebar />
+            </Suspense>
           </aside>
         </div>
       </main>

@@ -1,4 +1,5 @@
 import NewsDetail from "@/views/NewsDetail";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import type { Metadata } from "next";
 import type { CMSArticle } from "@/services/cms";
 import {
@@ -324,7 +325,9 @@ export default async function Page(props: { params: Promise<PageParams> }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
         />
       ) : null}
-      <NewsDetail nextParams={{ category, slug }} />
+      <ErrorBoundary>
+        <NewsDetail nextParams={{ category, slug }} />
+      </ErrorBoundary>
     </>
   );
 }

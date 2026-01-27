@@ -221,7 +221,7 @@ const ContentManagerPage = () => {
             break;
           case 'news':
             // For news, just log - actual implementation would need backend
-            console.log('News import (demo):', item);
+            // console.log('News import (demo):', item);
             break;
         }
       } catch (error) {
@@ -1068,7 +1068,7 @@ const AddResultForm = ({ onSuccess }: AddResultFormProps) => {
     try {
       const slug = formData.slug || generateSlug(formData.title || formData.titleHindi || '');
       // For now, just show success - in a real app this would call a mutation
-      console.log('Result data:', { ...formData, slug, status: 'announced' });
+      // console.log('Result data:', { ...formData, slug, status: 'announced' });
       toast.success('परिणाम जोड़ा गया (डेमो मोड)');
       onSuccess();
     } catch {

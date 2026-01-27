@@ -99,8 +99,6 @@ export function Providers({ children }: { children: ReactNode }) {
 
       const candidates = [
         typeof envStrapiUrl === "string" ? normalizeStrapiBaseUrl(envStrapiUrl) : "",
-        process.env.NODE_ENV === "development" ? "http://localhost:1337/api" : "",
-        process.env.NODE_ENV === "development" ? "http://127.0.0.1:1337/api" : "",
       ].filter((value, index, arr) => Boolean(value) && arr.indexOf(value) === index);
 
       for (const baseUrl of candidates) {

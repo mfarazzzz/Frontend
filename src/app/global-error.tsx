@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
 
 export default function GlobalError({
   error,
@@ -22,7 +21,12 @@ export default function GlobalError({
           <p className="text-muted-foreground">
             एप्लिकेशन लोड करने में समस्या आ रही है।
           </p>
-          <Button onClick={() => reset()}>पुनः प्रयास करें</Button>
+          <button
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+            onClick={() => reset()}
+          >
+            पुनः प्रयास करें
+          </button>
         </div>
       </body>
     </html>

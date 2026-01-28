@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
 
 export default function Error({
   error,
@@ -22,10 +21,18 @@ export default function Error({
         क्षमा करें, हम इस पृष्ठ को लोड नहीं कर सके।
       </p>
       <div className="flex gap-4">
-        <Button onClick={() => reset()}>पुनः प्रयास करें</Button>
-        <Button variant="outline" onClick={() => (window.location.href = "/")}>
+        <button
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          onClick={() => reset()}
+        >
+          पुनः प्रयास करें
+        </button>
+        <button
+          className="px-4 py-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          onClick={() => (window.location.href = "/")}
+        >
           होमपेज पर जाएं
-        </Button>
+        </button>
       </div>
     </div>
   );

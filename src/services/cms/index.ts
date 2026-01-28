@@ -111,7 +111,12 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       .map((value) => normalizeStrapiBaseUrl(String(value)))
       .filter(Boolean);
 
-    if (candidates.length === 0) return '';
+    if (candidates.length === 0) {
+      if (process.env.NODE_ENV === 'production') {
+        return 'https://api.rampur.cloud';
+      }
+      return '';
+    }
     try {
       const u = new URL(candidates[0]!);
       return `${u.protocol}//${u.host}`;
@@ -133,9 +138,30 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
   const normalizeArticleMedia = (article: CMSArticle | null): CMSArticle | null => {
     if (!article) return article;
     const origin = getStrapiOrigin() || getStrapiMediaOriginFromEnv();
-    if (!origin || !article.image) return article;
-    const image = resolveStrapiMediaUrl(origin, article.image);
-    return image && image !== article.image ? { ...article, image } : article;
+    if (!origin) return article;
+
+    let updatedArticle = { ...article };
+
+    // Normalize featured image
+    if (article.image) {
+      const image = resolveStrapiMediaUrl(origin, article.image);
+      if (image && image !== article.image) {
+        updatedArticle.image = image;
+      }
+    }
+
+    // Normalize content images
+    if (article.content) {
+      updatedArticle.content = article.content.replace(
+        /src="\/uploads\//g,
+        `src="${origin}/uploads/`
+      ).replace(
+        /src='\/uploads\//g,
+        `src='${origin}/uploads/`
+      );
+    }
+
+    return updatedArticle;
   };
 
   const normalizeArticleListMedia = (items: CMSArticle[]) => {

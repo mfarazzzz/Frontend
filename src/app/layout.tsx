@@ -65,6 +65,47 @@ export const metadata: Metadata = {
   },
 };
 
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "रामपुर न्यूज़ | Rampur News",
+  url: "https://rampurnews.com",
+  logo: "https://rampurnews.com/logo.png",
+  sameAs: [
+    "https://www.facebook.com/rampurnews",
+    "https://twitter.com/RampurNews",
+    "https://www.instagram.com/rampurnews"
+  ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    telephone: "+91-1234567890",
+    contactType: "customer service",
+    areaServed: "IN",
+    availableLanguage: "Hindi"
+  },
+  foundingDate: "2020",
+  description: "रामपुर और उत्तर प्रदेश की ताज़ा खबरें: स्थानीय, शिक्षा, खेल, मनोरंजन और अधिक।"
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "रामपुर न्यूज़ | Rampur News",
+  url: "https://rampurnews.com",
+  description: "रामपुर और उत्तर प्रदेश की ताज़ा खबरें: स्थानीय, शिक्षा, खेल, मनोरंजन और अधिक।",
+  inLanguage: "hi-IN",
+  publisher: {
+    "@type": "Organization",
+    name: "रामपुर न्यूज़ | Rampur News",
+    logo: "https://rampurnews.com/logo.png"
+  },
+  potentialAction: {
+    "@type": "SearchAction",
+    target: "https://rampurnews.com/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -72,6 +113,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="hi" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+      </head>
       <body className={`min-h-screen bg-background ${notoSansDevanagari.variable} font-sans`} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

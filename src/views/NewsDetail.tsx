@@ -3,6 +3,7 @@ import { useParams, Link } from "@/lib/router-compat";
 import { VALID_NEWS_CATEGORIES, getCategoryHindi } from "@/lib/utils";
 import { ArrowLeft, Clock, Share2, User } from "lucide-react";
 import { lazy, Suspense } from "react";
+import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ShareButtons from "@/components/ShareButtons";
@@ -10,7 +11,7 @@ import NewsCard from "@/components/NewsCard";
 import { Button } from "@/components/ui/button";
 import { useArticleBySlug, useArticlesByCategory } from "@/hooks/useCMS";
 
-const Sidebar = lazy(() => import("@/components/Sidebar"));
+const Sidebar = lazy(() => import("@/components/Sidebar").then(mod => ({ default: mod.default })));
 
 const formatDateHindi = (dateString: string): string => {
   const date = new Date(dateString);
@@ -236,13 +237,14 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
 
             {article.image ? (
               <figure className="rounded-lg overflow-hidden mb-6">
-                <img
+                <Image
                   src={article.image}
                   alt={article.title}
+                  width={800}
+                  height={450}
+                  priority
                   className="w-full h-auto object-cover"
-                  loading="eager"
-                  width="800"
-                  height="450"
+                  sizes="(min-width: 1024px) 800px, 100vw"
                 />
                 <meta itemProp="thumbnailUrl" content={article.image} />
               </figure>

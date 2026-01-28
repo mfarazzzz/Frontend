@@ -1,10 +1,15 @@
 "use client";
 
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import AdminSidebar from '@/components/admin/AdminSidebar';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
+import dynamic from 'next/dynamic';
+
+const AdminSidebar = dynamic(() => import('@/components/admin/AdminSidebar'), {
+  ssr: false,
+  loading: () => <div className="w-64 bg-muted animate-pulse" />
+});
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAdminAuth();
@@ -30,7 +35,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex h-screen bg-background">
-      <AdminSidebar />
+      <Suspense fallback={<div className="w-64 bg-muted animate-pulse" />}>
+        <AdminSidebar />
+      </Suspense>
       <main className="flex-1 overflow-auto">
         {children}
       </main>

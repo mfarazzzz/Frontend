@@ -10,8 +10,8 @@ import type {
   PaginatedResponse 
 } from './types';
 import type { CMSProvider } from './provider';
-import { mockNewsData } from '@/data/mockNews';
-import { categories as defaultCategories } from '@/data/categories';
+import { mockNewsData } from '../../data/mockNews';
+import { categories as defaultCategories } from '../../data/categories';
 
 const STORAGE_KEYS = {
   ARTICLES: 'cms_articles',

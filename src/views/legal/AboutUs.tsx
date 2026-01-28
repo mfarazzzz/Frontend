@@ -1,6 +1,6 @@
 "use client";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 import { Users, Target, Heart, Shield, Phone, Mail, MapPin } from "lucide-react";
 
 const AboutUs = () => {

@@ -1,5 +1,4 @@
 import NewsDetail from "@/views/NewsDetail";
-import ErrorBoundary from "@/components/ErrorBoundary";
 import type { Metadata } from "next";
 import type { CMSArticle } from "@/services/cms";
 import {
@@ -45,14 +44,7 @@ type PageParams = {
 export async function generateMetadata(props: {
   params: Promise<PageParams>;
 }): Promise<Metadata> {
-  const params = await props.params;
-  if (!params || !params.category || !params.slug) {
-    return {
-      title: "खबर नहीं मिली | रामपुर न्यूज़",
-      description: "यह खबर मौजूद नहीं है या हटा दी गई है।",
-    };
-  }
-  const { category, slug } = params;
+  const { category, slug } = await props.params;
   const isValidCategory = VALID_NEWS_CATEGORIES.includes(category);
   const canonicalPath = isValidCategory ? `/${category}/${slug}` : `/${slug}`;
 
@@ -182,11 +174,7 @@ export async function generateMetadata(props: {
 }
 
 export default async function Page(props: { params: Promise<PageParams> }) {
-  const params = await props.params;
-  if (!params || !params.category || !params.slug) {
-    return <div>Invalid parameters</div>;
-  }
-  const { category, slug } = params;
+  const { category, slug } = await props.params;
   const isValidCategory = VALID_NEWS_CATEGORIES.includes(category);
   const canonicalPath = isValidCategory ? `/${category}/${slug}` : `/${slug}`;
 
@@ -325,9 +313,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
         />
       ) : null}
-      <ErrorBoundary>
-        <NewsDetail nextParams={{ category, slug }} />
-      </ErrorBoundary>
+      <NewsDetail nextParams={{ category, slug }} />
     </>
   );
 }

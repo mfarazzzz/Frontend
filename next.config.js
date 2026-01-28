@@ -82,7 +82,13 @@ const nextConfig = {
   experimental: {},
   output: "standalone",
   images: {
+    formats: ['image/avif', 'image/webp'],
     remotePatterns,
+  },
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
   },
   outputFileTracingRoot: path.join(__dirname, ".."),
   typescript: {

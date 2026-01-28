@@ -7,6 +7,7 @@ import CategorySection from "@/components/CategorySection";
 import Sidebar from "@/components/Sidebar";
 import NewsCard from "@/components/NewsCard";
 import { useArticlesByCategory, useFeaturedArticles } from "@/hooks/useCMS";
+import type { CMSArticle } from "@/services/cms";
 
 type CMSCategorySectionProps = {
   slug: string;
@@ -34,8 +35,8 @@ const CMSCategorySection = ({
   );
 };
 
-const Index = () => {
-  const { data: featuredNews = [] } = useFeaturedArticles(3);
+const Index = ({ initialFeaturedArticles }: { initialFeaturedArticles?: CMSArticle[] }) => {
+  const { data: featuredNews = [] } = useFeaturedArticles(3, { initialData: initialFeaturedArticles });
 
   return (
     <div className="min-h-screen bg-background">

@@ -54,11 +54,12 @@ export const useArticleBySlug = (slug: string) => {
   });
 };
 
-export const useFeaturedArticles = (limit = 5) => {
+export const useFeaturedArticles = (limit = 5, options?: { initialData?: CMSArticle[] }) => {
   const providerKey = getProviderKey();
   return useQuery({
     queryKey: [...cmsKeys.featured(), providerKey],
     queryFn: () => getCMSProvider().getFeaturedArticles(limit),
+    initialData: options?.initialData,
   });
 };
 

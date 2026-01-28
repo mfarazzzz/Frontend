@@ -137,14 +137,14 @@ export async function POST(request: NextRequest) {
   const response = NextResponse.json({ user: sessionUser });
   response.cookies.set("admin_session", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true, // Always secure since site is HTTPS
     sameSite: "lax",
     path: "/",
     maxAge: 24 * 60 * 60,
   });
   response.cookies.set("strapi_jwt", jwt, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true, // Always secure since site is HTTPS
     sameSite: "lax",
     path: "/",
     maxAge: 24 * 60 * 60,

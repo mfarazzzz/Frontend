@@ -1,5 +1,6 @@
 import Index from "@/views/Index";
 import type { Metadata } from "next";
+import { getCMSProvider } from "@/services/cms";
 
 export const metadata: Metadata = {
   title: "रामपुर की ताज़ा खबरें | रामपुर न्यूज़ | Rampur News",
@@ -29,9 +30,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
+export default async function Page() {
   const siteUrl = "https://rampurnews.com";
   const siteName = "रामपुर न्यूज़ | Rampur News";
+
+  // Pre-fetch critical LCP data (Featured Articles)
+  const featuredArticles = await getCMSProvider().getFeaturedArticles(3).catch(() => []);
   
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -129,7 +133,7 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <Index />
+      <Index initialFeaturedArticles={featuredArticles} />
     </>
   );
 }

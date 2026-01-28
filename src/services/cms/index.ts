@@ -960,10 +960,10 @@ const getEnvStrapiUrl = () => {
     const url = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
     if (url) return url;
     if (process.env.NODE_ENV === 'production') {
-      return 'https://api.rampur.cloud';
+      return 'https://api.rampur.cloud/api';
     }
   }
-  return undefined;
+  return 'https://api.rampur.cloud/api';
 };
 
 const defaultConfig: CMSConfig = {

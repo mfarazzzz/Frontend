@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { PaginatedResponse } from "../../../../services/cms/types";
-import { __strapiExtendedInternal } from "../../../../services/cms/strapiExtendedProvider";
+import type { PaginatedResponse } from "../../../../../services/cms/types";
+import { __strapiExtendedInternal } from "../../../../../services/cms/strapiExtendedProvider";
 
 export const runtime = "nodejs";
 

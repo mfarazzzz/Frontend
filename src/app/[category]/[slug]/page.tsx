@@ -1,13 +1,13 @@
-import NewsDetail from "../../views/NewsDetail";
+import NewsDetail from "../../../views/NewsDetail";
 import type { Metadata } from "next";
-import type { CMSArticle } from "../../services/cms";
+import type { CMSArticle } from "../../../services/cms";
 import {
   VALID_NEWS_CATEGORIES,
   deriveAiSeoSignals,
   getCategoryHindi,
   stripHtmlToText,
   truncateText,
-} from "../../lib/utils";
+} from "../../../lib/utils";
 import { headers } from "next/headers";
 
 const SITE_URL = "https://rampurnews.com";

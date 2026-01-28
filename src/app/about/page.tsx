@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AboutUs } from "@/views/legal";
+import { AboutUs } from "../../views/legal";
 
 export const metadata: Metadata = {
   title: "हमारे बारे में | रामपुर न्यूज़ - Rampur News",

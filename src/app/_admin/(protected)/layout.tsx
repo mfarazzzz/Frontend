@@ -1,12 +1,12 @@
 "use client";
 
-import { useAdminAuth } from '@/contexts/AdminAuthContext';
+import { useAdminAuth } from '../../../contexts/AdminAuthContext';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 
-const AdminSidebar = dynamic(() => import('@/components/admin/AdminSidebar'), {
+const AdminSidebar = dynamic(() => import('../../../components/admin/AdminSidebar'), {
   ssr: false,
   loading: () => <div className="w-64 bg-muted animate-pulse" />
 });

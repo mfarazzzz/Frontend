@@ -100,6 +100,54 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     }
   };
 
+  const getStrapiMediaOriginFromEnv = () => {
+    const candidates = [
+      process.env.NEXT_PUBLIC_STRAPI_API_URL,
+      process.env.STRAPI_API_URL,
+      process.env.NEXT_PUBLIC_STRAPI_BASE_URL,
+      process.env.NEXT_PUBLIC_STRAPI_URL,
+    ]
+      .filter((value) => typeof value === 'string')
+      .map((value) => normalizeStrapiBaseUrl(String(value)))
+      .filter(Boolean);
+
+    if (candidates.length === 0) return '';
+    try {
+      const u = new URL(candidates[0]!);
+      return `${u.protocol}//${u.host}`;
+    } catch {
+      return '';
+    }
+  };
+
+  const resolveStrapiMediaUrl = (origin: string, url?: string) => {
+    if (!url) return url || '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+    if (url.startsWith('//')) return `https:${url}`;
+    const baseOrigin = origin || getStrapiMediaOriginFromEnv();
+    if (!baseOrigin || !url.startsWith('/')) return url;
+    return `${baseOrigin}${url}`;
+  };
+
+  const normalizeArticleMedia = (article: CMSArticle | null): CMSArticle | null => {
+    if (!article) return article;
+    const origin = getStrapiOrigin() || getStrapiMediaOriginFromEnv();
+    if (!origin || !article.image) return article;
+    const image = resolveStrapiMediaUrl(origin, article.image);
+    return image && image !== article.image ? { ...article, image } : article;
+  };
+
+  const normalizeArticleListMedia = (items: CMSArticle[]) => {
+    const origin = getStrapiOrigin() || getStrapiMediaOriginFromEnv();
+    if (!origin) return items;
+    return items.map((article) => {
+      if (!article?.image) return article;
+      const image = resolveStrapiMediaUrl(origin, article.image);
+      return image && image !== article.image ? { ...article, image } : article;
+    });
+  };
+
   const normalizeStrapiUploadFile = (file: any, origin: string): CMSMedia | null => {
     if (!file) return null;
     return {
@@ -245,7 +293,10 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         totalPages: 0,
       };
     }
-    return result;
+    return {
+      ...result,
+      data: normalizeArticleListMedia(result.data),
+    };
   };
 
   return {
@@ -274,9 +325,9 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
       try {
         if (shouldTryAdmin) {
-          return await tryFetch(`/articles/admin/${id}`, true, false, false);
+          return normalizeArticleMedia(await tryFetch(`/articles/admin/${id}`, true, false, false));
         }
-        return await tryFetch(path, false, undefined, false);
+        return normalizeArticleMedia(await tryFetch(path, false, undefined, false));
       } catch (error) {
         if (
           shouldTryAdmin &&
@@ -284,7 +335,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
             error instanceof TypeError)
         ) {
           try {
-            return await tryFetch(`/articles/${id}`, false, undefined, false);
+            return normalizeArticleMedia(await tryFetch(`/articles/${id}`, false, undefined, false));
           } catch (fallbackError) {
             if (
               config.apiKey &&
@@ -292,7 +343,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
               fallbackError instanceof HttpError &&
               (fallbackError.status === 401 || fallbackError.status === 403)
             ) {
-              return await tryFetch(`/articles/${id}`, true, undefined, false);
+              return normalizeArticleMedia(await tryFetch(`/articles/${id}`, true, undefined, false));
             }
             throw fallbackError;
           }
@@ -324,9 +375,11 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
       try {
         if (shouldTryAdmin) {
-          return await tryFetch(`/articles/admin/slug/${encodeURIComponent(slug)}`, true, false, false);
+          return normalizeArticleMedia(
+            await tryFetch(`/articles/admin/slug/${encodeURIComponent(slug)}`, true, false, false),
+          );
         }
-        return await tryFetch(path, false, undefined, false);
+        return normalizeArticleMedia(await tryFetch(path, false, undefined, false));
       } catch (error) {
         if (
           shouldTryAdmin &&
@@ -334,7 +387,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
             error instanceof TypeError)
         ) {
           try {
-            return await tryFetch(`/articles/slug/${encodeURIComponent(slug)}`, false, undefined, false);
+            return normalizeArticleMedia(await tryFetch(`/articles/slug/${encodeURIComponent(slug)}`, false, undefined, false));
           } catch (fallbackError) {
             if (
               config.apiKey &&
@@ -342,7 +395,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
               fallbackError instanceof HttpError &&
               (fallbackError.status === 401 || fallbackError.status === 403)
             ) {
-              return await tryFetch(`/articles/slug/${encodeURIComponent(slug)}`, true, undefined, false);
+              return normalizeArticleMedia(await tryFetch(`/articles/slug/${encodeURIComponent(slug)}`, true, undefined, false));
             }
             throw fallbackError;
           }

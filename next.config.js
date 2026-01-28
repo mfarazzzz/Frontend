@@ -68,6 +68,11 @@ const remotePatterns = [
     hostname: "rampurnews.com",
     pathname: "/**",
   },
+  {
+    protocol: "https",
+    hostname: "api.rampur.cloud",
+    pathname: "/**",
+  },
 ];
 
 const strapiApiBaseUrl = getStrapiApiBaseUrlFromEnv();

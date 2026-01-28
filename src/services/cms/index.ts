@@ -929,9 +929,20 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
   };
 };
 
+const getEnvStrapiUrl = () => {
+  if (typeof process !== 'undefined' && process.env) {
+    const url = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
+    if (url) return url;
+    if (process.env.NODE_ENV === 'production') {
+      return 'https://api.rampur.cloud';
+    }
+  }
+  return undefined;
+};
+
 const defaultConfig: CMSConfig = {
   provider: 'strapi',
-  baseUrl: 'http://localhost:1337/api',
+  baseUrl: getEnvStrapiUrl() || 'http://localhost:1337/api',
 };
 
 let currentConfig: CMSConfig = defaultConfig;

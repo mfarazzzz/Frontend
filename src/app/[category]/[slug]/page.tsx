@@ -1,6 +1,6 @@
 import NewsDetail from "../../../views/NewsDetail";
 import type { Metadata } from "next";
-import type { CMSArticle } from "../../../services/cms";
+import { type CMSArticle, getCMSProvider } from "../../../services/cms";
 import {
   VALID_NEWS_CATEGORIES,
   deriveAiSeoSignals,
@@ -8,30 +8,15 @@ import {
   stripHtmlToText,
   truncateText,
 } from "../../../lib/utils";
-import { headers } from "next/headers";
 
 const SITE_URL = "https://rampurnews.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 
-const getRequestOrigin = async () => {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") || h.get("host") || "";
-  const proto = h.get("x-forwarded-proto") || "http";
-  if (!host) return "";
-  return `${proto}://${host}`;
-};
-
 const fetchArticleForSeo = async (slug: string): Promise<CMSArticle | null> => {
-  const origin = await getRequestOrigin();
-  const url = origin
-    ? `${origin}/api/cms/strapi/articles/slug/${encodeURIComponent(slug)}`
-    : `${SITE_URL}/api/cms/strapi/articles/slug/${encodeURIComponent(slug)}`;
-
   try {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return null;
-    return (await res.json()) as CMSArticle;
-  } catch {
+    return await getCMSProvider().getArticleBySlug(slug);
+  } catch (error) {
+    console.error("Error fetching article for SEO:", error);
     return null;
   }
 };

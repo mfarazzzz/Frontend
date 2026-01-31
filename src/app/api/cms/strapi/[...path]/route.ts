@@ -93,6 +93,7 @@ const proxy = async (request: NextRequest, path: string[]) => {
     // Special handling for "articles" collection (Strapi v5)
     if (path[0] === "articles") {
       // 1. Rewrite URL to Content Manager API
+      // Handles: /articles, /articles/:id, /articles/:id/actions/publish, etc.
       const strapiApiUrl = getStrapiApiBaseUrl();
       const strapiRoot = strapiApiUrl.replace(/\/api\/?$/, ""); // Remove trailing /api
       
@@ -190,4 +191,3 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   const { path } = await context.params;
   return proxy(request, path);
 }
-

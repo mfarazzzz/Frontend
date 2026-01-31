@@ -68,13 +68,16 @@ const proxy = async (request: NextRequest, path: string[]) => {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Determine token and headers based on method
+  // Headers setup
   const headers = new Headers(request.headers);
   headers.delete("host");
   headers.delete("connection");
   headers.delete("content-length");
   headers.delete("cookie");
   headers.delete("authorization");
+
+  let finalMethod = method;
+  let finalBody: BodyInit | undefined;
 
   const isWriteOperation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
 
@@ -87,11 +90,11 @@ const proxy = async (request: NextRequest, path: string[]) => {
       console.warn("STRAPI_API_TOKEN is not defined in environment variables");
     }
 
-    // Rewrite URL for articles to use Content Manager API (required for Strapi v5 + API Token)
+    // Special handling for "articles" collection (Strapi v5)
     if (path[0] === "articles") {
+      // 1. Rewrite URL to Content Manager API
       const strapiApiUrl = getStrapiApiBaseUrl();
-      // Remove trailing /api to get root (e.g., https://api.rampur.cloud)
-      const strapiRoot = strapiApiUrl.replace(/\/api\/?$/, "");
+      const strapiRoot = strapiApiUrl.replace(/\/api\/?$/, ""); // Remove trailing /api
       
       const remainingPath = path.slice(1).join("/");
       // Construct new path: /content-manager/collection-types/api::article.article/:id
@@ -102,6 +105,31 @@ const proxy = async (request: NextRequest, path: string[]) => {
       request.nextUrl.searchParams.forEach((value, key) => {
         targetUrl.searchParams.append(key, value);
       });
+
+      // 2. Convert PATCH to PUT (Content Manager doesn't support PATCH)
+      if (method === "PATCH") {
+        finalMethod = "PUT";
+      }
+
+      // 3. Wrap body in { data: ... }
+      if (method !== "DELETE") {
+        try {
+          const rawText = await request.text();
+          const rawJson = rawText ? JSON.parse(rawText) : {};
+          finalBody = JSON.stringify({ data: rawJson });
+          headers.set("Content-Type", "application/json");
+        } catch (e) {
+          console.warn("Failed to parse request body", e);
+          finalBody = JSON.stringify({ data: {} });
+          headers.set("Content-Type", "application/json");
+        }
+      }
+    } else {
+      // Other write operations - pass through body
+      if (method !== "GET" && method !== "HEAD") {
+        const ab = await request.arrayBuffer();
+        finalBody = Buffer.from(ab);
+      }
     }
   } else {
     // For GET/HEAD, use the user's JWT
@@ -112,14 +140,18 @@ const proxy = async (request: NextRequest, path: string[]) => {
     if (jwt) {
       headers.set("Authorization", `Bearer ${jwt}`);
     }
+    
+    // Pass through body for read operations (if any)
+    if (method !== "GET" && method !== "HEAD") {
+      const ab = await request.arrayBuffer();
+      finalBody = Buffer.from(ab);
+    }
   }
 
-  const body = (method === "GET" || method === "HEAD") ? undefined : await request.arrayBuffer();
-
   const upstream = await fetch(targetUrl.toString(), {
-    method,
+    method: finalMethod,
     headers,
-    body: body ? Buffer.from(body) : undefined,
+    body: finalBody,
   });
 
   const responseHeaders = new Headers(upstream.headers);

@@ -85,7 +85,6 @@ if (strapiOriginRemotePattern) {
 const nextConfig = {
   reactStrictMode: true,
   experimental: {},
-  output: "standalone",
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns,

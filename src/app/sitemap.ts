@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getCMSProvider } from "@/services/cms";
 
+export const dynamic = 'force-dynamic';
+
 const BASE_URL = "https://rampurnews.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

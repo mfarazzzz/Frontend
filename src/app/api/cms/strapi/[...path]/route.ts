@@ -56,20 +56,6 @@ const buildTargetUrl = (request: NextRequest, path: string[]) => {
   return targetUrl;
 };
 
-const buildHeaders = (request: NextRequest, includeAuth: boolean, jwt: string | null) => {
-  const headers = new Headers(request.headers);
-  headers.delete("host");
-  headers.delete("connection");
-  headers.delete("content-length");
-  headers.delete("cookie");
-  headers.delete("authorization");
-
-  if (includeAuth && jwt) {
-    headers.set("Authorization", `Bearer ${jwt}`);
-  }
-  return headers;
-};
-
 const proxy = async (request: NextRequest, path: string[]) => {
   const method = request.method.toUpperCase();
   const targetUrl = buildTargetUrl(request, path);
@@ -82,13 +68,36 @@ const proxy = async (request: NextRequest, path: string[]) => {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const jwt = request.cookies.get("strapi_jwt")?.value ?? null;
-  if (session && !jwt) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Determine token and headers based on method
+  const headers = new Headers(request.headers);
+  headers.delete("host");
+  headers.delete("connection");
+  headers.delete("content-length");
+  headers.delete("cookie");
+  headers.delete("authorization");
+
+  const isWriteOperation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+
+  if (isWriteOperation) {
+    // For write operations, use the server-side API Token
+    const apiToken = process.env.STRAPI_API_TOKEN;
+    if (apiToken) {
+      headers.set("Authorization", `Bearer ${apiToken}`);
+    } else {
+      console.warn("STRAPI_API_TOKEN is not defined in environment variables");
+    }
+  } else {
+    // For GET/HEAD, use the user's JWT
+    const jwt = request.cookies.get("strapi_jwt")?.value ?? null;
+    if (session && !jwt) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (jwt) {
+      headers.set("Authorization", `Bearer ${jwt}`);
+    }
   }
 
-  const headers = buildHeaders(request, !!session, jwt);
-  const body = method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
+  const body = (method === "GET" || method === "HEAD") ? undefined : await request.arrayBuffer();
 
   const upstream = await fetch(targetUrl.toString(), {
     method,

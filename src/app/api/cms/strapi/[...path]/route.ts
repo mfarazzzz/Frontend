@@ -58,7 +58,7 @@ const buildTargetUrl = (request: NextRequest, path: string[]) => {
 
 const proxy = async (request: NextRequest, path: string[]) => {
   const method = request.method.toUpperCase();
-  const targetUrl = buildTargetUrl(request, path);
+  let targetUrl = buildTargetUrl(request, path);
   const pathString = path.join("/");
 
   const session = getSession(request);
@@ -85,6 +85,23 @@ const proxy = async (request: NextRequest, path: string[]) => {
       headers.set("Authorization", `Bearer ${apiToken}`);
     } else {
       console.warn("STRAPI_API_TOKEN is not defined in environment variables");
+    }
+
+    // Rewrite URL for articles to use Content Manager API (required for Strapi v5 + API Token)
+    if (path[0] === "articles") {
+      const strapiApiUrl = getStrapiApiBaseUrl();
+      // Remove trailing /api to get root (e.g., https://api.rampur.cloud)
+      const strapiRoot = strapiApiUrl.replace(/\/api\/?$/, "");
+      
+      const remainingPath = path.slice(1).join("/");
+      // Construct new path: /content-manager/collection-types/api::article.article/:id
+      const newPath = `content-manager/collection-types/api::article.article${remainingPath ? '/' + remainingPath : ''}`;
+      
+      targetUrl = new URL(`${strapiRoot}/${newPath}`);
+      // Preserve search params
+      request.nextUrl.searchParams.forEach((value, key) => {
+        targetUrl.searchParams.append(key, value);
+      });
     }
   } else {
     // For GET/HEAD, use the user's JWT

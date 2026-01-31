@@ -62,7 +62,10 @@ const proxy = async (request: NextRequest, path: string[]) => {
   const pathString = path.join("/");
 
   const session = getSession(request);
-  const allowWithoutSession = (method === "GET" || method === "HEAD") && isPublicGetPath(pathString);
+  const isWriteOperation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+  
+  // Allow write operations to bypass admin_session validation (authenticated via API Token)
+  const allowWithoutSession = isWriteOperation || ((method === "GET" || method === "HEAD") && isPublicGetPath(pathString));
 
   if (!session && !allowWithoutSession) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -78,8 +81,6 @@ const proxy = async (request: NextRequest, path: string[]) => {
 
   let finalMethod = method;
   let finalBody: BodyInit | undefined;
-
-  const isWriteOperation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
 
   if (isWriteOperation) {
     // For write operations, use the server-side API Token

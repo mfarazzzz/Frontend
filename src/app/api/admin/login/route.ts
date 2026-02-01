@@ -41,15 +41,15 @@ const normalizeRoleType = (value: unknown) => {
 
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
-  // Prefer frontend session secret, fallback to ADMIN_JWT_SECRET for legacy environments
-  const sessionSecret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_JWT_SECRET;
+  // Prefer ADMIN_JWT_SECRET, fallback to ADMIN_SESSION_SECRET
+  const sessionSecret = process.env.ADMIN_JWT_SECRET || process.env.ADMIN_SESSION_SECRET;
 
   if (!sessionSecret) {
     return NextResponse.json(
-        {
-          error:
-            "Server configuration error: ADMIN_SESSION_SECRET (or ADMIN_JWT_SECRET) is missing",
-        },
+      {
+        error:
+          "Server configuration error: ADMIN_JWT_SECRET (or ADMIN_SESSION_SECRET) is missing",
+      },
       { status: 500 },
     );
   }
@@ -140,16 +140,24 @@ export async function POST(request: NextRequest) {
   );
 
   const response = NextResponse.json({ user: sessionUser });
+  
+  // Determine if we should set Secure flag
+  // In production, we usually want Secure. However, if the user is accessing via HTTP (e.g. direct IP),
+  // Secure: true will prevent the cookie from being saved.
+  // We check X-Forwarded-Proto (standard for proxies) or the protocol itself.
+  const isSecure = process.env.NODE_ENV === "production" && 
+    (request.headers.get("x-forwarded-proto") === "https" || request.nextUrl.protocol === "https:");
+
   response.cookies.set("admin_session", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecure,
     sameSite: "lax",
     path: "/",
     maxAge: 24 * 60 * 60,
   });
   response.cookies.set("strapi_jwt", jwt, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecure,
     sameSite: "lax",
     path: "/",
     maxAge: 24 * 60 * 60,

@@ -1,33 +1,12 @@
 "use client";
 import { ReactNode, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { configureCMS } from "../services/cms";
+import { configureCMS, normalizeStrapiBaseUrl } from "../services/cms";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   useEffect(() => {
-    const normalizeStrapiBaseUrl = (value: string): string => {
-      const trimmed = value.trim().replace(/\/+$/, "");
-      if (!trimmed) return trimmed;
-      try {
-        const u = new URL(trimmed);
-        const segments = u.pathname.split("/").filter(Boolean);
-        const apiIndex = segments.indexOf("api");
-        if (apiIndex >= 0) {
-          u.pathname = `/${segments.slice(0, apiIndex + 1).join("/")}`;
-          u.search = "";
-          u.hash = "";
-          return u.toString().replace(/\/+$/, "");
-        }
-      } catch (error) {
-        void error;
-      }
-      if (trimmed.endsWith("/api")) return trimmed;
-      if (/^https?:\/\/[^/]+$/i.test(trimmed)) return `${trimmed}/api`;
-      return trimmed;
-    };
-
     const applyConfig = (config: Parameters<typeof configureCMS>[0]) => {
       configureCMS(config);
       queryClient.invalidateQueries({ queryKey: ["cms"] });

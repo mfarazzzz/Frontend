@@ -17,6 +17,31 @@ export * from './types';
 export * from './provider';
 export { createWordPressProvider } from './wordpressProvider';
 
+/**
+ * Normalizes a Strapi base URL by trimming whitespace, removing trailing slashes,
+ * and ensuring it ends with /api if needed.
+ */
+export const normalizeStrapiBaseUrl = (value: string): string => {
+  const trimmed = value.trim().replace(/\/+$/, '');
+  if (!trimmed) return trimmed;
+  try {
+    const u = new URL(trimmed);
+    const segments = u.pathname.split('/').filter(Boolean);
+    const apiIndex = segments.indexOf('api');
+    if (apiIndex >= 0) {
+      u.pathname = `/${segments.slice(0, apiIndex + 1).join('/')}`;
+      u.search = '';
+      u.hash = '';
+      return u.toString().replace(/\/+$/, '');
+    }
+  } catch {
+    void 0;
+  }
+  if (trimmed.endsWith('/api')) return trimmed;
+  if (/^https?:\/\/[^/]+$/i.test(trimmed)) return `${trimmed}/api`;
+  return trimmed;
+};
+
 const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
   const baseUrl = (config.baseUrl || '').replace(/\/+$/, '');
   const isStrapi = config.provider === 'strapi';
@@ -979,27 +1004,6 @@ const providerInstances: Partial<Record<CMSProviderType, CMSProvider>> = {
 };
 
 let didHydrateFromStorage = false;
-
-const normalizeStrapiBaseUrl = (value: string): string => {
-  const trimmed = value.trim().replace(/\/+$/, '');
-  if (!trimmed) return trimmed;
-  try {
-    const u = new URL(trimmed);
-    const segments = u.pathname.split('/').filter(Boolean);
-    const apiIndex = segments.indexOf('api');
-    if (apiIndex >= 0) {
-      u.pathname = `/${segments.slice(0, apiIndex + 1).join('/')}`;
-      u.search = '';
-      u.hash = '';
-      return u.toString().replace(/\/+$/, '');
-    }
-  } catch {
-    void 0;
-  }
-  if (trimmed.endsWith('/api')) return trimmed;
-  if (/^https?:\/\/[^/]+$/i.test(trimmed)) return `${trimmed}/api`;
-  return trimmed;
-};
 
 const hydrateCMSConfigFromStorage = (): void => {
   if (didHydrateFromStorage) return;

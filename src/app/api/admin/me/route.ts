@@ -41,8 +41,8 @@ const normalizeRoleType = (value: unknown) => {
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get("admin_session")?.value;
-  // Prefer frontend session secret, fallback to ADMIN_JWT_SECRET for legacy environments
-  const secret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_JWT_SECRET;
+  // Prefer ADMIN_JWT_SECRET, fallback to ADMIN_SESSION_SECRET
+  const secret = process.env.ADMIN_JWT_SECRET || process.env.ADMIN_SESSION_SECRET;
   if (!token || !secret) {
     return NextResponse.json({ user: null }, { status: 401 });
   }

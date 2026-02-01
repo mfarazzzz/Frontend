@@ -124,43 +124,48 @@ const proxy = async (request: NextRequest, path: string[]) => {
   let finalMethod = method;
   let finalBody: BodyInit | undefined;
 
-  // Handle Article Write Operations - Use REST API (not Content Manager)
-  // API tokens work with /api/articles, NOT /content-manager endpoints
-  if (isWriteOperation && path[0] === "articles") {
-    // targetUrl is already correct: /api/articles or /api/articles/:id
-    // No URL rewriting needed for REST API
+  // Global Method Conversion: Strapi v5 often prefers PUT over PATCH
+  if (method === "PATCH") {
+    finalMethod = "PUT";
+  }
 
-    // 6. Request Body Normalization for Strapi v4/v5 REST API
-    if (method !== "DELETE") {
-      try {
-        const rawText = await request.text();
-        if (rawText) {
-          const rawJson = JSON.parse(rawText);
-          // Strapi REST API expects { data: { ...attributes } }
-          if (rawJson && typeof rawJson === 'object' && 'data' in rawJson) {
-             finalBody = JSON.stringify(rawJson);
-          } else {
-             // Wrap in { data: body }
-             finalBody = JSON.stringify({ data: rawJson });
-          }
-          headers.set("Content-Type", "application/json");
+  // Check if this is a file upload (multipart/form-data)
+  // We should NOT touch the body or method for uploads usually, but strictly speaking
+  // uploads are POST to /api/upload.
+  const isUpload = path[0] === "upload";
+
+  // 6. Request Body Normalization for Strapi v4/v5 REST API
+  // Apply to ALL write operations except uploads and DELETE
+  if (isWriteOperation && !isUpload && method !== "DELETE") {
+    try {
+      const rawText = await request.text();
+      if (rawText) {
+        const rawJson = JSON.parse(rawText);
+        // Strapi REST API expects { data: { ...attributes } }
+        if (rawJson && typeof rawJson === 'object' && 'data' in rawJson) {
+           finalBody = JSON.stringify(rawJson);
+        } else {
+           // Wrap in { data: body }
+           finalBody = JSON.stringify({ data: rawJson });
         }
-      } catch (e) {
-        console.warn("Failed to parse request body", e);
-        // Fallback: send empty data wrapper if parsing fails but it's a write op
-        finalBody = JSON.stringify({ data: {} });
         headers.set("Content-Type", "application/json");
       }
+    } catch (e) {
+      console.warn("Failed to parse request body", e);
+      // Fallback: send empty data wrapper if parsing fails but it's a write op
+      finalBody = JSON.stringify({ data: {} });
+      headers.set("Content-Type", "application/json");
     }
   } else if (isWriteOperation) {
-    // Other write operations (non-articles) - pass through body as-is
-    // Only read body if it's not a DELETE request (DELETE bodies are rare and can cause issues)
-    if (method !== "DELETE") {
-      const ab = await request.arrayBuffer();
-      finalBody = Buffer.from(ab);
+    // Pass-through for Uploads or DELETE
+    // For uploads, we need the array buffer to preserve binary data
+    // For DELETE, usually no body, but we can pass through if present (rare)
+    if (method !== "DELETE" || isUpload) {
+       const ab = await request.arrayBuffer();
+       finalBody = Buffer.from(ab);
     }
   } else {
-    // Standard pass-through for non-article-write requests
+    // Standard pass-through for read requests
     if (!["GET", "HEAD"].includes(method)) {
       const ab = await request.arrayBuffer();
       finalBody = Buffer.from(ab);

@@ -41,12 +41,15 @@ const normalizeRoleType = (value: unknown) => {
 
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
-  // CRITICAL FIX: Use ADMIN_JWT_SECRET for consistency with proxy, fallback to ADMIN_SESSION_SECRET
-  const sessionSecret = process.env.ADMIN_JWT_SECRET || process.env.ADMIN_SESSION_SECRET;
+  // Prefer frontend session secret, fallback to ADMIN_JWT_SECRET for legacy environments
+  const sessionSecret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_JWT_SECRET;
 
   if (!sessionSecret) {
     return NextResponse.json(
-      { error: "Server configuration error: ADMIN_JWT_SECRET is missing" },
+        {
+          error:
+            "Server configuration error: ADMIN_SESSION_SECRET (or ADMIN_JWT_SECRET) is missing",
+        },
       { status: 500 },
     );
   }

@@ -32,9 +32,9 @@ const getStrapiApiBaseUrl = () => {
 };
 
 const getSession = (request: NextRequest) => {
-  // CRITICAL FIX: Use ADMIN_JWT_SECRET instead of ADMIN_SESSION_SECRET
-  const secret = process.env.ADMIN_JWT_SECRET;
-  if (!secret) return null; // Logic in proxy() will handle missing secret error if needed, but here we return null.
+  // Prefer frontend session secret, fallback to ADMIN_JWT_SECRET for legacy environments
+  const secret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_JWT_SECRET;
+  if (!secret) return null;
   
   const token = request.cookies.get("admin_session")?.value;
   if (!token) return null;
@@ -62,9 +62,12 @@ const buildTargetUrl = (request: NextRequest, path: string[]) => {
 
 const proxy = async (request: NextRequest, path: string[]) => {
   // 1. Environment Consistency Check
-  if (!process.env.ADMIN_JWT_SECRET && !process.env.ADMIN_SESSION_SECRET) {
+  if (!process.env.ADMIN_SESSION_SECRET && !process.env.ADMIN_JWT_SECRET) {
     return NextResponse.json(
-      { error: "Server configuration error: ADMIN_JWT_SECRET is missing" },
+      {
+        error:
+          "Server configuration error: ADMIN_SESSION_SECRET (or ADMIN_JWT_SECRET) is missing",
+      },
       { status: 500 }
     );
   }

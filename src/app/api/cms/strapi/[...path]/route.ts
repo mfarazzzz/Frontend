@@ -62,7 +62,7 @@ const buildTargetUrl = (request: NextRequest, path: string[]) => {
 
 const proxy = async (request: NextRequest, path: string[]) => {
   // 1. Environment Consistency Check
-  if (!process.env.ADMIN_JWT_SECRET) {
+  if (!process.env.ADMIN_JWT_SECRET && !process.env.ADMIN_SESSION_SECRET) {
     return NextResponse.json(
       { error: "Server configuration error: ADMIN_JWT_SECRET is missing" },
       { status: 500 }

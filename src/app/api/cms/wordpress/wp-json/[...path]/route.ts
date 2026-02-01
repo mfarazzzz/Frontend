@@ -27,8 +27,8 @@ const getWordPressAuthHeader = () => {
 
 const getAdminSession = (request: NextRequest) => {
   const token = request.cookies.get("admin_session")?.value;
-  // CRITICAL FIX: Use ADMIN_JWT_SECRET for consistency
-  const secret = process.env.ADMIN_JWT_SECRET;
+  // CRITICAL FIX: Use ADMIN_JWT_SECRET for consistency, fallback to ADMIN_SESSION_SECRET
+  const secret = process.env.ADMIN_JWT_SECRET || process.env.ADMIN_SESSION_SECRET;
   if (!token || !secret) return null;
   return verifyAdminSessionToken(token, secret);
 };

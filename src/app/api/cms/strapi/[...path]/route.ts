@@ -124,45 +124,19 @@ const proxy = async (request: NextRequest, path: string[]) => {
   let finalMethod = method;
   let finalBody: BodyInit | undefined;
 
-  // Handle Article Write Operations
+  // Handle Article Write Operations - Use REST API (not Content Manager)
+  // API tokens work with /api/articles, NOT /content-manager endpoints
   if (isWriteOperation && path[0] === "articles") {
-    const strapiApiUrl = getStrapiApiBaseUrl();
-    const strapiRoot = strapiApiUrl.replace(/\/api\/?$/, ""); // Remove trailing /api
-    
-    // Construct base Content Manager path
-    // Default: /content-manager/collection-types/api::article.article
-    let newPath = "content-manager/collection-types/api::article.article";
-    const articleId = path[1]; // /articles/:id
-    
-    // Determine specific path based on action
-    if (path.length > 1 && articleId) {
-      if (path.includes("actions") && path.includes("publish")) {
-         // Publish: .../:id/actions/publish
-         newPath += `/${articleId}/actions/publish`;
-      } else {
-         // Update/Delete: .../:id
-         newPath += `/${articleId}`;
-      }
-    }
+    // targetUrl is already correct: /api/articles or /api/articles/:id
+    // No URL rewriting needed for REST API
 
-    targetUrl = new URL(`${strapiRoot}/${newPath}`);
-    // Preserve search params
-    request.nextUrl.searchParams.forEach((value, key) => {
-      targetUrl.searchParams.append(key, value);
-    });
-
-    // Convert PATCH -> PUT
-    if (method === "PATCH") {
-      finalMethod = "PUT";
-    }
-
-    // 6. Request Body Normalization
+    // 6. Request Body Normalization for Strapi v4/v5 REST API
     if (method !== "DELETE") {
       try {
         const rawText = await request.text();
         if (rawText) {
           const rawJson = JSON.parse(rawText);
-          // Check if body already has { data }
+          // Strapi REST API expects { data: { ...attributes } }
           if (rawJson && typeof rawJson === 'object' && 'data' in rawJson) {
              finalBody = JSON.stringify(rawJson);
           } else {
@@ -178,6 +152,10 @@ const proxy = async (request: NextRequest, path: string[]) => {
         headers.set("Content-Type", "application/json");
       }
     }
+  } else if (isWriteOperation) {
+    // Other write operations (non-articles) - pass through body as-is
+    const ab = await request.arrayBuffer();
+    finalBody = Buffer.from(ab);
   } else {
     // Standard pass-through for non-article-write requests
     if (!["GET", "HEAD"].includes(method)) {

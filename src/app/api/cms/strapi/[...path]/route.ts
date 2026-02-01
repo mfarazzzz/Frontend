@@ -32,9 +32,13 @@ const getStrapiApiBaseUrl = () => {
 };
 
 const getSession = (request: NextRequest) => {
+  // CRITICAL FIX: Use ADMIN_JWT_SECRET instead of ADMIN_SESSION_SECRET
+  const secret = process.env.ADMIN_JWT_SECRET;
+  if (!secret) return null; // Logic in proxy() will handle missing secret error if needed, but here we return null.
+  
   const token = request.cookies.get("admin_session")?.value;
-  const secret = process.env.ADMIN_SESSION_SECRET;
-  if (!token || !secret) return null;
+  if (!token) return null;
+  
   return verifyAdminSessionToken(token, secret);
 };
 
@@ -57,115 +61,151 @@ const buildTargetUrl = (request: NextRequest, path: string[]) => {
 };
 
 const proxy = async (request: NextRequest, path: string[]) => {
+  // 1. Environment Consistency Check
+  if (!process.env.ADMIN_JWT_SECRET) {
+    return NextResponse.json(
+      { error: "Server configuration error: ADMIN_JWT_SECRET is missing" },
+      { status: 500 }
+    );
+  }
+
   const method = request.method.toUpperCase();
-  let targetUrl = buildTargetUrl(request, path);
   const pathString = path.join("/");
-
-  const session = getSession(request);
   const isWriteOperation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
-  
-  // Allow write operations to bypass admin_session validation (authenticated via API Token)
-  const allowWithoutSession = isWriteOperation || ((method === "GET" || method === "HEAD") && isPublicGetPath(pathString));
 
-  if (!session && !allowWithoutSession) {
+  // 2. Session Handling: Verify admin_session cookie only for UI access control
+  const session = getSession(request);
+  const isPublic = (method === "GET" || method === "HEAD") && isPublicGetPath(pathString);
+
+  // Access Control: Must have session unless public GET/HEAD
+  // Note: Even for write operations, we require admin_session for the PROXY access,
+  // even though we don't forward it to Strapi.
+  if (!session && !isPublic) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Headers setup
+  // 3. Header Hygiene
   const headers = new Headers(request.headers);
   headers.delete("host");
   headers.delete("connection");
   headers.delete("content-length");
-  headers.delete("cookie");
-  headers.delete("authorization");
+  headers.delete("transfer-encoding");
 
-  let finalMethod = method;
-  let finalBody: BodyInit | undefined;
-
+  // 4. Authentication Strategy & Cookie Handling
   if (isWriteOperation) {
-    // For write operations, use the server-side API Token
+    // Write Ops: Completely ignore browser cookies, use STRAPI_API_TOKEN
+    headers.delete("cookie");
+    
     const apiToken = process.env.STRAPI_API_TOKEN;
-    if (apiToken) {
-      headers.set("Authorization", `Bearer ${apiToken}`);
-    } else {
-      console.warn("STRAPI_API_TOKEN is not defined in environment variables");
+    if (!apiToken) {
+      return NextResponse.json(
+        { error: "Server configuration error: STRAPI_API_TOKEN is missing" },
+        { status: 500 }
+      );
     }
-
-    // Special handling for "articles" collection (Strapi v5)
-    if (path[0] === "articles") {
-      // 1. Rewrite URL to Content Manager API
-      // Handles: /articles, /articles/:id, /articles/:id/actions/publish, etc.
-      const strapiApiUrl = getStrapiApiBaseUrl();
-      const strapiRoot = strapiApiUrl.replace(/\/api\/?$/, ""); // Remove trailing /api
-      
-      const remainingPath = path.slice(1).join("/");
-      // Construct new path: /content-manager/collection-types/api::article.article/:id
-      const newPath = `content-manager/collection-types/api::article.article${remainingPath ? '/' + remainingPath : ''}`;
-      
-      targetUrl = new URL(`${strapiRoot}/${newPath}`);
-      // Preserve search params
-      request.nextUrl.searchParams.forEach((value, key) => {
-        targetUrl.searchParams.append(key, value);
-      });
-
-      // 2. Convert PATCH to PUT (Content Manager doesn't support PATCH)
-      if (method === "PATCH") {
-        finalMethod = "PUT";
-      }
-
-      // 3. Wrap body in { data: ... }
-      if (method !== "DELETE") {
-        try {
-          const rawText = await request.text();
-          const rawJson = rawText ? JSON.parse(rawText) : {};
-          finalBody = JSON.stringify({ data: rawJson });
-          headers.set("Content-Type", "application/json");
-        } catch (e) {
-          console.warn("Failed to parse request body", e);
-          finalBody = JSON.stringify({ data: {} });
-          headers.set("Content-Type", "application/json");
-        }
-      }
-    } else {
-      // Other write operations - pass through body
-      if (method !== "GET" && method !== "HEAD") {
-        const ab = await request.arrayBuffer();
-        finalBody = Buffer.from(ab);
-      }
-    }
+    // Always replace authorization
+    headers.set("Authorization", `Bearer ${apiToken}`);
   } else {
-    // For GET/HEAD, use the user's JWT
-    const jwt = request.cookies.get("strapi_jwt")?.value ?? null;
-    if (session && !jwt) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Read Ops: Use strapi_jwt from cookies
+    // Keep "cookie" header intact (do not delete) so we can extract if needed, 
+    // but primarily we extract strapi_jwt and set Authorization.
+    const jwt = request.cookies.get("strapi_jwt")?.value;
     if (jwt) {
       headers.set("Authorization", `Bearer ${jwt}`);
     }
+    // We do NOT delete the cookie header here, per requirements.
+  }
+
+  // 5. Strapi v5 Content Manager Routing & URL Rewriting
+  let targetUrl = buildTargetUrl(request, path);
+  let finalMethod = method;
+  let finalBody: BodyInit | undefined;
+
+  // Handle Article Write Operations
+  if (isWriteOperation && path[0] === "articles") {
+    const strapiApiUrl = getStrapiApiBaseUrl();
+    const strapiRoot = strapiApiUrl.replace(/\/api\/?$/, ""); // Remove trailing /api
     
-    // Pass through body for read operations (if any)
-    if (method !== "GET" && method !== "HEAD") {
+    // Construct base Content Manager path
+    // Default: /content-manager/collection-types/api::article.article
+    let newPath = "content-manager/collection-types/api::article.article";
+    const articleId = path[1]; // /articles/:id
+    
+    // Determine specific path based on action
+    if (path.length > 1 && articleId) {
+      if (path.includes("actions") && path.includes("publish")) {
+         // Publish: .../:id/actions/publish
+         newPath += `/${articleId}/actions/publish`;
+      } else {
+         // Update/Delete: .../:id
+         newPath += `/${articleId}`;
+      }
+    }
+
+    targetUrl = new URL(`${strapiRoot}/${newPath}`);
+    // Preserve search params
+    request.nextUrl.searchParams.forEach((value, key) => {
+      targetUrl.searchParams.append(key, value);
+    });
+
+    // Convert PATCH -> PUT
+    if (method === "PATCH") {
+      finalMethod = "PUT";
+    }
+
+    // 6. Request Body Normalization
+    if (method !== "DELETE") {
+      try {
+        const rawText = await request.text();
+        if (rawText) {
+          const rawJson = JSON.parse(rawText);
+          // Check if body already has { data }
+          if (rawJson && typeof rawJson === 'object' && 'data' in rawJson) {
+             finalBody = JSON.stringify(rawJson);
+          } else {
+             // Wrap in { data: body }
+             finalBody = JSON.stringify({ data: rawJson });
+          }
+          headers.set("Content-Type", "application/json");
+        }
+      } catch (e) {
+        console.warn("Failed to parse request body", e);
+        // Fallback: send empty data wrapper if parsing fails but it's a write op
+        finalBody = JSON.stringify({ data: {} });
+        headers.set("Content-Type", "application/json");
+      }
+    }
+  } else {
+    // Standard pass-through for non-article-write requests
+    if (!["GET", "HEAD"].includes(method)) {
       const ab = await request.arrayBuffer();
       finalBody = Buffer.from(ab);
     }
   }
 
-  const upstream = await fetch(targetUrl.toString(), {
-    method: finalMethod,
-    headers,
-    body: finalBody,
-  });
+  // 7. Error Transparency & Execution
+  try {
+    const upstream = await fetch(targetUrl.toString(), {
+      method: finalMethod,
+      headers,
+      body: finalBody,
+      redirect: "manual", // Prevent auto-following redirects
+    });
 
-  const responseHeaders = new Headers(upstream.headers);
-  responseHeaders.delete("set-cookie");
-  responseHeaders.delete("content-encoding");
-  responseHeaders.delete("content-length");
-  responseHeaders.delete("transfer-encoding");
+    const responseHeaders = new Headers(upstream.headers);
+    responseHeaders.delete("set-cookie"); // Don't pass upstream cookies back to client? Usually good practice.
+    responseHeaders.delete("content-encoding");
+    responseHeaders.delete("content-length");
+    responseHeaders.delete("transfer-encoding");
 
-  return new NextResponse(upstream.body, {
-    status: upstream.status,
-    headers: responseHeaders,
-  });
+    return new NextResponse(upstream.body, {
+      status: upstream.status,
+      headers: responseHeaders,
+    });
+  } catch (error) {
+    console.error("Proxy Error:", error);
+    return NextResponse.json({ error: "Internal Proxy Error" }, { status: 500 });
+  }
 };
 
 export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {

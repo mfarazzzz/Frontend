@@ -64,22 +64,14 @@ export async function GET(request: NextRequest) {
     });
 
     if (!upstream.ok) {
-      const response = NextResponse.json({ user: null }, { status: 401 });
-      response.cookies.set("admin_session", "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 0,
+      return NextResponse.json({
+        user: {
+          id: session.id,
+          name: session.name,
+          email: session.email,
+          role: normalizeRoleType(session.role) ?? "author",
+        },
       });
-      response.cookies.set("strapi_jwt", "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 0,
-      });
-      return response;
     }
 
     const me = (await upstream.json()) as any;

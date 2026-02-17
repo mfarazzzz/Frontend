@@ -21,7 +21,12 @@ export async function generateMetadata(
   props: { params: Promise<PageParams> }
 ): Promise<Metadata> {
   const { slug } = await props.params;
-  const place = await provider.getFamousPlaceBySlug(slug);
+  let place = null;
+  try {
+    place = await provider.getFamousPlaceBySlug(slug);
+  } catch {
+    place = null;
+  }
 
   if (!place) {
     const title = "स्थान नहीं मिला | रामपुर";
@@ -89,7 +94,12 @@ export async function generateMetadata(
 
 export default async function Page(props: { params: Promise<PageParams> }) {
   const { slug } = await props.params;
-  const place = await provider.getFamousPlaceBySlug(slug);
+  let place = null;
+  try {
+    place = await provider.getFamousPlaceBySlug(slug);
+  } catch {
+    place = null;
+  }
 
   const schema = place
     ? {

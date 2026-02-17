@@ -50,7 +50,9 @@ export function Providers({ children }: { children: ReactNode }) {
       }
 
       const envStrapiUrl =
-        process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.NEXT_PUBLIC_STRAPI_BASE_URL || process.env.NEXT_PUBLIC_STRAPI_URL;
+        process.env.NEXT_PUBLIC_STRAPI_URL ||
+        process.env.NEXT_PUBLIC_STRAPI_API_URL ||
+        process.env.NEXT_PUBLIC_STRAPI_BASE_URL;
       const envStrapiToken =
         process.env.NEXT_PUBLIC_STRAPI_API_TOKEN || process.env.NEXT_PUBLIC_STRAPI_API_KEY;
 
@@ -102,7 +104,7 @@ export function Providers({ children }: { children: ReactNode }) {
         return;
       }
     })();
-  }, []);
+  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>

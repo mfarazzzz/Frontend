@@ -761,7 +761,7 @@ const createRestExtendedProvider = (config: CMSConfig): ExtendedCMSProvider => {
             type: 'holiday',
             category: holiday.type,
             color: '#f59e0b',
-            link: `/culture/holidays/${holiday.slug}`,
+            link: `/religion-culture/holidays/${holiday.slug}`,
           });
         }
       });

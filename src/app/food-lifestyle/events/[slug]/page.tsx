@@ -19,7 +19,12 @@ export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const { slug } = await props.params;
-  const event = await provider.getEventBySlug(slug);
+  let event = null;
+  try {
+    event = await provider.getEventBySlug(slug);
+  } catch {
+    event = null;
+  }
 
   if (!event) {
     const title = "इवेंट नहीं मिला | कार्यक्रम रामपुर";
@@ -87,7 +92,12 @@ export async function generateMetadata(
 
 export default async function Page(props: { params: Promise<{ slug: string }> }) {
   const { slug } = await props.params;
-  const event = await provider.getEventBySlug(slug);
+  let event = null;
+  try {
+    event = await provider.getEventBySlug(slug);
+  } catch {
+    event = null;
+  }
 
   const statusMap: Record<string, string> = {
     upcoming: "https://schema.org/EventScheduled",

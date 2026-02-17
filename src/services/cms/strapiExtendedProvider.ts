@@ -55,11 +55,12 @@ const getOrigin = (apiUrl: string) => {
 const toAbsoluteUrl = (origin: string, url: string) => {
   if (!url) return url;
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  const normalizedPath = url.startsWith("/api/uploads/") ? url.replace(/^\/api/, "") : url;
   if (!origin) return url;
   try {
-    return new URL(url, origin).toString();
+    return new URL(normalizedPath, origin).toString();
   } catch {
-    return url;
+    return normalizedPath;
   }
 };
 
@@ -107,13 +108,24 @@ const normalizeEntity = <T extends Record<string, any>>(entity: StrapiEntity<T>,
   const normalized: any = { id: String((entity as any).id), ...(attributes as any) };
 
   if (normalized.image) {
-    const url = extractMediaUrl(normalized.image, origin);
-    if (url) normalized.image = url;
+    if (typeof normalized.image === "string") {
+      normalized.image = toAbsoluteUrl(origin, normalized.image);
+    } else {
+      const url = extractMediaUrl(normalized.image, origin);
+      if (url) normalized.image = url;
+    }
   }
 
   if (normalized.gallery) {
-    const urls = extractMediaUrls(normalized.gallery, origin);
-    if (urls) normalized.gallery = urls;
+    if (Array.isArray(normalized.gallery)) {
+      const urls = normalized.gallery
+        .filter((v: unknown) => typeof v === "string")
+        .map((v: string) => toAbsoluteUrl(origin, v));
+      if (urls.length) normalized.gallery = urls;
+    } else {
+      const urls = extractMediaUrls(normalized.gallery, origin);
+      if (urls) normalized.gallery = urls;
+    }
   }
 
   if (normalized.seo && typeof normalized.seo === "object") {
@@ -171,6 +183,7 @@ const buildListQuery = (contentType: ContentTypeKey, params?: ExtendedQueryParam
   const offset = params?.offset ?? 0;
 
   query.push(["publicationState", "live"]);
+  query.push(["filters[publishedAt][$notNull]", true]);
   query.push(["pagination[withCount]", true]);
   query.push(["pagination[start]", offset]);
   query.push(["pagination[limit]", limit]);
@@ -191,8 +204,11 @@ const buildListQuery = (contentType: ContentTypeKey, params?: ExtendedQueryParam
   if (params?.featured !== undefined) query.push(["filters[isFeatured][$eq]", params.featured]);
   if (params?.popular !== undefined) query.push(["filters[isPopular][$eq]", params.popular]);
 
-  if (params?.dateFrom) query.push(["filters[date][$gte]", params.dateFrom]);
-  if (params?.dateTo) query.push(["filters[date][$lte]", params.dateTo]);
+  const dateField = (contentTypeConfig[contentType] as any).dateField as string | undefined;
+  if (dateField) {
+    if (params?.dateFrom) query.push([`filters[${dateField}][$gte]`, params.dateFrom]);
+    if (params?.dateTo) query.push([`filters[${dateField}][$lte]`, params.dateTo]);
+  }
 
   if (params?.search) {
     const fields = contentTypeConfig[contentType].searchFields;
@@ -201,13 +217,7 @@ const buildListQuery = (contentType: ContentTypeKey, params?: ExtendedQueryParam
     });
   }
 
-  if (contentType === "exams" || contentType === "results" || contentType === "institutions") {
-    query.push(["populate[image]", "*"]);
-  } else if (contentType === "events") {
-    query.push(["populate[image]", "*"]);
-  } else {
-    query.push(["populate[image]", "*"]);
-  }
+  query.push(["populate", "*"]);
 
   return query;
 };
@@ -215,13 +225,12 @@ const buildListQuery = (contentType: ContentTypeKey, params?: ExtendedQueryParam
 const buildSlugQuery = (contentType: ContentTypeKey, slug: string) => {
   const query: Array<[string, string | number | boolean | undefined]> = [];
   query.push(["publicationState", "live"]);
+  query.push(["filters[publishedAt][$notNull]", true]);
   query.push(["filters[slug][$eq]", slug]);
   query.push(["pagination[withCount]", false]);
   query.push(["pagination[start]", 0]);
   query.push(["pagination[limit]", 1]);
-  query.push(["populate[image]", "*"]);
-  query.push(["populate[gallery]", "*"]);
-  query.push(["populate[seo]", "*"]);
+  query.push(["populate", "*"]);
   return query;
 };
 
@@ -261,7 +270,9 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
       } catch {
         void 0;
       }
-      throw new Error(message);
+      const err: any = new Error(message);
+      err.status = response.status;
+      throw err;
     }
     return (await response.json()) as T;
   };
@@ -341,6 +352,30 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
     return { data, total, page, pageSize, totalPages };
   };
 
+  const stripPublishedFilter = (query: Array<[string, string | number | boolean | undefined]>) =>
+    query.filter(([key]) => key !== "filters[publishedAt][$notNull]");
+
+  const deriveStatus = (iso: string, todayIso: string) => {
+    if (iso > todayIso) return "upcoming";
+    if (iso < todayIso) return "completed";
+    return "ongoing";
+  };
+
+  const applyDerivedFields = <T extends Record<string, any>>(contentType: ContentTypeKey, item: T) => {
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const next: any = { ...item };
+    if (contentType === "exams" && !next.status && typeof next.examDate === "string") {
+      next.status = deriveStatus(next.examDate, todayIso);
+    }
+    if (contentType === "events" && !next.status && typeof next.date === "string") {
+      next.status = deriveStatus(next.date, todayIso);
+    }
+    if (contentType === "results" && !next.status && typeof next.resultDate === "string") {
+      next.status = deriveStatus(next.resultDate, todayIso);
+    }
+    return next as T;
+  };
+
   const extractList = <T extends Record<string, any>>(
     result: any,
   ): Array<StrapiEntity<T>> => {
@@ -357,8 +392,23 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
     const query = buildListQuery(contentType, params);
     if (typeof window !== "undefined") {
       const url = buildProxyUrl(contentTypeConfig[contentType].path, query);
-      const result = await fetchJson<any>(url, { method: "GET" }, { allowNotFound: true });
-      const items = extractList<T>(result).map((e) => normalizeEntity(e as StrapiEntity<T>, origin));
+      let result: any = null;
+      try {
+        result = await fetchJson<any>(url, { method: "GET" }, { allowNotFound: true });
+      } catch (error: any) {
+        if (error?.status === 400) {
+          result = await fetchJson<any>(
+            buildProxyUrl(contentTypeConfig[contentType].path, stripPublishedFilter(query)),
+            { method: "GET" },
+            { allowNotFound: true },
+          );
+        } else {
+          throw error;
+        }
+      }
+      const items = extractList<T>(result).map((e) =>
+        applyDerivedFields(contentType, normalizeEntity(e as StrapiEntity<T>, origin)),
+      );
 
       const pagination = result?.meta?.pagination;
       if (pagination && typeof pagination === "object") {
@@ -374,8 +424,28 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
     }
 
     const url = buildDirectUrl(contentTypeConfig[contentType].path, query);
-    const result = await fetchJson<any>(url, { method: "GET", headers: getPublicHeaders() }, { revalidate: revalidateSeconds });
-    const items = extractList<T>(result).map((e) => normalizeEntity(e as StrapiEntity<T>, origin));
+    let result: any = null;
+    try {
+      result = await fetchJson<any>(
+        url,
+        { method: "GET", headers: getPublicHeaders() },
+        { revalidate: revalidateSeconds },
+      );
+    } catch (error: any) {
+      if (error?.status === 400) {
+        const fallbackUrl = buildDirectUrl(contentTypeConfig[contentType].path, stripPublishedFilter(query));
+        result = await fetchJson<any>(
+          fallbackUrl,
+          { method: "GET", headers: getPublicHeaders() },
+          { revalidate: revalidateSeconds },
+        );
+      } else {
+        throw error;
+      }
+    }
+    const items = extractList<T>(result).map((e) =>
+      applyDerivedFields(contentType, normalizeEntity(e as StrapiEntity<T>, origin)),
+    );
 
     const pagination = result?.meta?.pagination;
     if (pagination && typeof pagination === "object") {
@@ -393,24 +463,43 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
   const bySlug = async <T extends Record<string, any>>(contentType: ContentTypeKey, slug: string) => {
     if (typeof window !== "undefined") {
       const slugUrl = buildProxyUrl(`${contentTypeConfig[contentType].path}/slug/${encodeURIComponent(slug)}`);
-      const bySlugResult = await fetchJson<any>(slugUrl, { method: "GET" }, { allowNotFound: true });
+      let bySlugResult: any = null;
+      try {
+        bySlugResult = await fetchJson<any>(slugUrl, { method: "GET" }, { allowNotFound: true });
+      } catch (error: any) {
+        if (error?.status !== 404) throw error;
+      }
       if (bySlugResult) {
         if (Array.isArray(bySlugResult)) {
           const first = bySlugResult[0];
-          return first ? (normalizeEntity(first as StrapiEntity<T>, origin) as any) : null;
+          return first ? (applyDerivedFields(contentType, normalizeEntity(first as StrapiEntity<T>, origin)) as any) : null;
         }
         if (bySlugResult?.data) {
           const entity = Array.isArray(bySlugResult.data) ? bySlugResult.data[0] : bySlugResult.data;
-          return entity ? (normalizeEntity(entity as StrapiEntity<T>, origin) as any) : null;
+          return entity
+            ? (applyDerivedFields(contentType, normalizeEntity(entity as StrapiEntity<T>, origin)) as any)
+            : null;
         }
-        return normalizeEntity(bySlugResult as StrapiEntity<T>, origin) as any;
+        return applyDerivedFields(contentType, normalizeEntity(bySlugResult as StrapiEntity<T>, origin)) as any;
       }
 
       const query = buildSlugQuery(contentType, slug);
-      const url = buildProxyUrl(contentTypeConfig[contentType].path, query);
-      const result = await fetchJson<any>(url, { method: "GET" }, { allowNotFound: true });
+      let result: any = null;
+      try {
+        result = await fetchJson<any>(buildProxyUrl(contentTypeConfig[contentType].path, query), { method: "GET" }, { allowNotFound: true });
+      } catch (error: any) {
+        if (error?.status === 400) {
+          result = await fetchJson<any>(
+            buildProxyUrl(contentTypeConfig[contentType].path, stripPublishedFilter(query)),
+            { method: "GET" },
+            { allowNotFound: true },
+          );
+        } else {
+          throw error;
+        }
+      }
       const first = extractList<T>(result)[0];
-      if (first) return normalizeEntity(first as StrapiEntity<T>, origin) as any;
+      if (first) return applyDerivedFields(contentType, normalizeEntity(first as StrapiEntity<T>, origin)) as any;
 
       const all = await list<T>(contentType, { limit: 2000, offset: 0 });
       const found = all.data.find((item: any) => item?.slug === slug);
@@ -418,11 +507,27 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
     }
 
     const query = buildSlugQuery(contentType, slug);
-    const url = buildDirectUrl(contentTypeConfig[contentType].path, query);
-    const result = await fetchJson<any>(url, { method: "GET", headers: getPublicHeaders() }, { allowNotFound: true, revalidate: revalidateSeconds });
+    let result: any = null;
+    try {
+      result = await fetchJson<any>(
+        buildDirectUrl(contentTypeConfig[contentType].path, query),
+        { method: "GET", headers: getPublicHeaders() },
+        { allowNotFound: true, revalidate: revalidateSeconds },
+      );
+    } catch (error: any) {
+      if (error?.status === 400) {
+        result = await fetchJson<any>(
+          buildDirectUrl(contentTypeConfig[contentType].path, stripPublishedFilter(query)),
+          { method: "GET", headers: getPublicHeaders() },
+          { allowNotFound: true, revalidate: revalidateSeconds },
+        );
+      } else {
+        throw error;
+      }
+    }
     const first = extractList<T>(result)[0];
     if (!first) return null;
-    return normalizeEntity(first as StrapiEntity<T>, origin);
+    return applyDerivedFields(contentType, normalizeEntity(first as StrapiEntity<T>, origin));
   };
 
   const create = async <T extends Record<string, any>>(contentType: ContentTypeKey, value: any): Promise<T & { id: string }> => {

@@ -21,7 +21,12 @@ export async function generateMetadata(
   props: { params: Promise<PageParams> }
 ): Promise<Metadata> {
   const { slug } = await props.params;
-  const store = await provider.getFashionStoreBySlug(slug);
+  let store = null;
+  try {
+    store = await provider.getFashionStoreBySlug(slug);
+  } catch {
+    store = null;
+  }
 
   if (!store) {
     const title = "फैशन स्टोर नहीं मिला | रामपुर";

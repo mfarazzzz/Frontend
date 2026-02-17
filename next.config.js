@@ -47,6 +47,11 @@ const getRemotePatternFromUrl = (urlValue) => {
 
 const remotePatterns = [
   {
+    protocol: "https",
+    hostname: "api.rampur.cloud",
+    pathname: "/**",
+  },
+  {
     protocol: "http",
     hostname: "localhost",
     port: "1337",

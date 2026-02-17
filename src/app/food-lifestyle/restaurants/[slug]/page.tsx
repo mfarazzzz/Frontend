@@ -21,7 +21,12 @@ export async function generateMetadata(
   props: { params: Promise<PageParams> }
 ): Promise<Metadata> {
   const { slug } = await props.params;
-  const restaurant = await provider.getRestaurantBySlug(slug);
+  let restaurant = null;
+  try {
+    restaurant = await provider.getRestaurantBySlug(slug);
+  } catch {
+    restaurant = null;
+  }
 
   if (!restaurant) {
     const title = "रेस्तरां नहीं मिला | रामपुर";

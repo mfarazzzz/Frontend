@@ -131,10 +131,10 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
   const getStrapiMediaOriginFromEnv = () => {
     const candidates = [
-      process.env.NEXT_PUBLIC_STRAPI_API_URL,
-      process.env.STRAPI_API_URL,
-      process.env.NEXT_PUBLIC_STRAPI_BASE_URL,
       process.env.NEXT_PUBLIC_STRAPI_URL,
+      process.env.NEXT_PUBLIC_STRAPI_API_URL,
+      process.env.NEXT_PUBLIC_STRAPI_BASE_URL,
+      typeof window === 'undefined' ? process.env.STRAPI_API_URL : undefined,
     ]
       .filter((value) => typeof value === 'string')
       .map((value) => normalizeStrapiBaseUrl(String(value)))
@@ -156,9 +156,37 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
     if (url.startsWith('data:') || url.startsWith('blob:')) return url;
     if (url.startsWith('//')) return `https:${url}`;
+    const normalizedPath = url.startsWith('/api/uploads/') ? url.replace(/^\/api/, '') : url;
     const baseOrigin = origin || getStrapiMediaOriginFromEnv();
-    if (!baseOrigin || !url.startsWith('/')) return url;
-    return `${baseOrigin}${url}`;
+    if (!baseOrigin || !normalizedPath.startsWith('/')) return normalizedPath;
+    return `${baseOrigin}${normalizedPath}`;
+  };
+
+  const extractStrapiMediaUrlLike = (value: unknown): string | undefined => {
+    if (!value) return undefined;
+    if (typeof value === 'string') return value;
+    if (typeof value !== 'object') return undefined;
+    const v: any = value as any;
+    const direct =
+      (typeof v.url === 'string' && v.url) ||
+      (typeof v.src === 'string' && v.src) ||
+      (typeof v.path === 'string' && v.path) ||
+      undefined;
+    if (direct) return direct;
+    const nestedData = v?.data;
+    if (nestedData) {
+      if (Array.isArray(nestedData)) {
+        const first = nestedData[0];
+        if (first) return extractStrapiMediaUrlLike(first);
+        return undefined;
+      }
+      return extractStrapiMediaUrlLike(nestedData);
+    }
+    const attrs = v?.attributes;
+    if (attrs && typeof attrs === 'object') {
+      return extractStrapiMediaUrlLike(attrs);
+    }
+    return undefined;
   };
 
   const normalizeArticleMedia = (article: CMSArticle | null): CMSArticle | null => {
@@ -169,16 +197,21 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     const updatedArticle = { ...article };
 
     // Normalize featured image
-    if (article.image) {
-      const image = resolveStrapiMediaUrl(origin, article.image);
-      if (image && image !== article.image) {
-        updatedArticle.image = image;
-      }
+    const rawImage = extractStrapiMediaUrlLike((article as any).image);
+    if (rawImage) {
+      const image = resolveStrapiMediaUrl(origin, rawImage);
+      if (image && image !== (article as any).image) updatedArticle.image = image;
     }
 
     // Normalize content images
     if (article.content) {
       updatedArticle.content = article.content.replace(
+        /src="\/api\/uploads\//g,
+        `src="${origin}/uploads/`
+      ).replace(
+        /src='\/api\/uploads\//g,
+        `src='${origin}/uploads/`
+      ).replace(
         /src="\/uploads\//g,
         `src="${origin}/uploads/`
       ).replace(
@@ -194,9 +227,10 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     const origin = getStrapiOrigin() || getStrapiMediaOriginFromEnv();
     if (!origin) return items;
     return items.map((article) => {
-      if (!article?.image) return article;
-      const image = resolveStrapiMediaUrl(origin, article.image);
-      return image && image !== article.image ? { ...article, image } : article;
+      const rawImage = extractStrapiMediaUrlLike((article as any)?.image);
+      if (!rawImage) return article;
+      const image = resolveStrapiMediaUrl(origin, rawImage);
+      return image && image !== (article as any).image ? { ...article, image } : article;
     });
   };
 
@@ -983,11 +1017,15 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
 const getEnvStrapiUrl = () => {
   if (typeof process !== 'undefined' && process.env) {
-    const url =
-      process.env.NEXT_PUBLIC_STRAPI_API_URL ||
-      process.env.STRAPI_API_URL ||
-      process.env.NEXT_PUBLIC_STRAPI_BASE_URL ||
-      process.env.NEXT_PUBLIC_STRAPI_URL;
+    const isBrowser = typeof window !== 'undefined';
+    const url = isBrowser
+      ? process.env.NEXT_PUBLIC_STRAPI_URL ||
+        process.env.NEXT_PUBLIC_STRAPI_API_URL ||
+        process.env.NEXT_PUBLIC_STRAPI_BASE_URL
+      : process.env.STRAPI_API_URL ||
+        process.env.NEXT_PUBLIC_STRAPI_API_URL ||
+        process.env.NEXT_PUBLIC_STRAPI_BASE_URL ||
+        process.env.NEXT_PUBLIC_STRAPI_URL;
     if (url) return normalizeStrapiBaseUrl(url);
     if (process.env.NODE_ENV !== 'production') {
       return normalizeStrapiBaseUrl('http://localhost:1337/api');

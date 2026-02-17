@@ -61,7 +61,15 @@ const buildTargetUrl = (request: NextRequest, path: string[]) => {
 };
 
 const proxy = async (request: NextRequest, path: string[]) => {
-  if (!process.env.ADMIN_JWT_SECRET && !process.env.ADMIN_SESSION_SECRET) {
+  const method = request.method.toUpperCase();
+  const pathString = path.join("/");
+  const isWriteOperation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+
+  const isPublic = (method === "GET" || method === "HEAD") && isPublicGetPath(pathString);
+  const hasAdminSecrets = Boolean(process.env.ADMIN_JWT_SECRET || process.env.ADMIN_SESSION_SECRET);
+  const session = isPublic ? null : getSession(request);
+
+  if (!isPublic && !hasAdminSecrets) {
     return NextResponse.json(
       {
         error:
@@ -70,13 +78,6 @@ const proxy = async (request: NextRequest, path: string[]) => {
       { status: 500 }
     );
   }
-
-  const method = request.method.toUpperCase();
-  const pathString = path.join("/");
-  const isWriteOperation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
-
-  const session = getSession(request);
-  const isPublic = (method === "GET" || method === "HEAD") && isPublicGetPath(pathString);
 
   if (!session && !isPublic) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

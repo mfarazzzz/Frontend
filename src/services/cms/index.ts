@@ -153,11 +153,29 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
   const resolveStrapiMediaUrl = (origin: string, url?: string) => {
     if (!url) return url || '';
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
     if (url.startsWith('data:') || url.startsWith('blob:')) return url;
     if (url.startsWith('//')) return `https:${url}`;
     const normalizedPath = url.startsWith('/api/uploads/') ? url.replace(/^\/api/, '') : url;
     const baseOrigin = origin || getStrapiMediaOriginFromEnv();
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      try {
+        const u = new URL(url);
+        const normalizedAbsolutePath = u.pathname.startsWith('/api/uploads/')
+          ? u.pathname.replace(/^\/api/, '')
+          : u.pathname;
+        const isUploadPath = normalizedAbsolutePath.startsWith('/uploads/');
+        if (!baseOrigin || !isUploadPath) return url;
+        const base = new URL(baseOrigin);
+        const isLocalHost = ['localhost', '127.0.0.1', '0.0.0.0'].includes(u.hostname);
+        const isSameHostDifferentProtocol = u.host === base.host && u.protocol !== base.protocol;
+        if (isLocalHost || isSameHostDifferentProtocol) {
+          return `${baseOrigin}${normalizedAbsolutePath}${u.search}${u.hash}`;
+        }
+        return url;
+      } catch {
+        return url;
+      }
+    }
     if (!baseOrigin || !normalizedPath.startsWith('/')) return normalizedPath;
     return `${baseOrigin}${normalizedPath}`;
   };
@@ -216,6 +234,30 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         `src="${origin}/uploads/`
       ).replace(
         /src='\/uploads\//g,
+        `src='${origin}/uploads/`
+      ).replace(
+        /src="https?:\/\/localhost(?::\d+)?\/api\/uploads\//g,
+        `src="${origin}/uploads/`
+      ).replace(
+        /src='https?:\/\/localhost(?::\d+)?\/api\/uploads\//g,
+        `src='${origin}/uploads/`
+      ).replace(
+        /src="https?:\/\/localhost(?::\d+)?\/uploads\//g,
+        `src="${origin}/uploads/`
+      ).replace(
+        /src='https?:\/\/localhost(?::\d+)?\/uploads\//g,
+        `src='${origin}/uploads/`
+      ).replace(
+        /src="https?:\/\/127\.0\.0\.1(?::\d+)?\/api\/uploads\//g,
+        `src="${origin}/uploads/`
+      ).replace(
+        /src='https?:\/\/127\.0\.0\.1(?::\d+)?\/api\/uploads\//g,
+        `src='${origin}/uploads/`
+      ).replace(
+        /src="https?:\/\/127\.0\.0\.1(?::\d+)?\/uploads\//g,
+        `src="${origin}/uploads/`
+      ).replace(
+        /src='https?:\/\/127\.0\.0\.1(?::\d+)?\/uploads\//g,
         `src='${origin}/uploads/`
       );
     }

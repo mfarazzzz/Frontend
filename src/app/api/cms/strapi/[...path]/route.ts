@@ -3,6 +3,83 @@ import { verifyAdminSessionToken } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
 
+const getStrapiOrigin = () => {
+  const base = getStrapiApiBaseUrl();
+  try {
+    const u = new URL(base);
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return "";
+  }
+};
+
+const rewriteMediaUrl = (origin: string, url: string) => {
+  if (!url) return url;
+  if (url.startsWith("data:") || url.startsWith("blob:")) return url;
+  if (url.startsWith("//")) return `https:${url}`;
+
+  if (url.startsWith("/uploads/")) return `${origin}${url}`;
+  if (url.startsWith("/api/uploads/")) return `${origin}${url.replace(/^\/api/, "")}`;
+
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    try {
+      const u = new URL(url);
+      const normalizedPath = u.pathname.startsWith("/api/uploads/") ? u.pathname.replace(/^\/api/, "") : u.pathname;
+      const isStrapiUpload = normalizedPath.startsWith("/uploads/");
+      const isLocalHost = ["localhost", "127.0.0.1", "0.0.0.0"].includes(u.hostname);
+      if (origin && isStrapiUpload && isLocalHost) {
+        return `${origin}${normalizedPath}${u.search}${u.hash}`;
+      }
+      return url;
+    } catch {
+      return url;
+    }
+  }
+
+  return url;
+};
+
+const rewriteMediaInHtml = (origin: string, html: string) => {
+  if (!html) return html;
+  return html
+    .replace(/src="\/api\/uploads\//g, `src="${origin}/uploads/`)
+    .replace(/src='\/api\/uploads\//g, `src='${origin}/uploads/`)
+    .replace(/src="\/uploads\//g, `src="${origin}/uploads/`)
+    .replace(/src='\/uploads\//g, `src='${origin}/uploads/`)
+    .replace(/src="https?:\/\/localhost(?::\d+)?\/api\/uploads\//g, `src="${origin}/uploads/`)
+    .replace(/src='https?:\/\/localhost(?::\d+)?\/api\/uploads\//g, `src='${origin}/uploads/`)
+    .replace(/src="https?:\/\/localhost(?::\d+)?\/uploads\//g, `src="${origin}/uploads/`)
+    .replace(/src='https?:\/\/localhost(?::\d+)?\/uploads\//g, `src='${origin}/uploads/`)
+    .replace(/src="https?:\/\/127\.0\.0\.1(?::\d+)?\/api\/uploads\//g, `src="${origin}/uploads/`)
+    .replace(/src='https?:\/\/127\.0\.0\.1(?::\d+)?\/api\/uploads\//g, `src='${origin}/uploads/`)
+    .replace(/src="https?:\/\/127\.0\.0\.1(?::\d+)?\/uploads\//g, `src="${origin}/uploads/`)
+    .replace(/src='https?:\/\/127\.0\.0\.1(?::\d+)?\/uploads\//g, `src='${origin}/uploads/`)
+    .replace(/src="https?:\/\/0\.0\.0\.0(?::\d+)?\/api\/uploads\//g, `src="${origin}/uploads/`)
+    .replace(/src='https?:\/\/0\.0\.0\.0(?::\d+)?\/api\/uploads\//g, `src='${origin}/uploads/`)
+    .replace(/src="https?:\/\/0\.0\.0\.0(?::\d+)?\/uploads\//g, `src="${origin}/uploads/`)
+    .replace(/src='https?:\/\/0\.0\.0\.0(?::\d+)?\/uploads\//g, `src='${origin}/uploads/`);
+};
+
+const rewriteMediaDeep = (origin: string, value: unknown): unknown => {
+  if (!origin) return value;
+  if (typeof value === "string") {
+    const rewritten = rewriteMediaUrl(origin, value);
+    if (rewritten !== value) return rewritten;
+    if (value.includes('src="/uploads/') || value.includes("src='/uploads/") || value.includes("/api/uploads/")) {
+      return rewriteMediaInHtml(origin, value);
+    }
+    return value;
+  }
+  if (!value || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map((item) => rewriteMediaDeep(origin, item));
+  const obj = value as Record<string, unknown>;
+  const next: Record<string, unknown> = {};
+  Object.entries(obj).forEach(([key, v]) => {
+    next[key] = rewriteMediaDeep(origin, v);
+  });
+  return next;
+};
+
 const normalizeStrapiApiUrl = (value: string) => {
   const trimmed = value.trim().replace(/\/+$/, "");
   if (!trimmed) return "";
@@ -164,10 +241,28 @@ const proxy = async (request: NextRequest, path: string[]) => {
     responseHeaders.delete("content-length");
     responseHeaders.delete("transfer-encoding");
 
-    return new NextResponse(upstream.body, {
-      status: upstream.status,
-      headers: responseHeaders,
-    });
+    const contentType = upstream.headers.get("content-type") || "";
+    const isJson = contentType.includes("application/json");
+    const canRewriteBody = finalMethod === "GET" && upstream.ok && isJson;
+
+    if (canRewriteBody) {
+      const origin = getStrapiOrigin();
+      try {
+        const data = await upstream.json();
+        const rewritten = rewriteMediaDeep(origin, data);
+        return NextResponse.json(rewritten, {
+          status: upstream.status,
+          headers: responseHeaders,
+        });
+      } catch {
+        return new NextResponse(upstream.body, {
+          status: upstream.status,
+          headers: responseHeaders,
+        });
+      }
+    }
+
+    return new NextResponse(upstream.body, { status: upstream.status, headers: responseHeaders });
   } catch (error) {
     console.error("Proxy Error:", error);
     return NextResponse.json({ error: "Internal Proxy Error" }, { status: 500 });

@@ -16,9 +16,9 @@ const getStrapiApiBaseUrl = () => {
     process.env.STRAPI_API_URL,
     process.env.NEXT_PUBLIC_STRAPI_API_URL,
     process.env.NEXT_PUBLIC_STRAPI_BASE_URL,
-    "https://api.rampur.cloud/api",
-    "http://localhost:1337/api",
-    "http://127.0.0.1:1337/api",
+    process.env.NEXT_PUBLIC_STRAPI_URL,
+    process.env.NODE_ENV === "production" ? undefined : "http://localhost:1337/api",
+    process.env.NODE_ENV === "production" ? undefined : "http://127.0.0.1:1337/api",
   ]
     .filter((value) => typeof value === "string")
     .map((value) => normalizeStrapiApiUrl(String(value)))
@@ -61,7 +61,6 @@ const buildTargetUrl = (request: NextRequest, path: string[]) => {
 };
 
 const proxy = async (request: NextRequest, path: string[]) => {
-  // 1. Environment Consistency Check
   if (!process.env.ADMIN_JWT_SECRET && !process.env.ADMIN_SESSION_SECRET) {
     return NextResponse.json(
       {
@@ -76,58 +75,35 @@ const proxy = async (request: NextRequest, path: string[]) => {
   const pathString = path.join("/");
   const isWriteOperation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
 
-  // 2. Session Handling: Verify admin_session cookie only for UI access control
   const session = getSession(request);
   const isPublic = (method === "GET" || method === "HEAD") && isPublicGetPath(pathString);
 
-  // Access Control: Must have session unless public GET/HEAD OR it is a write operation (which uses server token)
-  // We explicitly allow write operations to proceed without admin_session because we force-attach the STRAPI_API_TOKEN.
-  // This ensures that Uploads, Deletes, and Article Writes work even if the UI session is unstable.
-  if (!session && !isPublic && !isWriteOperation) {
+  if (!session && !isPublic) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // 3. Header Hygiene
   const headers = new Headers(request.headers);
   headers.delete("host");
   headers.delete("connection");
   headers.delete("content-length");
   headers.delete("transfer-encoding");
 
-  // 4. Authentication Strategy & Cookie Handling
+  const jwt = request.cookies.get("strapi_jwt")?.value;
   if (isWriteOperation) {
-    // Write Ops: Completely ignore browser cookies, use STRAPI_API_TOKEN
-    headers.delete("cookie");
-    
-    const apiToken = process.env.STRAPI_API_TOKEN;
-    if (!apiToken) {
-      return NextResponse.json(
-        { error: "Server configuration error: STRAPI_API_TOKEN is missing" },
-        { status: 500 }
-      );
+    if (!jwt) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    // Always replace authorization
-    headers.set("Authorization", `Bearer ${apiToken}`);
+    headers.set("Authorization", `Bearer ${jwt}`);
   } else {
-    // Read Ops: Use strapi_jwt from cookies
-    // Keep "cookie" header intact (do not delete) so we can extract if needed, 
-    // but primarily we extract strapi_jwt and set Authorization.
-    const jwt = request.cookies.get("strapi_jwt")?.value;
     if (jwt) {
       headers.set("Authorization", `Bearer ${jwt}`);
     }
-    // We do NOT delete the cookie header here, per requirements.
   }
 
   // 5. Strapi v5 Content Manager Routing & URL Rewriting
-  let targetUrl = buildTargetUrl(request, path);
-  let finalMethod = method;
+  const targetUrl = buildTargetUrl(request, path);
+  const finalMethod = method;
   let finalBody: BodyInit | undefined;
-
-  // Global Method Conversion: Strapi v5 often prefers PUT over PATCH
-  if (method === "PATCH") {
-    finalMethod = "PUT";
-  }
 
   // Check if this is a file upload (multipart/form-data)
   // We should NOT touch the body or method for uploads usually, but strictly speaking

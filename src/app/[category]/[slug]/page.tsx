@@ -2,12 +2,12 @@ import NewsDetail from "../../../views/NewsDetail";
 import type { Metadata } from "next";
 import { type CMSArticle, getCMSProvider } from "../../../services/cms";
 import {
-  VALID_NEWS_CATEGORIES,
   deriveAiSeoSignals,
   getCategoryHindi,
   stripHtmlToText,
   truncateText,
 } from "../../../lib/utils";
+import { redirect } from "next/navigation";
 
 const SITE_URL = "https://rampurnews.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
@@ -30,11 +30,11 @@ export async function generateMetadata(props: {
   params: Promise<PageParams>;
 }): Promise<Metadata> {
   const { category, slug } = await props.params;
-  const isValidCategory = VALID_NEWS_CATEGORIES.includes(category);
-  const canonicalPath = isValidCategory ? `/${category}/${slug}` : `/${slug}`;
-
   const article = await fetchArticleForSeo(slug);
-  if (!article || (isValidCategory && article.category !== category)) {
+  const effectiveCategory = (article?.category || category || "").trim();
+  const canonicalPath = effectiveCategory ? `/${effectiveCategory}/${slug}` : `/${slug}`;
+
+  if (!article) {
     const title = "खबर नहीं मिली | रामपुर न्यूज़";
     const description = "यह खबर मौजूद नहीं है या हटा दी गई है।";
     return {
@@ -88,7 +88,7 @@ export async function generateMetadata(props: {
   const keywordList = ai.keywords.length > 0 ? ai.keywords : [article.categoryHindi, "रामपुर", "Rampur"];
   const canonical = article.canonicalUrl?.trim() || canonicalPath;
   const absoluteCanonical = canonical.startsWith("http") ? canonical : `${SITE_URL}${canonical}`;
-  const articleSection = article.categoryHindi || getCategoryHindi(category);
+  const articleSection = article.categoryHindi || getCategoryHindi(effectiveCategory);
 
   return {
     title: seoTitle,
@@ -160,11 +160,15 @@ export async function generateMetadata(props: {
 
 export default async function Page(props: { params: Promise<PageParams> }) {
   const { category, slug } = await props.params;
-  const isValidCategory = VALID_NEWS_CATEGORIES.includes(category);
-  const canonicalPath = isValidCategory ? `/${category}/${slug}` : `/${slug}`;
-
   const article = await fetchArticleForSeo(slug);
-  const canInjectSchema = !!article && (!isValidCategory || article.category === category);
+  const effectiveCategory = (article?.category || category || "").trim();
+  const canonicalPath = effectiveCategory ? `/${effectiveCategory}/${slug}` : `/${slug}`;
+
+  if (article?.category && category && article.category !== category) {
+    redirect(`/${article.category}/${slug}`);
+  }
+
+  const canInjectSchema = !!article && (!category || !article?.category || article.category === category);
 
   const title = article?.seoTitle?.trim() || article?.title || "";
   const bodyText = article ? stripHtmlToText(article.content || "") : "";
@@ -202,7 +206,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
   const absoluteCanonical = article?.canonicalUrl?.trim()
     ? article.canonicalUrl.trim()
     : `${SITE_URL}${canonicalPath}`;
-  const categoryLabelHindi = getCategoryHindi(category);
+  const categoryLabelHindi = getCategoryHindi(effectiveCategory || category);
 
   // Safe schema injection
   const schemaFromCms =
@@ -272,7 +276,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
               "@type": "ListItem",
               position: 2,
               name: categoryLabelHindi,
-              item: `${SITE_URL}/${category}`,
+              item: `${SITE_URL}/${effectiveCategory || category}`,
             },
             {
               "@type": "ListItem",

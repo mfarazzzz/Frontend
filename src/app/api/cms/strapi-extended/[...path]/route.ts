@@ -18,9 +18,8 @@ const getStrapiApiBaseUrl = () => {
     process.env.NEXT_PUBLIC_STRAPI_API_URL,
     process.env.NEXT_PUBLIC_STRAPI_BASE_URL,
     process.env.NEXT_PUBLIC_STRAPI_URL,
-    "https://api.rampur.cloud/api",
-    "http://localhost:1337/api",
-    "http://127.0.0.1:1337/api",
+    process.env.NODE_ENV === "production" ? undefined : "http://localhost:1337/api",
+    process.env.NODE_ENV === "production" ? undefined : "http://127.0.0.1:1337/api",
   ]
     .filter((value) => typeof value === "string")
     .map((value) => normalizeStrapiApiUrl(String(value)))

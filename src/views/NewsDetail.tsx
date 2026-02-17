@@ -1,6 +1,6 @@
 "use client";
-import { useParams, Link } from "@/lib/router-compat";
-import { VALID_NEWS_CATEGORIES, getCategoryHindi } from "@/lib/utils";
+import { Link, Navigate } from "@/lib/router-compat";
+import { getCategoryHindi } from "@/lib/utils";
 import { ArrowLeft, Clock, Share2, User } from "lucide-react";
 import { lazy, Suspense } from "react";
 import Image from "next/image";
@@ -79,13 +79,13 @@ interface NextParams {
 const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
   const category = nextParams?.category ?? "";
   const slug = nextParams?.slug ?? "";
-  const isValidCategory = VALID_NEWS_CATEGORIES.includes(category);
+  const normalizedCategory = category.trim();
 
-  const { data: article, isLoading: isArticleLoading } = useArticleBySlug(isValidCategory ? slug : "");
-  const { data: categoryNews = [] } = useArticlesByCategory(isValidCategory ? category : "", 20);
+  const { data: article, isLoading: isArticleLoading } = useArticleBySlug(slug);
+  const effectiveCategory = (article?.category || normalizedCategory).trim();
+  const { data: categoryNews = [] } = useArticlesByCategory(effectiveCategory, 20);
 
-  // Validate category
-  if (!isValidCategory) {
+  if (!slug.trim()) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -120,7 +120,7 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
     );
   }
 
-  if (!article || article.category !== category) {
+  if (!article) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -128,10 +128,10 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
           <div className="text-center py-16">
             <h1 className="text-2xl font-bold text-foreground mb-4">खबर नहीं मिली</h1>
             <p className="text-muted-foreground mb-6">यह खबर मौजूद नहीं है या हटा दी गई है।</p>
-            <Link to={`/${category}`}>
+            <Link to={effectiveCategory ? `/${effectiveCategory}` : "/"}>
               <Button>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                {getCategoryHindi(category)} पर वापस जाएं
+                {effectiveCategory ? `${getCategoryHindi(effectiveCategory)} पर वापस जाएं` : "होम पर जाएं"}
               </Button>
             </Link>
           </div>
@@ -141,10 +141,14 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
     );
   }
 
+  if (normalizedCategory && article.category && article.category !== normalizedCategory) {
+    return <Navigate to={`/${article.category}/${article.slug || slug}`} replace />;
+  }
+
   // Get related news from same category
   const relatedNews = categoryNews.filter((a) => a.id !== article.id).slice(0, 4);
 
-  const articleUrl = `/${category}/${slug}`;
+  const articleUrl = `/${effectiveCategory}/${slug}`;
   const readingTime = article.readTime || getReadingTime(article.content, article.excerpt);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
   const shareUrl = `${siteUrl}${articleUrl}`;
@@ -156,7 +160,7 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
       .slice(0, 2)
       .filter((n) => n.slug && n.title)
       .map((n) => ({
-        href: `/${category}/${n.slug}`,
+        href: `/${effectiveCategory}/${n.slug}`,
         title: n.title,
       }));
 
@@ -183,8 +187,8 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6" aria-label="Breadcrumb">
           <Link to="/" className="hover:text-primary">होम</Link>
           <span>/</span>
-          <Link to={`/${category}`} className="hover:text-primary">
-            {getCategoryHindi(category)}
+          <Link to={`/${effectiveCategory}`} className="hover:text-primary">
+            {getCategoryHindi(effectiveCategory)}
           </Link>
           <span>/</span>
           <span className="text-foreground line-clamp-1">{article.title}</span>
@@ -196,7 +200,7 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
             {/* Category & Breaking Badge */}
             <div className="flex items-center gap-3 mb-4">
               <Link 
-                to={`/${category}`}
+                to={`/${effectiveCategory}`}
                 className="text-sm font-semibold text-primary hover:underline"
                 itemProp="articleSection"
               >

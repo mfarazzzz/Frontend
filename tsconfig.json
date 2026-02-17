@@ -16,8 +16,7 @@
       "dom",
       "dom.iterable",
       "esnext",
-      "es2020",
-      "es5"
+      "es2020"
     ],
     "types": ["node"],
     "strict": false,
@@ -34,7 +33,7 @@
         "name": "next"
       }
     ],
-    "target": "es5"
+    "target": "es2020"
   },
   "include": [
     "next-env.d.ts",

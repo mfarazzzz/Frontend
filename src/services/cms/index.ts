@@ -61,6 +61,10 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       return `/api/cms/strapi${path}${qs ? `?${qs}` : ''}`;
     }
 
+    if (isStrapi && !baseUrl) {
+      throw new Error('Strapi API URL is not configured');
+    }
+
     const urlString = `${baseUrl}${path}`;
     const searchParams = new URLSearchParams();
     if (params) {
@@ -137,9 +141,6 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       .filter(Boolean);
 
     if (candidates.length === 0) {
-      if (process.env.NODE_ENV === 'production') {
-        return 'https://api.rampur.cloud';
-      }
       return '';
     }
     try {
@@ -165,7 +166,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     const origin = getStrapiOrigin() || getStrapiMediaOriginFromEnv();
     if (!origin) return article;
 
-    let updatedArticle = { ...article };
+    const updatedArticle = { ...article };
 
     // Normalize featured image
     if (article.image) {
@@ -982,18 +983,22 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
 const getEnvStrapiUrl = () => {
   if (typeof process !== 'undefined' && process.env) {
-    const url = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
-    if (url) return url;
-    if (process.env.NODE_ENV === 'production') {
-      return 'https://api.rampur.cloud/api';
+    const url =
+      process.env.NEXT_PUBLIC_STRAPI_API_URL ||
+      process.env.STRAPI_API_URL ||
+      process.env.NEXT_PUBLIC_STRAPI_BASE_URL ||
+      process.env.NEXT_PUBLIC_STRAPI_URL;
+    if (url) return normalizeStrapiBaseUrl(url);
+    if (process.env.NODE_ENV !== 'production') {
+      return normalizeStrapiBaseUrl('http://localhost:1337/api');
     }
   }
-  return 'https://api.rampur.cloud/api';
+  return '';
 };
 
 const defaultConfig: CMSConfig = {
   provider: 'strapi',
-  baseUrl: getEnvStrapiUrl() || 'http://localhost:1337/api',
+  baseUrl: getEnvStrapiUrl(),
 };
 
 let currentConfig: CMSConfig = defaultConfig;

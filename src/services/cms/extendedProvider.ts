@@ -874,12 +874,12 @@ let cachedProvider: ExtendedCMSProvider | null = null;
 
 export const getExtendedCMSProvider = (): ExtendedCMSProvider => {
   const config = getCMSConfig();
-  if (config.provider === 'strapi' && config.baseUrl) {
+  if (config.provider === 'strapi' && (config.baseUrl || typeof window !== 'undefined')) {
     const key = `${config.provider}:${config.baseUrl}:${config.apiKey || ''}`;
     if (!cachedProvider || cachedProviderKey !== key) {
       cachedProviderKey = key;
       cachedProvider = createStrapiExtendedProvider({
-        baseUrl: config.baseUrl,
+        baseUrl: config.baseUrl || '',
         apiToken: config.apiKey,
       });
     }

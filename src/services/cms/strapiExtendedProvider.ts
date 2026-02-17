@@ -152,15 +152,15 @@ const encodeStrapiQuery = (params: Array<[string, string | number | boolean | un
 };
 
 const contentTypeConfig = {
-  exams: { path: "/exams", searchFields: ["titleHindi", "title", "organizationHindi", "organization"] },
-  results: { path: "/results", searchFields: ["titleHindi", "title", "organizationHindi", "organization"] },
+  exams: { path: "/exams", dateField: "examDate", searchFields: ["titleHindi", "title", "organizationHindi", "organization"] },
+  results: { path: "/results", dateField: "resultDate", searchFields: ["titleHindi", "title", "organizationHindi", "organization"] },
   institutions: { path: "/institutions", searchFields: ["nameHindi", "name", "city", "district", "state"] },
-  holidays: { path: "/holidays", searchFields: ["nameHindi", "name", "descriptionHindi", "description"] },
+  holidays: { path: "/holidays", dateField: "date", searchFields: ["nameHindi", "name", "descriptionHindi", "description"] },
   restaurants: { path: "/restaurants", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
   fashionStores: { path: "/fashion-stores", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
   shoppingCentres: { path: "/shopping-centres", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
   places: { path: "/places", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
-  events: { path: "/events", searchFields: ["titleHindi", "title", "city", "district", "venueHindi", "venue", "descriptionHindi", "description"] },
+  events: { path: "/events", dateField: "date", searchFields: ["titleHindi", "title", "city", "district", "venueHindi", "venue", "descriptionHindi", "description"] },
 } as const;
 
 type ContentTypeKey = keyof typeof contentTypeConfig;
@@ -272,69 +272,162 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
     return headers;
   };
 
+  const toPaginated = <T extends Record<string, any>>(
+    rawItems: Array<T & { id: string }>,
+    contentType: ContentTypeKey,
+    params?: ExtendedQueryParams,
+  ): PaginatedResponse<T & { id: string }> => {
+    let items = [...rawItems];
+
+    if (params?.category) items = items.filter((item: any) => item?.category === params.category);
+    if (params?.subcategory) items = items.filter((item: any) => item?.subcategory === params.subcategory);
+    if (params?.type) items = items.filter((item: any) => item?.type === params.type);
+    if (params?.city) items = items.filter((item: any) => item?.city === params.city);
+    if (params?.district) items = items.filter((item: any) => item?.district === params.district);
+    if (params?.status) items = items.filter((item: any) => item?.status === params.status);
+    if (params?.applicationStatus) items = items.filter((item: any) => item?.applicationStatus === params.applicationStatus);
+    if (params?.resultStatus) items = items.filter((item: any) => item?.resultStatus === params.resultStatus);
+    if (params?.featured !== undefined) items = items.filter((item: any) => Boolean(item?.isFeatured) === params.featured);
+    if (params?.popular !== undefined) items = items.filter((item: any) => Boolean(item?.isPopular) === params.popular);
+
+    const dateField = (contentTypeConfig[contentType] as any).dateField as string | undefined;
+    if (dateField && (params?.dateFrom || params?.dateTo)) {
+      const from = params?.dateFrom ? new Date(params.dateFrom).getTime() : undefined;
+      const to = params?.dateTo ? new Date(params.dateTo).getTime() : undefined;
+      items = items.filter((item: any) => {
+        const raw = item?.[dateField];
+        if (!raw) return false;
+        const t = new Date(raw).getTime();
+        if (from !== undefined && t < from) return false;
+        if (to !== undefined && t > to) return false;
+        return true;
+      });
+    }
+
+    if (params?.search) {
+      const q = params.search.toLowerCase();
+      const fields = contentTypeConfig[contentType].searchFields;
+      items = items.filter((item: any) =>
+        fields.some((field) => {
+          const value = item?.[field];
+          if (typeof value !== "string") return false;
+          return value.toLowerCase().includes(q);
+        }),
+      );
+    }
+
+    if (params?.orderBy) {
+      const dir = (params.order || "desc").toLowerCase() === "asc" ? 1 : -1;
+      const key = params.orderBy;
+      items.sort((a: any, b: any) => {
+        const av = a?.[key];
+        const bv = b?.[key];
+        if (av === bv) return 0;
+        if (av === undefined || av === null) return 1;
+        if (bv === undefined || bv === null) return -1;
+        if (typeof av === "number" && typeof bv === "number") return (av - bv) * dir;
+        return String(av).localeCompare(String(bv)) * dir;
+      });
+    }
+
+    const limit = params?.limit ?? 10;
+    const offset = params?.offset ?? 0;
+    const total = items.length;
+    const data = items.slice(offset, offset + limit);
+    const page = Math.floor(offset / limit) + 1;
+    const pageSize = limit;
+    const totalPages = Math.ceil(total / limit);
+
+    return { data, total, page, pageSize, totalPages };
+  };
+
+  const extractList = <T extends Record<string, any>>(
+    result: any,
+  ): Array<StrapiEntity<T>> => {
+    if (!result) return [];
+    if (Array.isArray(result)) return result as Array<StrapiEntity<T>>;
+    if (Array.isArray(result?.data)) return result.data as Array<StrapiEntity<T>>;
+    return [];
+  };
+
   const list = async <T extends Record<string, any>>(
     contentType: ContentTypeKey,
     params?: ExtendedQueryParams,
   ): Promise<PaginatedResponse<T & { id: string }>> => {
     const query = buildListQuery(contentType, params);
     if (typeof window !== "undefined") {
-      const url = `/api/cms/strapi-extended${contentTypeConfig[contentType].path}${encodeStrapiQuery(query)}`;
-      const result = await fetchJson<PaginatedResponse<T & { id: string }>>(url, { method: "GET" }, { allowNotFound: true });
-      if (!result) {
-        return {
-          data: [],
-          total: 0,
-          page: 1,
-          pageSize: params?.limit ?? 10,
-          totalPages: 0,
-        };
+      const url = buildProxyUrl(contentTypeConfig[contentType].path, query);
+      const result = await fetchJson<any>(url, { method: "GET" }, { allowNotFound: true });
+      const items = extractList<T>(result).map((e) => normalizeEntity(e as StrapiEntity<T>, origin));
+
+      const pagination = result?.meta?.pagination;
+      if (pagination && typeof pagination === "object") {
+        const total = typeof pagination.total === "number" ? pagination.total : items.length;
+        const pageSize = typeof pagination.pageSize === "number" ? pagination.pageSize : params?.limit ?? 10;
+        const page = typeof pagination.page === "number" ? pagination.page : Math.floor((params?.offset ?? 0) / pageSize) + 1;
+        const totalPages =
+          typeof pagination.pageCount === "number" ? pagination.pageCount : Math.max(1, Math.ceil(total / pageSize));
+        return { data: items, total, page, pageSize, totalPages };
       }
-      return result;
+
+      return toPaginated(items, contentType, params);
     }
 
     const url = buildDirectUrl(contentTypeConfig[contentType].path, query);
-    const result = await fetchJson<StrapiCollectionResponse<T>>(
-      url,
-      { method: "GET", headers: getPublicHeaders() },
-      { revalidate: revalidateSeconds },
-    );
+    const result = await fetchJson<any>(url, { method: "GET", headers: getPublicHeaders() }, { revalidate: revalidateSeconds });
+    const items = extractList<T>(result).map((e) => normalizeEntity(e as StrapiEntity<T>, origin));
 
-    const items = (result?.data || []).map((e) => normalizeEntity(e as StrapiEntity<T>, origin));
     const pagination = result?.meta?.pagination;
-    const total = typeof pagination?.total === "number" ? pagination.total : items.length;
-    const pageSize = typeof pagination?.pageSize === "number" ? pagination.pageSize : params?.limit ?? 10;
-    const page = typeof pagination?.page === "number" ? pagination.page : Math.floor((params?.offset ?? 0) / pageSize) + 1;
-    const totalPages = typeof pagination?.pageCount === "number" ? pagination.pageCount : Math.max(1, Math.ceil(total / pageSize));
+    if (pagination && typeof pagination === "object") {
+      const total = typeof pagination.total === "number" ? pagination.total : items.length;
+      const pageSize = typeof pagination.pageSize === "number" ? pagination.pageSize : params?.limit ?? 10;
+      const page = typeof pagination.page === "number" ? pagination.page : Math.floor((params?.offset ?? 0) / pageSize) + 1;
+      const totalPages =
+        typeof pagination.pageCount === "number" ? pagination.pageCount : Math.max(1, Math.ceil(total / pageSize));
+      return { data: items, total, page, pageSize, totalPages };
+    }
 
-    return { data: items, total, page, pageSize, totalPages };
+    return toPaginated(items, contentType, params);
   };
 
   const bySlug = async <T extends Record<string, any>>(contentType: ContentTypeKey, slug: string) => {
-    const query = buildSlugQuery(contentType, slug);
     if (typeof window !== "undefined") {
-      const url = `/api/cms/strapi-extended${contentTypeConfig[contentType].path}${encodeStrapiQuery([
-        ...query,
-        ["single", "true"],
-      ])}`;
-      const result = await fetchJson<(T & { id: string }) | null>(url, { method: "GET" }, { allowNotFound: true });
-      return result || null;
+      const slugUrl = buildProxyUrl(`${contentTypeConfig[contentType].path}/slug/${encodeURIComponent(slug)}`);
+      const bySlugResult = await fetchJson<any>(slugUrl, { method: "GET" }, { allowNotFound: true });
+      if (bySlugResult) {
+        if (Array.isArray(bySlugResult)) {
+          const first = bySlugResult[0];
+          return first ? (normalizeEntity(first as StrapiEntity<T>, origin) as any) : null;
+        }
+        if (bySlugResult?.data) {
+          const entity = Array.isArray(bySlugResult.data) ? bySlugResult.data[0] : bySlugResult.data;
+          return entity ? (normalizeEntity(entity as StrapiEntity<T>, origin) as any) : null;
+        }
+        return normalizeEntity(bySlugResult as StrapiEntity<T>, origin) as any;
+      }
+
+      const query = buildSlugQuery(contentType, slug);
+      const url = buildProxyUrl(contentTypeConfig[contentType].path, query);
+      const result = await fetchJson<any>(url, { method: "GET" }, { allowNotFound: true });
+      const first = extractList<T>(result)[0];
+      if (first) return normalizeEntity(first as StrapiEntity<T>, origin) as any;
+
+      const all = await list<T>(contentType, { limit: 2000, offset: 0 });
+      const found = all.data.find((item: any) => item?.slug === slug);
+      return found || null;
     }
 
+    const query = buildSlugQuery(contentType, slug);
     const url = buildDirectUrl(contentTypeConfig[contentType].path, query);
-    const result = await fetchJson<StrapiCollectionResponse<T>>(
-      url,
-      { method: "GET", headers: getPublicHeaders() },
-      { allowNotFound: true, revalidate: revalidateSeconds },
-    );
-
-    const first = result?.data?.[0];
+    const result = await fetchJson<any>(url, { method: "GET", headers: getPublicHeaders() }, { allowNotFound: true, revalidate: revalidateSeconds });
+    const first = extractList<T>(result)[0];
     if (!first) return null;
     return normalizeEntity(first as StrapiEntity<T>, origin);
   };
 
   const create = async <T extends Record<string, any>>(contentType: ContentTypeKey, value: any): Promise<T & { id: string }> => {
     const url = buildProxyUrl(contentTypeConfig[contentType].path);
-    const result = await fetchJson<StrapiSingleResponse<T>>(
+    const result = await fetchJson<any>(
       url,
       {
         method: "POST",
@@ -344,8 +437,9 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
       },
       { allowNotFound: false },
     );
-    if (!result?.data) throw new Error("Failed to create item");
-    return normalizeEntity(result.data as StrapiEntity<T>, origin);
+    const entity = result?.data && typeof result.data === "object" ? result.data : result;
+    if (!entity) throw new Error("Failed to create item");
+    return normalizeEntity(entity as StrapiEntity<T>, origin);
   };
 
   const update = async <T extends Record<string, any>>(
@@ -354,18 +448,19 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
     value: any,
   ): Promise<T & { id: string }> => {
     const url = buildProxyUrl(`${contentTypeConfig[contentType].path}/${encodeURIComponent(id)}`);
-    const result = await fetchJson<StrapiSingleResponse<T>>(
+    const result = await fetchJson<any>(
       url,
       {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ data: value || {} }),
       },
       { allowNotFound: false },
     );
-    if (!result?.data) throw new Error("Failed to update item");
-    return normalizeEntity(result.data as StrapiEntity<T>, origin);
+    const entity = result?.data && typeof result.data === "object" ? result.data : result;
+    if (!entity) throw new Error("Failed to update item");
+    return normalizeEntity(entity as StrapiEntity<T>, origin);
   };
 
   const remove = async (contentType: ContentTypeKey, id: string): Promise<void> => {

@@ -1,7 +1,6 @@
 "use client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import BreakingNewsTicker from "@/components/BreakingNewsTicker";
 import BreakingNewsSlider from "@/components/BreakingNewsSlider";
 import CategorySection from "@/components/CategorySection";
 import Sidebar from "@/components/Sidebar";
@@ -41,7 +40,6 @@ const Index = ({ initialFeaturedArticles }: { initialFeaturedArticles?: CMSArtic
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <BreakingNewsTicker />
 
       <main className="container py-6">
         {/* Breaking News Slider */}

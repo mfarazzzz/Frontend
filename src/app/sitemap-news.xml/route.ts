@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCMSProvider } from "@/services/cms";
-import { generateRSSFeed } from "@/utils/generateFeeds";
+import { generateNewsSitemap } from "@/utils/generateFeeds";
 
 export const dynamic = "force-dynamic";
 
@@ -28,16 +28,17 @@ export async function GET() {
       isBreaking: !!article.isBreaking,
     }));
 
-    const rss = generateRSSFeed(feedArticles);
+    const xml = generateNewsSitemap(feedArticles);
 
-    return new NextResponse(rss, {
+    return new NextResponse(xml, {
       status: 200,
       headers: {
-        "Content-Type": "application/rss+xml; charset=utf-8",
+        "Content-Type": "application/xml; charset=utf-8",
       },
     });
   } catch (error) {
-    console.error("Error generating RSS feed:", error);
-    return new NextResponse("Error generating RSS feed", { status: 500 });
+    console.error("Error generating news sitemap:", error);
+    return new NextResponse("Error generating news sitemap", { status: 500 });
   }
 }
+

@@ -16,13 +16,33 @@ import { useExams, useResults } from "@/hooks/useExtendedCMS";
 import { mockCareerGuides, mockTestimonials, mockVideoTutorials, mockEducationNews } from "@/services/cms/extendedMockData";
 
 const EducationHub = () => {
-  const { data: examsData, isLoading: examsLoading } = useExams({ limit: 6, featured: true });
-  const { data: resultsData, isLoading: resultsLoading } = useResults({ limit: 4 });
+  const { data: examsData, isLoading: examsLoading } = useExams({ limit: 20, orderBy: "publishedAt", order: "desc" });
+  const { data: resultsData, isLoading: resultsLoading } = useResults({ limit: 20, orderBy: "publishedAt", order: "desc" });
+
+  const exams = examsData?.data ?? [];
+  const results = resultsData?.data ?? [];
 
   const featuredCareers = mockCareerGuides.filter(c => c.isFeatured).slice(0, 3);
   const featuredTestimonials = mockTestimonials.filter(t => t.isFeatured).slice(0, 2);
   const featuredVideos = mockVideoTutorials.filter(v => v.isFeatured).slice(0, 4);
-  const latestNews = mockEducationNews.slice(0, 3);
+  const latestNews = [...exams, ...results]
+    .map((item) => {
+      const baseDate =
+        "examDate" in item
+          ? item.publishedAt || item.lastUpdated || item.examDate
+          : item.publishedAt || item.lastUpdated || item.resultDate;
+      const date = baseDate ? new Date(baseDate) : null;
+      return {
+        id: "examDate" in item ? `exam-${item.id}` : `result-${item.id}`,
+        type: "examDate" in item ? "exam" : "result",
+        slug: item.slug,
+        titleHindi: item.titleHindi,
+        date,
+      };
+    })
+    .filter((n) => n.date && !Number.isNaN(n.date.getTime()))
+    .sort((a, b) => b.date!.getTime() - a.date!.getTime())
+    .slice(0, 6);
   const breakingNews = mockEducationNews.filter(n => n.isBreaking);
   const scholarshipNews = mockEducationNews.filter(n => n.category === 'scholarship').slice(0, 3);
   const examUpdates = mockEducationNews.filter(n => n.category === 'exam-news' || n.category === 'result-news').slice(0, 4);
@@ -81,13 +101,16 @@ const EducationHub = () => {
                 </span>
                 <div className="flex-1 overflow-hidden">
                   <div className="flex items-center gap-6 animate-pulse">
-                    {latestNews.map((news, i) => (
+                    {latestNews.map((news) => (
                       <Link 
-                        key={news.id} 
-                        to={`/education-jobs/news/${news.slug}`}
+                        key={news.id}
+                        to={
+                          news.type === "exam"
+                            ? `/education-jobs/exams/${news.slug}`
+                            : `/education-jobs/results/${news.slug}`
+                        }
                         className="shrink-0 text-sm hover:text-primary transition-colors"
                       >
-                        {news.isBreaking && <span className="text-primary font-semibold mr-1">●</span>}
                         {news.titleHindi}
                       </Link>
                     ))}
@@ -125,7 +148,10 @@ const EducationHub = () => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {examsData?.data.map(exam => (
+              {exams
+                .filter((exam) => exam.isFeatured)
+                .slice(0, 6)
+                .map((exam) => (
                 <ExamCard key={exam.id} exam={exam} />
               ))}
             </div>
@@ -160,7 +186,7 @@ const EducationHub = () => {
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
-                {resultsData?.data.map(result => (
+                {results.slice(0, 4).map((result) => (
                   <ResultCard key={result.id} result={result} variant="compact" />
                 ))}
               </div>

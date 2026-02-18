@@ -71,6 +71,47 @@ const escapeHtml = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+const convertPlainContentToHtml = (value: string): string => {
+  const raw = (value || "").replace(/\r\n/g, "\n");
+  if (!raw.trim()) return "";
+
+  const hasHtmlTags = /<\/?[a-z][\s\S]*>/i.test(raw);
+  if (hasHtmlTags) return raw;
+
+  let text = raw;
+
+  text = text.replace(
+    /!\[([^\]]*)]\(([^)]+)\)/g,
+    (_, alt, url) =>
+      `<figure class="my-4"><img src="${url.trim()}" alt="${alt.trim()}" class="mx-auto rounded-lg" /></figure>`,
+  );
+
+  text = text.replace(
+    /\[([^\]]+)]\(([^)]+)\)/g,
+    (_, label, href) =>
+      `<a href="${href.trim()}" class="underline" target="_blank" rel="noopener noreferrer">${label}</a>`,
+  );
+
+  text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+
+  text = text.replace(
+    /(https?:\/\/[^\s]+?\.(?:png|jpe?g|gif|webp))/gi,
+    (match) =>
+      `<figure class="my-4"><img src="${match}" alt="" class="mx-auto rounded-lg" /></figure>`,
+  );
+
+  const paragraphs = text.split(/\n{2,}/);
+  const html = paragraphs
+    .map((p) => p.replace(/\n/g, "<br />"))
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p>${p}</p>`)
+    .join("");
+
+  return html || `<p>${escapeHtml(raw)}</p>`;
+};
+
 interface NextParams {
   category: string;
   slug: string;
@@ -155,7 +196,7 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
   const embedUrl = article.videoType === "youtube" && article.videoUrl ? getYouTubeEmbedUrl(article.videoUrl) : "";
 
   const contentWithInternalLinks = (() => {
-    const baseHtml = article.content || "";
+    const baseHtml = convertPlainContentToHtml(article.content || "");
     const links = relatedNews
       .slice(0, 2)
       .filter((n) => n.slug && n.title)

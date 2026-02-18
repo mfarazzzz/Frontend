@@ -55,6 +55,8 @@ const ArticleEditor = () => {
     seoTitle: '',
     seoDescription: '',
     seoOverride: false,
+    canonicalUrl: '',
+    newsKeywords: '',
     tags: [],
     videoUrl: '',
     videoType: 'none',
@@ -547,7 +549,7 @@ const ArticleEditor = () => {
             const categorySlug = (formData.category || '').trim();
             const selectedCategory = categories?.find((c) => c.slug === categorySlug);
             const categoryName = (selectedCategory?.titleEnglish || selectedCategory?.titleHindi || formData.categoryHindi || categorySlug || '').trim();
-            const canonicalUrl = categorySlug && (formData.slug || '').trim()
+            const autoCanonicalUrl = categorySlug && (formData.slug || '').trim()
               ? `${SITE_URL}/${categorySlug}/${(formData.slug || '').trim()}`
               : '';
 
@@ -564,7 +566,33 @@ const ArticleEditor = () => {
 
             const seoTitleAuto = seoTitleAutoRaw.length > 60 ? truncateText(seoTitleAutoRaw, 60) : seoTitleAutoRaw;
 
+            const tagsList = Array.isArray(formData.tags)
+              ? formData.tags.map((t) => String(t || '').trim()).filter(Boolean)
+              : [];
+            const baseKeywords = [
+              categoryName,
+              'रामपुर',
+              'Rampur',
+              'Rampur News',
+              'रामपुर न्यूज़',
+              'उत्तर प्रदेश',
+              'Uttar Pradesh',
+              'India News',
+              'Hindi News',
+            ].filter(Boolean);
+            const seenKeywords = new Set<string>();
+            const combinedKeywords = [...tagsList, ...baseKeywords].filter((k) => {
+              const key = k.toLowerCase();
+              if (seenKeywords.has(key)) return false;
+              seenKeywords.add(key);
+              return true;
+            });
+            const newsKeywordsAuto = combinedKeywords.slice(0, 12).join(', ');
+
             const seoOverride = !!formData.seoOverride;
+            const canonicalUrl = seoOverride
+              ? (formData.canonicalUrl || autoCanonicalUrl)
+              : autoCanonicalUrl;
             const effectiveSeoTitle = seoOverride ? (formData.seoTitle || '') : seoTitleAuto;
             const effectiveSeoDescription = seoOverride ? (formData.seoDescription || '') : descriptionAuto;
 
@@ -618,6 +646,8 @@ const ArticleEditor = () => {
                             seoOverride: v,
                             seoTitle: v ? (prev.seoTitle || seoTitleAuto) : prev.seoTitle,
                             seoDescription: v ? (prev.seoDescription || descriptionAuto) : prev.seoDescription,
+                            canonicalUrl: v ? (prev.canonicalUrl || autoCanonicalUrl) : prev.canonicalUrl,
+                            newsKeywords: v ? (prev.newsKeywords || newsKeywordsAuto) : prev.newsKeywords,
                           }))
                         }
                       />
@@ -662,8 +692,66 @@ const ArticleEditor = () => {
 
                     <div className="space-y-1">
                       <div className="text-sm font-medium">Canonical URL</div>
-                      <div className="text-xs text-muted-foreground break-all">
-                        {canonicalUrl || '—'}
+                      {seoOverride ? (
+                        <>
+                          <Input
+                            value={formData.canonicalUrl || canonicalUrl}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                canonicalUrl: e.target.value,
+                              }))
+                            }
+                            placeholder={canonicalUrl || 'https://rampurnews.com/category/slug'}
+                          />
+                          <div className="text-xs text-muted-foreground break-all">
+                            {canonicalUrl || '—'}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-xs text-muted-foreground break-all">
+                          {canonicalUrl || '—'}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="newsKeywords">News Keywords</Label>
+                      <Textarea
+                        id="newsKeywords"
+                        value={seoOverride ? (formData.newsKeywords ?? '') : newsKeywordsAuto}
+                        onChange={(e) => {
+                          if (!seoOverride) return;
+                          setFormData((prev) => ({ ...prev, newsKeywords: e.target.value }));
+                        }}
+                        placeholder="रामपुर, उत्तर प्रदेश, Hindi News (कॉमा से अलग)"
+                        rows={2}
+                        disabled={!seoOverride}
+                      />
+                      <div className="text-xs text-muted-foreground">
+                        {seoOverride ? 'मैन्युअल (वैकल्पिक)' : 'ऑटो-जेनरेटेड'}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Search Preview</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="text-xs text-muted-foreground">
+                      Approximate Google result preview
+                    </div>
+                    <div className="space-y-1 border rounded-md p-3 bg-muted/40">
+                      <div className="text-xs text-green-700 break-all">
+                        {canonicalUrl || `${SITE_URL}/...`}
+                      </div>
+                      <div className="text-sm text-blue-700 font-medium">
+                        {effectiveSeoTitle || 'SEO शीर्षक'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {effectiveSeoDescription || 'मेटा विवरण यहाँ दिखेगा'}
                       </div>
                     </div>
                   </CardContent>

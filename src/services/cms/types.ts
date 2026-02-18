@@ -10,6 +10,7 @@ export interface CMSArticle {
   featuredMediaId?: string;
   category: string;
   categoryHindi: string;
+  categories?: string[];
   author: string;
   publishedDate: string;
   publishedAt?: string;

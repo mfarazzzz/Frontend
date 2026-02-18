@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -141,6 +142,28 @@ const ArticleEditor = () => {
     categories?.find((c) => c.id === formData.category)?.id ||
     categories?.find((c) => c.slug === formData.category)?.id ||
     '';
+
+  const primaryCategorySlug = (formData.category || '').trim();
+
+  const selectedExtraCategorySlugs = Array.isArray(formData.categories)
+    ? formData.categories.map((v) => String(v || '').trim()).filter(Boolean)
+    : [];
+
+  const toggleExtraCategory = (slug: string, checked: boolean) => {
+    setFormData((prev) => {
+      const current = Array.isArray(prev.categories)
+        ? prev.categories.map((v) => String(v || '').trim()).filter(Boolean)
+        : [];
+      const set = new Set(current);
+      if (checked) {
+        set.add(slug);
+      } else {
+        set.delete(slug);
+      }
+      const next = Array.from(set);
+      return { ...prev, categories: next.length > 0 ? next : undefined };
+    });
+  };
 
   const selectedAuthorId =
     authors?.find((a) => a.id === formData.author)?.id ||
@@ -392,6 +415,40 @@ const ArticleEditor = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>अतिरिक्त श्रेणियाँ (वैकल्पिक)</Label>
+                    <div className="space-y-1 max-h-40 overflow-y-auto border rounded-md p-2">
+                      {categories
+                        ?.filter((cat) => cat.slug !== primaryCategorySlug)
+                        .map((cat) => {
+                          const slug = cat.slug;
+                          const checked = selectedExtraCategorySlugs.includes(slug);
+                          return (
+                            <label
+                              key={cat.id}
+                              className="flex items-center gap-2 text-sm cursor-pointer"
+                            >
+                              <Checkbox
+                                checked={checked}
+                                onCheckedChange={(v) =>
+                                  toggleExtraCategory(slug, v === true)
+                                }
+                              />
+                              <span>{cat.titleHindi}</span>
+                            </label>
+                          );
+                        })}
+                      {categories && categories.length <= 1 && (
+                        <p className="text-xs text-muted-foreground">
+                          अतिरिक्त श्रेणी जोड़ने के लिए पहले नई श्रेणियाँ बनाएं।
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      चुने गए सभी सेक्शन की सूची पेजों में यह लेख दिखाई देगा।
+                    </p>
                   </div>
 
                   <div className="space-y-2">

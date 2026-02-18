@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Menu, X, Search, Facebook, Twitter, Youtube, Instagram, ChevronDown, Clock } from "lucide-react";
 import { categories } from "@/data/categories";
 import { MegaMenu, DropdownMenu } from "./MegaMenu";
+import BreakingNewsTicker from "./BreakingNewsTicker";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -72,6 +73,8 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      <BreakingNewsTicker />
 
       {/* Main Header */}
       <div className="container py-4">

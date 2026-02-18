@@ -15,6 +15,7 @@ export const cmsKeys = {
   articleBySlug: (slug: string) => [...cmsKeys.articles(), 'slug', slug] as const,
   articlesList: (params?: ArticleQueryParams) => [...cmsKeys.articles(), 'list', params] as const,
   featured: () => [...cmsKeys.articles(), 'featured'] as const,
+  hero: () => [...cmsKeys.articles(), 'hero'] as const,
   breaking: () => [...cmsKeys.articles(), 'breaking'] as const,
   trending: () => [...cmsKeys.articles(), 'trending'] as const,
   byCategory: (slug: string) => [...cmsKeys.articles(), 'category', slug] as const,
@@ -33,6 +34,15 @@ export const useArticles = (params?: ArticleQueryParams) => {
   return useQuery({
     queryKey: [...cmsKeys.articlesList(params), providerKey],
     queryFn: () => getCMSProvider().getArticles(params),
+  });
+};
+
+export const useHeroArticles = (limit = 15, options?: { initialData?: CMSArticle[] }) => {
+  const providerKey = getProviderKey();
+  return useQuery({
+    queryKey: [...cmsKeys.hero(), providerKey],
+    queryFn: () => getCMSProvider().getHeroArticles(limit),
+    initialData: options?.initialData,
   });
 };
 

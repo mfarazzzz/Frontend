@@ -34,8 +34,7 @@ export default async function Page() {
   const siteUrl = "https://rampurnews.com";
   const siteName = "रामपुर न्यूज़ | Rampur News";
 
-  // Pre-fetch critical LCP data (Featured Articles)
-  const featuredArticles = await getCMSProvider().getFeaturedArticles(3).catch(() => []);
+  const heroArticles = await getCMSProvider().getHeroArticles(15).catch(() => []);
   
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -133,7 +132,7 @@ export default async function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <Index initialFeaturedArticles={featuredArticles} />
+      <Index initialHeroArticles={heroArticles} />
     </>
   );
 }

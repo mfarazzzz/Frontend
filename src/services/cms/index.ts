@@ -1030,6 +1030,16 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       return result;
     },
 
+    async getHeroArticles(limit = 5): Promise<CMSArticle[]> {
+      try {
+        const items = await fetchJson<CMSArticle[]>(buildUrl('/articles/featured-hero', { limit }));
+        return normalizeArticleListMedia(items || []);
+      } catch {
+        const result = await getArticles({ featured: true, status: 'published', limit });
+        return result.data;
+      }
+    },
+
     async getFeaturedArticles(limit = 5): Promise<CMSArticle[]> {
       const result = await getArticles({ featured: true, status: 'published', limit });
       return result.data;

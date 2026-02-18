@@ -1,11 +1,14 @@
 "use client";
+import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategorySection from "@/components/CategorySection";
 import Sidebar from "@/components/Sidebar";
 import NewsCard from "@/components/NewsCard";
-import { useArticlesByCategory, useFeaturedArticles } from "@/hooks/useCMS";
+import { useArticlesByCategory, useHeroArticles } from "@/hooks/useCMS";
 import type { CMSArticle } from "@/services/cms";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import type { CarouselApi } from "@/components/ui/carousel";
 
 type CMSCategorySectionProps = {
   slug: string;
@@ -33,31 +36,75 @@ const CMSCategorySection = ({
   );
 };
 
-const Index = ({ initialFeaturedArticles }: { initialFeaturedArticles?: CMSArticle[] }) => {
-  const { data: featuredNews = [] } = useFeaturedArticles(3, { initialData: initialFeaturedArticles });
+const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) => {
+  const { data: heroArticles = [] } = useHeroArticles(15, { initialData: initialHeroArticles });
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    setSelectedIndex(carouselApi.selectedScrollSnap());
+    const handler = () => {
+      setSelectedIndex(carouselApi.selectedScrollSnap());
+    };
+    carouselApi.on("select", handler);
+    return () => {
+      carouselApi.off("select", handler);
+    };
+  }, [carouselApi]);
+
+  useEffect(() => {
+    if (!carouselApi || heroArticles.length <= 1) return;
+    const id = window.setInterval(() => {
+      const nextIndex = (carouselApi.selectedScrollSnap() + 1) % heroArticles.length;
+      carouselApi.scrollTo(nextIndex);
+    }, 5000);
+    return () => {
+      window.clearInterval(id);
+    };
+  }, [carouselApi, heroArticles.length]);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
       <main className="container py-6">
-        {/* Featured Hero Section */}
-        <section className="mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Main Featured */}
-            <div className="lg:col-span-2">
-              {featuredNews[0] && (
-                <NewsCard article={featuredNews[0]} variant="featured" />
+        {heroArticles.length > 0 && (
+          <section className="mb-8">
+            <Carousel className="relative" opts={{ loop: true }} setApi={setCarouselApi}>
+              <CarouselContent>
+                {heroArticles.map((article) => (
+                  <CarouselItem key={article.id}>
+                    <NewsCard article={article} variant="featured" />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {heroArticles.length > 1 && (
+                <>
+                  <CarouselPrevious className="-left-4 md:-left-12" />
+                  <CarouselNext className="-right-4 md:-right-12" />
+                </>
               )}
-            </div>
-            {/* Side Featured */}
-            <div className="space-y-4">
-              {featuredNews.slice(1, 3).map((article) => (
-                <NewsCard key={article.id} article={article} variant="horizontal" />
-              ))}
-            </div>
-          </div>
-        </section>
+            </Carousel>
+            {heroArticles.length > 1 && (
+              <div className="mt-4 flex justify-center gap-2">
+                {heroArticles.map((article, index) => (
+                  <button
+                    key={article.id}
+                    type="button"
+                    onClick={() => carouselApi?.scrollTo(index)}
+                    className={
+                      index === selectedIndex
+                        ? "h-2 w-6 rounded-full bg-primary"
+                        : "h-2 w-2 rounded-full bg-muted-foreground/50"
+                    }
+                    aria-label={`Slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Main Content with Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

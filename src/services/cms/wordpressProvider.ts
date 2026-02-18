@@ -620,6 +620,11 @@ export const createWordPressProvider = (config: WordPressConfig): CMSProvider =>
     },
 
     // Special queries
+    async getHeroArticles(limit = 5): Promise<CMSArticle[]> {
+      const result = await this.getArticles({ status: 'published', limit });
+      return result.data;
+    },
+
     async getFeaturedArticles(limit = 5): Promise<CMSArticle[]> {
       // Use sticky posts as featured in WordPress
       const response = await fetch(apiUrl('posts', { _embed: true, sticky: true, per_page: limit }));

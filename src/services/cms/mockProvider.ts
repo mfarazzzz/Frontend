@@ -358,6 +358,11 @@ export const mockCMSProvider: CMSProvider = {
   },
   
   // Special queries
+  async getHeroArticles(limit = 5): Promise<CMSArticle[]> {
+    const result = await this.getArticles({ status: 'published', limit });
+    return result.data;
+  },
+  
   async getFeaturedArticles(limit = 5): Promise<CMSArticle[]> {
     const result = await this.getArticles({ featured: true, status: 'published', limit });
     return result.data;

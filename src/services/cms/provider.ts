@@ -47,6 +47,7 @@ export interface CMSProvider {
   updateSettings(settings: Partial<CMSSettings>): Promise<CMSSettings>;
   
   // Special queries
+  getHeroArticles(limit?: number): Promise<CMSArticle[]>;
   getFeaturedArticles(limit?: number): Promise<CMSArticle[]>;
   getBreakingNews(limit?: number): Promise<CMSArticle[]>;
   getTrendingArticles(limit?: number): Promise<CMSArticle[]>;

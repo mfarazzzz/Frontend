@@ -31,6 +31,7 @@ const RestaurantDetail = () => {
   const priceLabels: Record<string, { label: string; icon: string }> = {
     'budget': { label: 'सस्ता', icon: '₹' },
     'moderate': { label: 'मध्यम', icon: '₹₹' },
+    'premium': { label: 'महंगा', icon: '₹₹₹' },
     'expensive': { label: 'महंगा', icon: '₹₹₹' },
     'luxury': { label: 'लक्ज़री', icon: '₹₹₹₹' },
   };

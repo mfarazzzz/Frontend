@@ -172,12 +172,17 @@ const contentTypeConfig = {
   fashionStores: { path: "/fashion-stores", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
   shoppingCentres: { path: "/shopping-centres", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
   places: { path: "/places", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
-  events: { path: "/events", dateField: "date", searchFields: ["titleHindi", "title", "city", "district", "venueHindi", "venue", "descriptionHindi", "description"] },
+  events: {
+    path: "/events",
+    dateField: "date",
+    backendDateField: "startDate",
+    searchFields: ["titleHindi", "title", "city", "district", "venueHindi", "venue", "descriptionHindi", "description"],
+  },
 } as const;
 
 type ContentTypeKey = keyof typeof contentTypeConfig;
 
-const buildListQuery = (contentType: ContentTypeKey, params?: ExtendedQueryParams) => {
+  const buildListQuery = (contentType: ContentTypeKey, params?: ExtendedQueryParams) => {
   const query: Array<[string, string | number | boolean | undefined]> = [];
   const limit = params?.limit ?? 10;
   const offset = params?.offset ?? 0;
@@ -204,7 +209,8 @@ const buildListQuery = (contentType: ContentTypeKey, params?: ExtendedQueryParam
   if (params?.featured !== undefined) query.push(["filters[isFeatured][$eq]", params.featured]);
   if (params?.popular !== undefined) query.push(["filters[isPopular][$eq]", params.popular]);
 
-  const dateField = (contentTypeConfig[contentType] as any).dateField as string | undefined;
+  const cfg: any = contentTypeConfig[contentType] as any;
+  const dateField = (cfg.backendDateField || cfg.dateField) as string | undefined;
   if (dateField) {
     if (params?.dateFrom) query.push([`filters[${dateField}][$gte]`, params.dateFrom]);
     if (params?.dateTo) query.push([`filters[${dateField}][$lte]`, params.dateTo]);
@@ -301,7 +307,8 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
     if (params?.featured !== undefined) items = items.filter((item: any) => Boolean(item?.isFeatured) === params.featured);
     if (params?.popular !== undefined) items = items.filter((item: any) => Boolean(item?.isPopular) === params.popular);
 
-    const dateField = (contentTypeConfig[contentType] as any).dateField as string | undefined;
+    const cfg: any = contentTypeConfig[contentType] as any;
+    const dateField = cfg.dateField as string | undefined;
     if (dateField && (params?.dateFrom || params?.dateTo)) {
       const from = params?.dateFrom ? new Date(params.dateFrom).getTime() : undefined;
       const to = params?.dateTo ? new Date(params.dateTo).getTime() : undefined;
@@ -356,19 +363,28 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
     query.filter(([key]) => key !== "filters[publishedAt][$notNull]");
 
   const deriveStatus = (iso: string, todayIso: string) => {
-    if (iso > todayIso) return "upcoming";
-    if (iso < todayIso) return "completed";
+    const dateOnly = iso.slice(0, 10);
+    if (dateOnly > todayIso) return "upcoming";
+    if (dateOnly < todayIso) return "completed";
     return "ongoing";
   };
 
   const applyDerivedFields = <T extends Record<string, any>>(contentType: ContentTypeKey, item: T) => {
     const todayIso = new Date().toISOString().slice(0, 10);
     const next: any = { ...item };
+
+    if (contentType === "events") {
+      if (!next.date && typeof next.startDate === "string") {
+        next.date = next.startDate;
+      }
+      if (!next.status && typeof next.date === "string") {
+        next.status = deriveStatus(next.date, todayIso);
+      }
+      return next as T;
+    }
+
     if (contentType === "exams" && !next.status && typeof next.examDate === "string") {
       next.status = deriveStatus(next.examDate, todayIso);
-    }
-    if (contentType === "events" && !next.status && typeof next.date === "string") {
-      next.status = deriveStatus(next.date, todayIso);
     }
     if (contentType === "results" && !next.status && typeof next.resultDate === "string") {
       next.status = deriveStatus(next.resultDate, todayIso);

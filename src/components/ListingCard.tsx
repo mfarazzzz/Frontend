@@ -61,6 +61,7 @@ const ListingCard = ({
     switch (range) {
       case 'budget': return '₹';
       case 'moderate': return '₹₹';
+      case 'premium': return '₹₹₹';
       case 'expensive': return '₹₹₹';
       case 'luxury': return '₹₹₹₹';
       default: return null;

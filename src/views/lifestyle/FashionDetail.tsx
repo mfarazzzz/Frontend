@@ -35,6 +35,7 @@ const FashionDetail = () => {
   const priceLabels: Record<string, string> = {
     'budget': 'सस्ता',
     'moderate': 'मध्यम',
+    'premium': 'महंगा',
     'expensive': 'महंगा',
     'luxury': 'लक्ज़री',
   };

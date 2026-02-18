@@ -24,8 +24,8 @@ export interface CMSExam {
   image?: string;
   status: 'upcoming' | 'ongoing' | 'completed';
   applicationStatus: 'open' | 'closed' | 'upcoming' | 'extended';
-  admitCardStatus: 'available' | 'upcoming' | 'not-released';
-  resultStatus: 'declared' | 'expected' | 'not-declared';
+  admitCardStatus: 'available' | 'upcoming' | 'notreleased';
+  resultStatus: 'declared' | 'expected' | 'notdeclared';
   isPopular?: boolean;
   isFeatured?: boolean;
   isNew?: boolean;
@@ -204,7 +204,7 @@ export interface CMSHoliday {
   slug: string;
   date: string;
   endDate?: string;
-  type: 'national' | 'regional' | 'religious' | 'cultural' | 'bank';
+  type: 'national' | 'state' | 'regional' | 'religious' | 'optional' | 'cultural' | 'bank';
   religion?: 'hindu' | 'muslim' | 'christian' | 'sikh' | 'buddhist' | 'jain' | 'secular';
   description: string;
   descriptionHindi: string;
@@ -237,7 +237,7 @@ export interface CMSRestaurant {
   city: string;
   district: string;
   phone?: string;
-  priceRange: 'budget' | 'moderate' | 'expensive' | 'luxury';
+  priceRange: 'budget' | 'moderate' | 'premium' | 'expensive' | 'luxury';
   rating?: number;
   reviews?: number;
   openingHours?: string;
@@ -269,7 +269,7 @@ export interface CMSFashionStore {
   city: string;
   district: string;
   phone?: string;
-  priceRange: 'budget' | 'moderate' | 'expensive' | 'luxury';
+  priceRange: 'budget' | 'moderate' | 'premium' | 'expensive' | 'luxury';
   rating?: number;
   image?: string;
   gallery?: string[];
@@ -318,7 +318,7 @@ export interface CMSFamousPlace {
   name: string;
   nameHindi: string;
   slug: string;
-  type: 'historical' | 'religious' | 'recreational' | 'market' | 'landmark' | 'food-hub';
+  type: 'historical' | 'religious' | 'natural' | 'recreational' | 'educational' | 'market' | 'landmark' | 'food-hub';
   address: string;
   addressHindi: string;
   city: string;
@@ -353,7 +353,17 @@ export interface CMSEvent {
   address: string;
   city: string;
   district: string;
-  category: 'cultural' | 'religious' | 'sports' | 'educational' | 'business' | 'entertainment' | 'food' | 'fashion';
+  category:
+    | 'cultural'
+    | 'religious'
+    | 'sports'
+    | 'educational'
+    | 'festival'
+    | 'government'
+    | 'business'
+    | 'entertainment'
+    | 'food'
+    | 'fashion';
   organizer?: string;
   organizerHindi?: string;
   description: string;

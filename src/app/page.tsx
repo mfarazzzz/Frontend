@@ -34,7 +34,10 @@ export default async function Page() {
   const siteUrl = "https://rampurnews.com";
   const siteName = "रामपुर न्यूज़ | Rampur News";
 
-  const heroArticles = await getCMSProvider().getHeroArticles(15).catch(() => []);
+  let heroArticles = await getCMSProvider().getHeroArticles(15).catch(() => []);
+  if (!heroArticles || heroArticles.length === 0) {
+    heroArticles = await getCMSProvider().getFeaturedArticles(3).catch(() => []);
+  }
   
   const websiteSchema = {
     "@context": "https://schema.org",

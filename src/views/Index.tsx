@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import CategorySection from "@/components/CategorySection";
 import Sidebar from "@/components/Sidebar";
 import NewsCard from "@/components/NewsCard";
-import { useArticlesByCategory, useHeroArticles } from "@/hooks/useCMS";
+import { useArticlesByCategory, useHeroArticles, useFeaturedArticles } from "@/hooks/useCMS";
 import type { CMSArticle } from "@/services/cms";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import type { CarouselApi } from "@/components/ui/carousel";
@@ -37,7 +37,9 @@ const CMSCategorySection = ({
 };
 
 const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) => {
-  const { data: heroArticles = [] } = useHeroArticles(15, { initialData: initialHeroArticles });
+  const { data: heroArticlesRaw = [] } = useHeroArticles(15, { initialData: initialHeroArticles });
+  const { data: featuredFallback = [] } = useFeaturedArticles(3);
+  const heroArticles = heroArticlesRaw.length > 0 ? heroArticlesRaw : featuredFallback;
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 

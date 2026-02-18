@@ -39,10 +39,18 @@ const normalizeRoleType = (value: unknown) => {
   return trimmed;
 };
 
+const getAdminSessionSecret = () => {
+  const fromEnv = process.env.ADMIN_JWT_SECRET || process.env.ADMIN_SESSION_SECRET;
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV !== "production") {
+    return "dev-admin-session-secret-change-me";
+  }
+  return null;
+};
+
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
-  // Prefer ADMIN_JWT_SECRET, fallback to ADMIN_SESSION_SECRET
-  const sessionSecret = process.env.ADMIN_JWT_SECRET || process.env.ADMIN_SESSION_SECRET;
+  const sessionSecret = getAdminSessionSecret();
 
   if (!sessionSecret) {
     return NextResponse.json(

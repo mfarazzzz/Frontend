@@ -33,6 +33,14 @@ export const categories: Category[] = [
     path: "/national",
   },
   {
+    id: "international",
+    slug: "international",
+    titleHindi: "अंतरराष्ट्रीय",
+    titleEnglish: "International",
+    description: "दुनिया भर की अहम अंतरराष्ट्रीय खबरें और वैश्विक घटनाक्रम।",
+    path: "/international",
+  },
+  {
     id: "politics",
     slug: "politics",
     titleHindi: "राजनीति",

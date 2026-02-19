@@ -21,7 +21,10 @@ const Header = () => {
     return () => window.clearInterval(timer);
   }, []);
 
-  const mainNavItems = categories.slice(0, 6);
+  const mainNavOrder = ["rampur", "up", "national", "international", "sports", "education-jobs"];
+  const mainNavItems = mainNavOrder
+    .map((id) => categories.find((cat) => cat.id === id))
+    .filter((cat): cat is (typeof categories)[number] => Boolean(cat));
 
   const isActive = (path: string) => pathname === path;
 
@@ -73,8 +76,6 @@ const Header = () => {
           </div>
         </div>
       </div>
-
-      <BreakingNewsTicker />
 
       {/* Main Header */}
       <div className="container py-4">
@@ -244,6 +245,8 @@ const Header = () => {
           )}
         </div>
       </nav>
+
+      <BreakingNewsTicker />
     </header>
   );
 };

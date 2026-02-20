@@ -28,6 +28,16 @@ const formatRelativeTimeHindi = (dateString: string) => {
   return `${diffYears} साल पहले`;
 };
 
+const getEditorialLabel = (article: CMSArticle) => {
+  if (!article.contentType) return null;
+  if (article.contentType === "editorial") return "संपादकीय";
+  if (article.contentType === "opinion") return "विचार";
+  if (article.contentType === "review") return "रिव्यू";
+  if (article.contentType === "interview") return "इंटरव्यू";
+  if (article.contentType === "special-report") return "स्पेशल रिपोर्ट";
+  return null;
+};
+
 const isLocalUpstreamImage = (src: string) => {
   try {
     const url = new URL(src);
@@ -40,6 +50,7 @@ const isLocalUpstreamImage = (src: string) => {
 const NewsCard = ({ article, variant = "default" }: NewsCardProps) => {
   const articleUrl = `/${article.category}/${article.slug}`;
   const unoptimizedImage = article.image ? isLocalUpstreamImage(article.image) : false;
+  const editorialLabel = getEditorialLabel(article);
 
   if (variant === "featured") {
     return (
@@ -59,10 +70,20 @@ const NewsCard = ({ article, variant = "default" }: NewsCardProps) => {
             ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
-              {article.isBreaking && (
-                <span className="live-badge mb-2">ब्रेकिंग</span>
-              )}
-              <span className="category-badge mb-3 inline-block">{article.categoryHindi}</span>
+              <div className="flex items-center gap-2 mb-3">
+                {article.isBreaking && (
+                  <span className="live-badge">ब्रेकिंग</span>
+                )}
+                {article.isEditorsPick && (
+                  <span className="category-badge bg-amber-500 text-black">संपादक की पसंद</span>
+                )}
+                {editorialLabel && (
+                  <span className="category-badge bg-primary/90">{editorialLabel}</span>
+                )}
+                {!editorialLabel && (
+                  <span className="category-badge">{article.categoryHindi}</span>
+                )}
+              </div>
               <h2 className="text-lg md:text-2xl font-bold text-white mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                 {article.title}
               </h2>
@@ -103,7 +124,19 @@ const NewsCard = ({ article, variant = "default" }: NewsCardProps) => {
         </Link>
         <div className="flex-1 min-w-0">
           <Link to={articleUrl}>
-            <span className="text-xs font-semibold text-primary">{article.categoryHindi}</span>
+            <div className="flex items-center gap-2">
+              {article.isBreaking && (
+                <span className="live-badge text-[10px] px-1.5 py-0.5">ब्रेकिंग</span>
+              )}
+              {article.isEditorsPick && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-black">
+                  संपादक की पसंद
+                </span>
+              )}
+              <span className="text-xs font-semibold text-primary">
+                {editorialLabel || article.categoryHindi}
+              </span>
+            </div>
             <h3 className="text-sm md:text-base font-semibold text-foreground line-clamp-2 mt-1 group-hover:text-primary transition-colors">
               {article.title}
             </h3>
@@ -168,11 +201,21 @@ const NewsCard = ({ article, variant = "default" }: NewsCardProps) => {
         </div>
       </Link>
       <div className="p-4">
-        <Link to={`/${article.category}`}>
-          <span className="text-xs font-semibold text-primary hover:underline">
-            {article.categoryHindi}
-          </span>
-        </Link>
+        <div className="flex items-center gap-2 mb-1">
+          {article.isBreaking && (
+            <span className="live-badge text-[10px] px-1.5 py-0.5">ब्रेकिंग</span>
+          )}
+          {article.isEditorsPick && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-black">
+              संपादक की पसंद
+            </span>
+          )}
+          <Link to={`/${article.category}`}>
+            <span className="text-[11px] font-semibold text-primary hover:underline">
+              {editorialLabel || article.categoryHindi}
+            </span>
+          </Link>
+        </div>
         <Link to={articleUrl}>
           <h3 className="text-base font-semibold text-foreground line-clamp-2 mt-2 group-hover:text-primary transition-colors">
             {article.title}

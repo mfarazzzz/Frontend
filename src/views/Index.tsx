@@ -15,7 +15,7 @@ type DynamicCategorySectionProps = {
   limit?: number;
 };
 
-const DynamicCategorySection = ({ category, limit = 12 }: DynamicCategorySectionProps) => {
+const DynamicCategorySection = ({ category, limit = 24 }: DynamicCategorySectionProps) => {
   const { data } = useArticles({
     category: category.slug,
     status: "published",
@@ -120,17 +120,39 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-8 space-y-8">
-            {categories
-              .slice()
-              .sort((a, b) => {
-                const orderA = a.order ?? 999;
-                const orderB = b.order ?? 999;
-                if (orderA !== orderB) return orderA - orderB;
-                return a.titleHindi.localeCompare(b.titleHindi);
-              })
-              .map((category) => (
+            {(() => {
+              const preferredOrder = [
+                "rampur",
+                "up",
+                "nearby",
+                "national",
+                "religion-culture",
+                "sports",
+                "education-jobs",
+                "international",
+              ];
+
+              const bySlug: Record<string, CMSCategory> = {};
+              for (const cat of categories) {
+                bySlug[cat.slug] = cat;
+              }
+
+              const ordered: CMSCategory[] = [];
+              for (const slug of preferredOrder) {
+                const cat = bySlug[slug];
+                if (cat) ordered.push(cat);
+              }
+
+              for (const cat of categories) {
+                if (!preferredOrder.includes(cat.slug)) {
+                  ordered.push(cat);
+                }
+              }
+
+              return ordered.map((category) => (
                 <DynamicCategorySection key={category.id} category={category} />
-              ))}
+              ));
+            })()}
 
             {editorsPicks.length > 0 && (
               <section className="py-6">

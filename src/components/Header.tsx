@@ -207,7 +207,7 @@ const Header = () => {
 
           {/* Mobile Navigation */}
           {isMenuOpen && (
-            <div className="lg:hidden py-4 animate-fade-in">
+            <div className="lg:hidden py-4 animate-fade-in max-h-[70vh] overflow-y-auto">
               <ul className="space-y-1">
                 <li>
                   <Link

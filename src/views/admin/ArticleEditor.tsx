@@ -25,6 +25,16 @@ import { deriveAiSeoSignals, stripHtmlToText, truncateText } from '@/lib/utils';
 
 const SITE_URL = 'https://rampurnews.com';
 
+const EDITORIAL_CATEGORY_SLUG = 'editorials';
+
+const EDITORIAL_CONTENT_TYPES: Array<NonNullable<CMSArticle['contentType']>> = [
+  'editorial',
+  'review',
+  'interview',
+  'opinion',
+  'special-report',
+];
+
 const ArticleEditor = () => {
   const params = useParams();
   const id = params?.id as string;
@@ -52,6 +62,8 @@ const ArticleEditor = () => {
     status: 'draft',
     isFeatured: false,
     isBreaking: false,
+    isEditorsPick: false,
+    contentType: 'news',
     readTime: '',
     seoTitle: '',
     seoDescription: '',
@@ -138,12 +150,23 @@ const ArticleEditor = () => {
     }));
   };
 
-  const selectedCategoryId =
-    categories?.find((c) => c.id === formData.category)?.id ||
-    categories?.find((c) => c.slug === formData.category)?.id ||
-    '';
+  const editorialCategory = categories?.find((c) => c.slug === EDITORIAL_CATEGORY_SLUG);
 
-  const primaryCategorySlug = (formData.category || '').trim();
+  const isEditorialType =
+    !!formData.contentType &&
+    EDITORIAL_CONTENT_TYPES.includes(
+      formData.contentType as NonNullable<CMSArticle['contentType']>,
+    );
+
+  const selectedCategoryId = isEditorialType
+    ? editorialCategory?.id || ''
+    : categories?.find((c) => c.id === formData.category)?.id ||
+      categories?.find((c) => c.slug === formData.category)?.id ||
+      '';
+
+  const primaryCategorySlug = (
+    isEditorialType ? EDITORIAL_CATEGORY_SLUG : formData.category || ''
+  ).trim();
 
   const selectedExtraCategorySlugs = Array.isArray(formData.categories)
     ? formData.categories.map((v) => String(v || '').trim()).filter(Boolean)
@@ -165,12 +188,30 @@ const ArticleEditor = () => {
     });
   };
 
+  const handleContentTypeChange = (value: NonNullable<CMSArticle['contentType']>) => {
+    setFormData((prev) => {
+      const next: Partial<CMSArticle> = { ...prev, contentType: value };
+      const editorial = EDITORIAL_CONTENT_TYPES.includes(value);
+      if (editorial) {
+        const cat = categories?.find((c) => c.slug === EDITORIAL_CATEGORY_SLUG);
+        if (cat) {
+          next.category = cat.slug;
+          next.categoryHindi = cat.titleHindi;
+        } else {
+          next.category = EDITORIAL_CATEGORY_SLUG;
+        }
+      }
+      return next;
+    });
+  };
+
   const selectedAuthorId =
     authors?.find((a) => a.id === formData.author)?.id ||
     authors?.find((a) => a.nameHindi === formData.author || a.name === formData.author)?.id ||
     '';
 
   const handleCategoryChange = (categoryId: string) => {
+    if (isEditorialType) return;
     const category = categories?.find((c) => c.id === categoryId);
     setFormData((prev) => ({
       ...prev,
@@ -399,16 +440,40 @@ const ArticleEditor = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
+                    <Label>सामग्री प्रकार</Label>
+                    <Select
+                      value={formData.contentType || 'news'}
+                      onValueChange={(v) =>
+                        handleContentTypeChange(
+                          (v || 'news') as NonNullable<CMSArticle['contentType']>,
+                        )
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="news">समाचार</SelectItem>
+                        <SelectItem value="editorial">संपादकीय</SelectItem>
+                        <SelectItem value="review">रिव्यू</SelectItem>
+                        <SelectItem value="interview">इंटरव्यू</SelectItem>
+                        <SelectItem value="opinion">राय</SelectItem>
+                        <SelectItem value="special-report">विशेष रिपोर्ट</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label>श्रेणी *</Label>
-                    <Select 
-                      value={selectedCategoryId} 
+                    <Select
+                      value={selectedCategoryId}
                       onValueChange={handleCategoryChange}
+                      disabled={isEditorialType}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="श्रेणी चुनें" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories?.map(cat => (
+                        {categories?.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
                             {cat.titleHindi}
                           </SelectItem>

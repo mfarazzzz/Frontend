@@ -149,16 +149,6 @@ const Header = () => {
                 होम
               </Link>
             </li>
-            <li>
-              <Link
-                to="/editorials"
-                className={`px-4 py-2 text-sm font-medium transition-colors hover:text-primary ${
-                  isActive("/editorials") ? "text-primary border-b-2 border-primary" : "text-foreground"
-                }`}
-              >
-                संपादकीय
-              </Link>
-            </li>
             {mainNavItems.map((item) => (
               <li key={item.id}>
                 <Link
@@ -191,6 +181,16 @@ const Header = () => {
                 items={aboutItems}
                 align="right"
               />
+            </li>
+            <li>
+              <Link
+                to="/editorials"
+                className={`px-4 py-2 text-sm font-medium transition-colors hover:text-primary ${
+                  isActive("/editorials") ? "text-primary border-b-2 border-primary" : "text-foreground"
+                }`}
+              >
+                संपादकीय
+              </Link>
             </li>
           </ul>
 
@@ -233,17 +233,6 @@ const Header = () => {
                     </Link>
                   </li>
                 ))}
-                <li>
-                  <Link
-                    to="/editorials"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={`block px-4 py-3 text-base font-medium rounded-lg transition-colors ${
-                      isActive("/editorials") ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                    }`}
-                  >
-                    संपादकीय
-                  </Link>
-                </li>
                 {/* Mobile About Section */}
                 <li className="pt-4 border-t border-border mt-4">
                   <span className="px-4 text-xs font-semibold text-muted-foreground uppercase">हमारे बारे में</span>
@@ -261,6 +250,17 @@ const Header = () => {
                     </Link>
                   </li>
                 ))}
+                <li>
+                  <Link
+                    to="/editorials"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`block px-4 py-3 text-base font-medium rounded-lg transition-colors ${
+                      isActive("/editorials") ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                    }`}
+                  >
+                    संपादकीय
+                    </Link>
+                  </li>
               </ul>
             </div>
           )}

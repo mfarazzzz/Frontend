@@ -43,6 +43,7 @@ export default async function EditorialsPage(props: { searchParams?: Promise<Rec
   const provider = getCMSProvider();
   const baseParams: any = {
     limit: 24,
+    category: "editorials" as const,
     status: "published" as const,
     orderBy: "publishedDate" as const,
     order: "desc" as const,

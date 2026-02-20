@@ -41,7 +41,7 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
   const { data: featuredFallback = [] } = useFeaturedArticles(3);
   const heroArticles = heroArticlesRaw.length > 0 ? heroArticlesRaw : featuredFallback;
   const { data: editorialData } = useArticles({
-    contentType: "editorial",
+    category: "editorials",
     editorsPick: true,
     limit: 4,
     status: "published",
@@ -121,30 +121,6 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-8 space-y-8">
-            {editorsPicks.length > 0 && (
-              <section className="bg-card border border-border rounded-2xl p-5 mb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">
-                    संपादकीय चुनिंदा
-                  </h2>
-                  <a
-                    href="/editorials"
-                    className="text-sm text-primary hover:underline"
-                  >
-                    सभी संपादकीय देखें
-                  </a>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {editorsPicks.map((article) => (
-                    <NewsCard
-                      key={article.id}
-                      article={article}
-                      variant="default"
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
             {/* Rampur News */}
             <CMSCategorySection slug="rampur" title="रामपुर" viewAllLink="/rampur" variant="featured" limit={6} />
 
@@ -183,6 +159,30 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
 
             {/* Nearby */}
             <CMSCategorySection slug="nearby" title="आस-पास" viewAllLink="/nearby" variant="default" />
+            {editorsPicks.length > 0 && (
+              <section className="bg-card border border-border rounded-2xl p-5 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">
+                    संपादकीय चुनिंदा
+                  </h2>
+                  <a
+                    href="/editorials"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    सभी संपादकीय देखें
+                  </a>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {editorsPicks.map((article) => (
+                    <NewsCard
+                      key={article.id}
+                      article={article}
+                      variant="default"
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* Sidebar */}

@@ -186,9 +186,15 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
     return <Navigate to={`/${article.category}/${article.slug || slug}`} replace />;
   }
 
-  // Get related news from same category
   const relatedNews = categoryNews.filter((a) => a.id !== article.id).slice(0, 4);
+  const moreFromAuthor =
+    article.author && categoryNews.length > 0
+      ? categoryNews
+          .filter((a) => a.id !== article.id && a.author === article.author)
+          .slice(0, 4)
+      : [];
 
+  const authorSlug = article.authorSlug && article.authorSlug.trim() ? article.authorSlug.trim() : "";
   const articleUrl = `/${effectiveCategory}/${slug}`;
   const readingTime = article.readTime || getReadingTime(article.content, article.excerpt);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
@@ -262,10 +268,22 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
 
             {/* Meta Info */}
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6 pb-6 border-b border-border">
-              <span className="flex items-center gap-1" itemProp="author" itemScope itemType="https://schema.org/Person">
-                <User size={14} />
-                <span itemProp="name">{article.author}</span>
-              </span>
+              {article.author && (
+                <span className="flex items-center gap-1" itemProp="author" itemScope itemType="https://schema.org/Person">
+                  <User size={14} />
+                  {authorSlug ? (
+                    <Link
+                      to={`/authors/${authorSlug}`}
+                      className="hover:underline"
+                      itemProp="url"
+                    >
+                      <span itemProp="name">{article.author}</span>
+                    </Link>
+                  ) : (
+                    <span itemProp="name">{article.author}</span>
+                  )}
+                </span>
+              )}
               <time 
                 className="flex items-center gap-1"
                 dateTime={article.publishedDate}
@@ -367,7 +385,6 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
               </span>
             </div>
 
-            {/* Related News */}
             {relatedNews.length > 0 && (
               <section className="mt-10 pt-8 border-t border-border">
                 <h2 className="text-xl font-bold text-foreground mb-6">
@@ -375,6 +392,19 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {relatedNews.map((news) => (
+                    <NewsCard key={news.id} article={news} variant="horizontal" />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {moreFromAuthor.length > 0 && (
+              <section className="mt-10 pt-8 border-t border-border">
+                <h2 className="text-xl font-bold text-foreground mb-6">
+                  इसी लेखक की और खबरें
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {moreFromAuthor.map((news) => (
                     <NewsCard key={news.id} article={news} variant="horizontal" />
                   ))}
                 </div>

@@ -12,6 +12,8 @@ export interface CMSArticle {
   categoryHindi: string;
   categories?: string[];
   author: string;
+   authorId?: string;
+   authorSlug?: string;
   publishedDate: string;
   publishedAt?: string;
   modifiedDate?: string;
@@ -48,11 +50,24 @@ export interface CMSCategory {
 
 export interface CMSAuthor {
   id: string;
+  slug?: string;
   name: string;
   nameHindi: string;
   email: string;
   avatar?: string;
   bio?: string;
+  designation?: string;
+  profession?: string;
+  otherRoles?: string;
+  experience?: string;
+  websiteUrl?: string;
+  linkedinUrl?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
+  whatsappUrl?: string;
+  knowsAbout?: any;
+  socialLinks?: any;
   role: 'admin' | 'editor' | 'author' | 'contributor';
 }
 

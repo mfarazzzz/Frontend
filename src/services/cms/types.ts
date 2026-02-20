@@ -125,6 +125,14 @@ export interface ArticleQueryParams {
   status?: 'draft' | 'published' | 'scheduled';
   featured?: boolean;
   breaking?: boolean;
+   editorsPick?: boolean;
+   contentType?:
+    | 'news'
+    | 'editorial'
+    | 'review'
+    | 'interview'
+    | 'opinion'
+    | 'special-report';
   limit?: number;
   offset?: number;
   search?: string;

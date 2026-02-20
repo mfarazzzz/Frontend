@@ -352,6 +352,8 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     if (params.status) query.status = params.status;
     if (params.featured !== undefined) query.featured = params.featured;
     if (params.breaking !== undefined) query.breaking = params.breaking;
+    if (params.editorsPick !== undefined) query.editorsPick = params.editorsPick;
+    if (params.contentType) query.contentType = params.contentType;
     if (params.limit !== undefined) query.limit = params.limit;
     if (params.offset !== undefined) query.offset = params.offset;
     if (params.search) query.search = params.search;

@@ -8,16 +8,59 @@ export const metadata: Metadata = {
     "Editorials, opinions, reviews, interviews and special reports from rampurnews.com.",
 };
 
-export default async function EditorialsPage() {
-  const provider = getCMSProvider();
-  const page = await provider.getArticles({
-    category: "editorials",
-    limit: 12,
-    orderBy: "publishedDate",
-    order: "desc",
+type EditorialFilter =
+  | "all"
+  | "editorial"
+  | "opinion"
+  | "review"
+  | "interview"
+  | "special-report";
+
+const filters: { value: EditorialFilter; label: string }[] = [
+  { value: "all", label: "सभी" },
+  { value: "editorial", label: "संपादकीय" },
+  { value: "opinion", label: "विचार" },
+  { value: "review", label: "रिव्यू" },
+  { value: "interview", label: "इंटरव्यू" },
+  { value: "special-report", label: "स्पेशल रिपोर्ट" },
+];
+
+const getFilterFromSearch = (searchParams: URLSearchParams): EditorialFilter => {
+  const raw = searchParams.get("type") || "all";
+  const allowed = new Set(filters.map((f) => f.value));
+  return allowed.has(raw as EditorialFilter) ? (raw as EditorialFilter) : "all";
+};
+
+export default async function EditorialsPage(props: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
+  const searchParamsObject = (await props.searchParams) || {};
+  const searchParams = new URLSearchParams();
+  Object.entries(searchParamsObject).forEach(([key, value]) => {
+    if (typeof value === "string") searchParams.set(key, value);
   });
 
+  const selectedFilter = getFilterFromSearch(searchParams);
+
+  const provider = getCMSProvider();
+  const baseParams: any = {
+    limit: 24,
+    status: "published" as const,
+    orderBy: "publishedDate" as const,
+    order: "desc" as const,
+  };
+
+  if (selectedFilter !== "all") {
+    baseParams.contentType = selectedFilter;
+  } else {
+    baseParams.contentType = "editorial";
+  }
+
+  const page = await provider.getArticles(baseParams);
   const articles = page?.data ?? [];
+
+  const editorsPick = articles.find((a) => a.isEditorsPick);
+  const remaining = editorsPick
+    ? articles.filter((a) => a.id !== editorsPick.id)
+    : articles;
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -31,13 +74,60 @@ export default async function EditorialsPage() {
         </p>
       </header>
 
-      {articles.length === 0 ? (
+      <section className="flex flex-wrap gap-2">
+        {filters.map((filter) => {
+          const isActive = selectedFilter === filter.value;
+          const href =
+            filter.value === "all"
+              ? "/editorials"
+              : `/editorials?type=${encodeURIComponent(filter.value)}`;
+          return (
+            <Link
+              key={filter.value}
+              href={href}
+              className={
+                isActive
+                  ? "px-3 py-1 rounded-full text-xs sm:text-sm bg-primary text-primary-foreground"
+                  : "px-3 py-1 rounded-full text-xs sm:text-sm bg-muted text-muted-foreground hover:bg-primary/10"
+              }
+            >
+              {filter.label}
+            </Link>
+          );
+        })}
+      </section>
+
+      {editorsPick && (
+        <section className="border border-border rounded-2xl p-5 bg-card">
+          <div className="text-xs font-semibold text-primary mb-2">
+            संपादक की पसंद
+          </div>
+          <Link
+            href={`/${editorsPick.category}/${editorsPick.slug}`}
+            className="group flex flex-col gap-2"
+          >
+            <h2 className="text-xl font-semibold group-hover:text-primary transition-colors">
+              {editorsPick.title}
+            </h2>
+            {editorsPick.excerpt && (
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {editorsPick.excerpt}
+              </p>
+            )}
+            <span className="text-xs text-muted-foreground mt-1">
+              {editorsPick.author}
+            </span>
+          </Link>
+        </section>
+      )}
+
+      {remaining.length === 0 ? (
         <p className="text-muted-foreground text-sm">
-          अभी इस सेक्शन में कोई संपादकीय प्रकाशित नहीं हुआ है।
+          अभी इस फिल्टर के लिए कोई लेख उपलब्ध नहीं है।
         </p>
       ) : (
         <section className="grid gap-6 md:grid-cols-2">
-          {articles.map((article) => (
+          {remaining.map((article) => (
             <Link
               key={article.id}
               href={`/${article.category}/${article.slug}`}
@@ -64,4 +154,3 @@ export default async function EditorialsPage() {
     </main>
   );
 }
-

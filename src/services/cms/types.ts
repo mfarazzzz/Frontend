@@ -22,6 +22,15 @@ export interface CMSArticle {
   isBreaking?: boolean;
   views?: number;
   status: 'draft' | 'published' | 'scheduled';
+  contentType?:
+    | 'news'
+    | 'editorial'
+    | 'review'
+    | 'interview'
+    | 'opinion'
+    | 'special-report';
+  isEditorsPick?: boolean;
+  authorRole?: CMSAuthor['role'];
   tags?: string[];
   seoTitle?: string;
   seoDescription?: string;

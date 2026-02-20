@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { User, Globe2, Linkedin, Twitter, Instagram, Facebook } from "lucide-react";
 import { getCMSProvider } from "@/services/cms";
 import type { CMSAuthor, CMSArticle } from "@/services/cms";
 import { stripHtmlToText, truncateText } from "@/lib/utils";
@@ -40,21 +41,43 @@ const findAuthorBySlug = async (slug: string): Promise<CMSAuthor | null> => {
   return null;
 };
 
-const getArticlesByAuthor = async (author: CMSAuthor): Promise<CMSArticle[]> => {
+type AuthorArticlesInfo = {
+  articles: CMSArticle[];
+  total: number;
+  categories: { slug: string; name: string }[];
+};
+
+const getArticlesByAuthor = async (author: CMSAuthor): Promise<AuthorArticlesInfo> => {
   const provider = getCMSProvider();
   const page = await provider.getArticles({
     author: author.email || author.name,
-    limit: 8,
+    limit: 16,
     orderBy: "publishedDate",
     order: "desc",
   });
-  const list = page?.data ?? [];
-  return list
-    .filter(
-      (article) =>
-        article.author === author.name || article.author === author.nameHindi,
-    )
-    .slice(0, 8);
+  const list = (page?.data ?? []).filter(
+    (article) =>
+      article.author === author.name || article.author === author.nameHindi,
+  );
+
+  const articles = list.slice(0, 8);
+  const total = typeof page?.total === "number" ? page.total : list.length;
+
+  const categoriesMap = new Map<string, string>();
+  for (const article of list) {
+    const slug = article.category?.trim();
+    if (!slug) continue;
+    const name = article.categoryHindi?.trim() || slug;
+    if (!categoriesMap.has(slug)) {
+      categoriesMap.set(slug, name);
+    }
+  }
+  const categories = Array.from(categoriesMap.entries()).map(([slug, name]) => ({
+    slug,
+    name,
+  }));
+
+  return { articles, total, categories };
 };
 
 export async function generateMetadata(props: { params: Promise<PageParams> }): Promise<Metadata> {
@@ -252,7 +275,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
       : "";
 
   const schema = buildAuthorSchema(author, slug);
-  const articles = await getArticlesByAuthor(author);
+  const { articles, total, categories } = await getArticlesByAuthor(author);
 
   return (
     <>
@@ -261,24 +284,112 @@ export default async function Page(props: { params: Promise<PageParams> }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        <header className="flex gap-6 items-start">
-          <div className="w-24 h-24 rounded-full overflow-hidden bg-muted shrink-0">
+        <header className="bg-card border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start">
+          <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden bg-muted shrink-0 flex items-center justify-center">
             {author.avatar ? (
               <img
                 src={author.avatar}
                 alt={name}
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
-            ) : null}
+            ) : (
+              <User className="w-10 h-10 text-muted-foreground" />
+            )}
           </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold">{name}</h1>
-            <p className="text-lg text-muted-foreground">{designation}</p>
+          <div className="flex-1 space-y-4">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold tracking-tight">{name}</h1>
+              <p className="text-lg text-muted-foreground">{designation}</p>
+            </div>
             {shortBio && (
-              <p className="text-sm text-muted-foreground max-w-2xl">
+              <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
                 {shortBio}
               </p>
             )}
+            <div className="flex flex-wrap gap-4 text-xs sm:text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-muted">
+                <span className="font-semibold text-foreground">
+                  {total}
+                </span>
+                <span>कुल लेख</span>
+              </span>
+              {categories.length > 0 && (
+                <span className="inline-flex flex-wrap items-center gap-1">
+                  <span className="font-medium text-foreground">
+                    कवर की गई श्रेणियां:
+                  </span>
+                  {categories.map((category, index) => (
+                    <span key={category.slug} className="inline-flex items-center">
+                      {index > 0 && <span className="mx-1 text-muted-foreground/60">•</span>}
+                      <Link
+                        href={`/${category.slug}`}
+                        className="hover:text-primary transition-colors"
+                      >
+                        {category.name}
+                      </Link>
+                    </span>
+                  ))}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              {author.websiteUrl && (
+                <a
+                  href={author.websiteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs sm:text-sm text-primary hover:underline"
+                >
+                  <Globe2 className="w-4 h-4" />
+                  <span>Website</span>
+                </a>
+              )}
+              {author.linkedinUrl && (
+                <a
+                  href={author.linkedinUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs sm:text-sm text-primary hover:underline"
+                >
+                  <Linkedin className="w-4 h-4" />
+                  <span>LinkedIn</span>
+                </a>
+              )}
+              {author.twitterUrl && (
+                <a
+                  href={author.twitterUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs sm:text-sm text-primary hover:underline"
+                >
+                  <Twitter className="w-4 h-4" />
+                  <span>Twitter</span>
+                </a>
+              )}
+              {author.instagramUrl && (
+                <a
+                  href={author.instagramUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs sm:text-sm text-primary hover:underline"
+                >
+                  <Instagram className="w-4 h-4" />
+                  <span>Instagram</span>
+                </a>
+              )}
+              {author.facebookUrl && (
+                <a
+                  href={author.facebookUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs sm:text-sm text-primary hover:underline"
+                >
+                  <Facebook className="w-4 h-4" />
+                  <span>Facebook</span>
+                </a>
+              )}
+            </div>
           </div>
         </header>
 

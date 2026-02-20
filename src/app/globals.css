@@ -207,7 +207,8 @@
 
   .breaking-ticker-content {
     @apply inline-block;
-    animation: ticker 30s linear infinite;
+    animation: ticker 36s linear infinite;
+    will-change: transform;
   }
 
   .breaking-ticker:hover .breaking-ticker-content {

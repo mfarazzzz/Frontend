@@ -5,33 +5,33 @@ import Footer from "@/components/Footer";
 import CategorySection from "@/components/CategorySection";
 import Sidebar from "@/components/Sidebar";
 import NewsCard from "@/components/NewsCard";
-import { useArticles, useArticlesByCategory, useHeroArticles, useFeaturedArticles } from "@/hooks/useCMS";
-import type { CMSArticle } from "@/services/cms";
+import { useArticles, useHeroArticles, useFeaturedArticles, useCategories, useEditorials } from "@/hooks/useCMS";
+import type { CMSArticle, CMSCategory, CMSEditorial } from "@/services/cms";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import type { CarouselApi } from "@/components/ui/carousel";
 
-type CMSCategorySectionProps = {
-  slug: string;
-  title: string;
-  viewAllLink: string;
-  variant?: "default" | "featured" | "grid";
+type DynamicCategorySectionProps = {
+  category: CMSCategory;
   limit?: number;
 };
 
-const CMSCategorySection = ({
-  slug,
-  title,
-  viewAllLink,
-  variant = "default",
-  limit = 9,
-}: CMSCategorySectionProps) => {
-  const { data: articles = [] } = useArticlesByCategory(slug, limit);
+const DynamicCategorySection = ({ category, limit = 12 }: DynamicCategorySectionProps) => {
+  const { data } = useArticles({
+    category: category.slug,
+    status: "published",
+    orderBy: "publishedDate",
+    order: "desc",
+    limit,
+  });
+  const articles = data?.data ?? [];
+  if (articles.length === 0) return null;
+
   return (
     <CategorySection
-      title={title}
+      title={category.titleHindi}
       articles={articles}
-      viewAllLink={viewAllLink}
-      variant={variant}
+      viewAllLink={category.path || `/${category.slug}`}
+      variant="featured"
     />
   );
 };
@@ -40,15 +40,14 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
   const { data: heroArticlesRaw = [] } = useHeroArticles(15, { initialData: initialHeroArticles });
   const { data: featuredFallback = [] } = useFeaturedArticles(3);
   const heroArticles = heroArticlesRaw.length > 0 ? heroArticlesRaw : featuredFallback;
-  const { data: editorialData } = useArticles({
-    category: "editorials",
-    editorsPick: true,
+  const { data: categories = [] } = useCategories();
+  const { data: editorialResponse } = useEditorials({
+    isEditorsPick: true,
     limit: 4,
-    status: "published",
     orderBy: "publishedDate",
     order: "desc",
   });
-  const editorsPicks = editorialData?.data ?? [];
+  const editorsPicks: CMSEditorial[] = editorialResponse?.data ?? [];
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -121,53 +120,59 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-8 space-y-8">
-            {/* Rampur News */}
-            <CMSCategorySection slug="rampur" title="रामपुर" viewAllLink="/rampur" variant="featured" limit={6} />
+            {categories
+              .slice()
+              .sort((a, b) => {
+                const orderA = a.order ?? 999;
+                const orderB = b.order ?? 999;
+                if (orderA !== orderB) return orderA - orderB;
+                return a.titleHindi.localeCompare(b.titleHindi);
+              })
+              .map((category) => (
+                <DynamicCategorySection key={category.id} category={category} />
+              ))}
 
-            {/* UP News */}
-            <CMSCategorySection slug="up" title="उत्तर प्रदेश" viewAllLink="/up" variant="default" />
-
-            {/* National News */}
-            <CMSCategorySection slug="national" title="देश" viewAllLink="/national" variant="default" />
-
-            {/* Politics */}
-            <CMSCategorySection slug="politics" title="राजनीति" viewAllLink="/politics" variant="default" />
-
-            {/* Crime */}
-            <CMSCategorySection slug="crime" title="अपराध" viewAllLink="/crime" variant="default" />
-
-            {/* Education & Jobs */}
-            <CMSCategorySection slug="education-jobs" title="शिक्षा और नौकरियां" viewAllLink="/education-jobs" variant="default" />
-
-            {/* Business */}
-            <CMSCategorySection slug="business" title="व्यापार" viewAllLink="/business" variant="default" />
-
-            {/* Entertainment */}
-            <CMSCategorySection slug="entertainment" title="मनोरंजन" viewAllLink="/entertainment" variant="default" />
-
-            {/* Sports */}
-            <CMSCategorySection slug="sports" title="खेल" viewAllLink="/sports" variant="default" />
-
-            {/* Health */}
-            <CMSCategorySection slug="health" title="स्वास्थ्य" viewAllLink="/health" variant="default" />
-
-            {/* Religion & Culture */}
-            <CMSCategorySection slug="religion-culture" title="धर्म और संस्कृति" viewAllLink="/religion-culture" variant="default" />
-
-            {/* Food & Lifestyle */}
-            <CMSCategorySection slug="food-lifestyle" title="खान-पान और लाइफस्टाइल" viewAllLink="/food-lifestyle" variant="default" />
-
-            {/* Nearby */}
-            <CMSCategorySection slug="nearby" title="आस-पास" viewAllLink="/nearby" variant="default" />
-
-            {/* Editorials */}
             {editorsPicks.length > 0 && (
-              <CategorySection
-                title="संपादकीय चुनिंदा"
-                articles={editorsPicks}
-                viewAllLink="/editorials"
-                variant="default"
-              />
+              <section className="py-6">
+                <div className="section-header">
+                  <h2 className="section-title">संपादकीय चुनिंदा</h2>
+                  <a
+                    href="/editorials"
+                    className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                  >
+                    और देखें
+                  </a>
+                </div>
+                <Carousel className="mt-4">
+                  <CarouselContent>
+                    {editorsPicks.map((editorial) => (
+                      <CarouselItem key={editorial.id}>
+                        <NewsCard
+                          article={{
+                            id: editorial.id,
+                            title: editorial.titleHindi || editorial.title,
+                            slug: editorial.slug,
+                            excerpt: editorial.excerpt,
+                            content: editorial.content,
+                            image: editorial.image,
+                            category: "editorials",
+                            categoryHindi: "संपादकीय",
+                            author: editorial.author,
+                            publishedDate: editorial.publishedDate,
+                            status: editorial.status,
+                          }}
+                        />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  {editorsPicks.length > 1 && (
+                    <>
+                      <CarouselPrevious className="-left-4 md:-left-8" />
+                      <CarouselNext className="-right-4 md:-right-8" />
+                    </>
+                  )}
+                </Carousel>
+              </section>
             )}
           </div>
 

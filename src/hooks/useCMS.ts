@@ -1,6 +1,17 @@
 // React hooks for CMS operations
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getCMSConfig, getCMSProvider, type CMSArticle, type ArticleQueryParams, type CMSCategory, type CMSAuthor, type CMSTag, type CMSSettings } from '@/services/cms';
+import {
+  getCMSConfig,
+  getCMSProvider,
+  type CMSArticle,
+  type ArticleQueryParams,
+  type CMSCategory,
+  type CMSAuthor,
+  type CMSTag,
+  type CMSSettings,
+  type CMSEditorial,
+  type EditorialQueryParams,
+} from '@/services/cms';
 
 const getProviderKey = () => {
   const config = getCMSConfig();
@@ -19,6 +30,8 @@ export const cmsKeys = {
   breaking: () => [...cmsKeys.articles(), 'breaking'] as const,
   trending: () => [...cmsKeys.articles(), 'trending'] as const,
   byCategory: (slug: string) => [...cmsKeys.articles(), 'category', slug] as const,
+  editorials: () => [...cmsKeys.all, 'editorials'] as const,
+  editorialsList: (params?: EditorialQueryParams) => [...cmsKeys.editorials(), 'list', params] as const,
   categories: () => [...cmsKeys.all, 'categories'] as const,
   category: (id: string) => [...cmsKeys.categories(), id] as const,
   authors: () => [...cmsKeys.all, 'authors'] as const,
@@ -104,6 +117,15 @@ export const useSearchArticles = (query: string, limit = 20) => {
     queryKey: [...cmsKeys.articles(), 'search', query, providerKey],
     queryFn: () => getCMSProvider().searchArticles(query, limit),
     enabled: query.length > 2,
+  });
+};
+
+// Editorial hooks
+export const useEditorials = (params?: EditorialQueryParams) => {
+  const providerKey = getProviderKey();
+  return useQuery({
+    queryKey: [...cmsKeys.editorialsList(params), providerKey],
+    queryFn: () => getCMSProvider().getEditorials(params),
   });
 };
 

@@ -15,7 +15,7 @@ type DynamicCategorySectionProps = {
   limit?: number;
 };
 
-const DynamicCategorySection = ({ category, limit = 24 }: DynamicCategorySectionProps) => {
+const DynamicCategorySection = ({ category, limit = 7 }: DynamicCategorySectionProps) => {
   const { data } = useArticles({
     category: category.slug,
     status: "published",
@@ -42,12 +42,11 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
   const heroArticles = heroArticlesRaw.length > 0 ? heroArticlesRaw : featuredFallback;
   const { data: categories = [] } = useCategories();
   const { data: editorialResponse } = useEditorials({
-    isEditorsPick: true,
-    limit: 4,
+    limit: 7,
     orderBy: "publishedDate",
     order: "desc",
   });
-  const editorsPicks: CMSEditorial[] = editorialResponse?.data ?? [];
+  const editorials: CMSEditorial[] = editorialResponse?.data ?? [];
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -154,47 +153,28 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
               ));
             })()}
 
-            {editorsPicks.length > 0 && (
-              <section className="py-6">
-                <div className="section-header">
-                  <h2 className="section-title">संपादकीय चुनिंदा</h2>
-                  <a
-                    href="/editorials"
-                    className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                  >
-                    और देखें
-                  </a>
-                </div>
-                <Carousel className="mt-4">
-                  <CarouselContent>
-                    {editorsPicks.map((editorial) => (
-                      <CarouselItem key={editorial.id}>
-                        <NewsCard
-                          article={{
-                            id: editorial.id,
-                            title: editorial.titleHindi || editorial.title,
-                            slug: editorial.slug,
-                            excerpt: editorial.excerpt,
-                            content: editorial.content,
-                            image: editorial.image,
-                            category: "editorials",
-                            categoryHindi: "संपादकीय",
-                            author: editorial.author,
-                            publishedDate: editorial.publishedDate,
-                            status: editorial.status,
-                          }}
-                        />
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  {editorsPicks.length > 1 && (
-                    <>
-                      <CarouselPrevious className="-left-4 md:-left-8" />
-                      <CarouselNext className="-right-4 md:-right-8" />
-                    </>
-                  )}
-                </Carousel>
-              </section>
+            {editorials.length > 0 && (
+              <CategorySection
+                title="संपादकीय"
+                viewAllLink="/editorials"
+                variant="featured"
+                articles={editorials.map((editorial) => ({
+                  id: editorial.id,
+                  title: editorial.titleHindi || editorial.title,
+                  slug: editorial.slug,
+                  excerpt: editorial.excerpt,
+                  content: editorial.content,
+                  image: editorial.image,
+                  category: "editorials",
+                  categoryHindi: "संपादकीय",
+                  author: editorial.author,
+                  publishedDate: editorial.publishedDate,
+                  status: editorial.status,
+                  contentType: editorial.editorialType,
+                  isEditorsPick: editorial.isEditorsPick,
+                  isFeatured: editorial.isFeatured,
+                }))}
+              />
             )}
           </div>
 

@@ -38,7 +38,7 @@ const BreakingNewsSlider = () => {
     if (isPaused || breakingNews.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % breakingNews.length);
-    }, 4000);
+    }, 6000);
     return () => clearInterval(interval);
   }, [isPaused, breakingNews.length]);
 
@@ -109,9 +109,6 @@ const BreakingNewsSlider = () => {
                     <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-white leading-tight line-clamp-2 group-hover:underline decoration-2 underline-offset-4">
                       {news.title}
                     </h3>
-                    <p className="text-white/80 mt-2 text-sm md:text-base line-clamp-2 max-w-3xl">
-                      {news.excerpt}
-                    </p>
                   </div>
                 </div>
               </Link>

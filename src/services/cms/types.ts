@@ -1,5 +1,78 @@
 // CMS-ready types (WordPress REST API compatible structure)
 
+// ─── Editorial types ─────────────────────────────────────────────────────────
+
+export type EditorialType =
+  | 'editorial'
+  | 'opinion'
+  | 'review'
+  | 'interview'
+  | 'special-report';
+
+/** A related article stub embedded in an editorial response */
+export interface CMSEditorialRelatedArticle {
+  id: string;
+  title: string;
+  titleHindi?: string;
+  slug: string;
+  image: string;
+  category: string;
+  categoryHindi: string;
+  publishedDate: string;
+}
+
+/**
+ * Editorial content type — completely separate from CMSArticle.
+ * Maps to the Strapi `api::editorial.editorial` collection.
+ */
+export interface CMSEditorial {
+  id: string;
+  title: string;
+  titleHindi?: string;
+  slug: string;
+  excerpt: string;
+  excerptHindi?: string;
+  content: string;
+  contentHindi?: string;
+  image: string;
+  editorialType: EditorialType;
+  author: string;
+  authorId?: string;
+  authorSlug?: string;
+  authorAvatar?: string;
+  authorRole?: string;
+  publishedDate: string;
+  publishedAt?: string;
+  modifiedDate?: string;
+  readTime?: string;
+  isFeatured?: boolean;
+  isEditorsPick?: boolean;
+  views?: number;
+  status: 'draft' | 'published' | 'scheduled';
+  scheduledAt?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoOverride?: boolean;
+  canonicalUrl?: string;
+  newsKeywords?: string;
+  schemaJson?: unknown;
+  relatedArticles?: CMSEditorialRelatedArticle[];
+}
+
+/** Query parameters for fetching editorials */
+export interface EditorialQueryParams {
+  editorialType?: EditorialType | 'all';
+  isEditorsPick?: boolean;
+  isFeatured?: boolean;
+  limit?: number;
+  offset?: number;
+  search?: string;
+  orderBy?: 'publishedDate' | 'views' | 'title';
+  order?: 'asc' | 'desc';
+}
+
+// ─── Article types ────────────────────────────────────────────────────────────
+
 export interface CMSArticle {
   id: string;
   title: string;

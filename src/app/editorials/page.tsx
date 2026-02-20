@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { getCMSProvider } from "@/services/cms";
+import type { EditorialType } from "@/services/cms/types";
 
 export const metadata: Metadata = {
   title: "Editorials, Opinions and Special Reports | Rampur News",
@@ -8,15 +10,7 @@ export const metadata: Metadata = {
     "Editorials, opinions, reviews, interviews and special reports from rampurnews.com.",
 };
 
-type EditorialFilter =
-  | "all"
-  | "editorial"
-  | "opinion"
-  | "review"
-  | "interview"
-  | "special-report";
-
-const filters: { value: EditorialFilter; label: string }[] = [
+const filters: { value: EditorialType | "all"; label: string }[] = [
   { value: "all", label: "सभी" },
   { value: "editorial", label: "संपादकीय" },
   { value: "opinion", label: "विचार" },
@@ -25,13 +19,27 @@ const filters: { value: EditorialFilter; label: string }[] = [
   { value: "special-report", label: "स्पेशल रिपोर्ट" },
 ];
 
-const getFilterFromSearch = (searchParams: URLSearchParams): EditorialFilter => {
-  const raw = searchParams.get("type") || "all";
-  const allowed = new Set(filters.map((f) => f.value));
-  return allowed.has(raw as EditorialFilter) ? (raw as EditorialFilter) : "all";
+const editorialTypeLabel: Record<EditorialType, string> = {
+  editorial: "संपादकीय",
+  opinion: "विचार",
+  review: "रिव्यू",
+  interview: "इंटरव्यू",
+  "special-report": "स्पेशल रिपोर्ट",
 };
 
-export default async function EditorialsPage(props: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
+const getFilterFromSearch = (
+  searchParams: URLSearchParams,
+): EditorialType | "all" => {
+  const raw = searchParams.get("type") || "all";
+  const allowed = new Set(filters.map((f) => f.value));
+  return allowed.has(raw as EditorialType | "all")
+    ? (raw as EditorialType | "all")
+    : "all";
+};
+
+export default async function EditorialsPage(props: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const searchParamsObject = (await props.searchParams) || {};
   const searchParams = new URLSearchParams();
   Object.entries(searchParamsObject).forEach(([key, value]) => {
@@ -41,27 +49,18 @@ export default async function EditorialsPage(props: { searchParams?: Promise<Rec
   const selectedFilter = getFilterFromSearch(searchParams);
 
   const provider = getCMSProvider();
-  const baseParams: any = {
+  const page = await provider.getEditorials({
+    editorialType: selectedFilter,
     limit: 24,
-    category: "editorials" as const,
-    status: "published" as const,
-    orderBy: "publishedDate" as const,
-    order: "desc" as const,
-  };
+    order: "desc",
+    orderBy: "publishedDate",
+  });
+  const editorials = page?.data ?? [];
 
-  if (selectedFilter !== "all") {
-    baseParams.contentType = selectedFilter;
-  } else {
-    baseParams.contentType = "editorial";
-  }
-
-  const page = await provider.getArticles(baseParams);
-  const articles = page?.data ?? [];
-
-  const editorsPick = articles.find((a) => a.isEditorsPick);
+  const editorsPick = editorials.find((e) => e.isEditorsPick);
   const remaining = editorsPick
-    ? articles.filter((a) => a.id !== editorsPick.id)
-    : articles;
+    ? editorials.filter((e) => e.id !== editorsPick.id)
+    : editorials;
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -70,11 +69,12 @@ export default async function EditorialsPage(props: { searchParams?: Promise<Rec
           संपादकीय और विशेष लेख
         </h1>
         <p className="text-muted-foreground max-w-2xl">
-          संपादकीय, विचार, रिव्यू, इंटरव्यू और विशेष रिपोर्ट – गहराई से समझने के
-          लिए चुने हुए लेख।
+          संपादकीय, विचार, रिव्यू, इंटरव्यू और विशेष रिपोर्ट – गहराई से समझने
+          के लिए चुने हुए लेख।
         </p>
       </header>
 
+      {/* Filter tabs */}
       <section className="flex flex-wrap gap-2">
         {filters.map((filter) => {
           const isActive = selectedFilter === filter.value;
@@ -98,56 +98,117 @@ export default async function EditorialsPage(props: { searchParams?: Promise<Rec
         })}
       </section>
 
+      {/* Editor's Pick highlight */}
       {editorsPick && (
-        <section className="border border-border rounded-2xl p-5 bg-card">
-          <div className="text-xs font-semibold text-primary mb-2">
-            संपादक की पसंद
-          </div>
-          <Link
-            href={`/${editorsPick.category}/${editorsPick.slug}`}
-            className="group flex flex-col gap-2"
-          >
-            <h2 className="text-xl font-semibold group-hover:text-primary transition-colors">
-              {editorsPick.title}
-            </h2>
-            {editorsPick.excerpt && (
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {editorsPick.excerpt}
-              </p>
+        <section className="border border-border rounded-2xl overflow-hidden bg-card">
+          <div className="flex flex-col sm:flex-row">
+            {editorsPick.image && editorsPick.image !== "/placeholder.svg" && (
+              <div className="relative w-full sm:w-64 h-48 sm:h-auto flex-shrink-0">
+                <Image
+                  src={editorsPick.image}
+                  alt={editorsPick.titleHindi || editorsPick.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 256px"
+                />
+              </div>
             )}
-            <span className="text-xs text-muted-foreground mt-1">
-              {editorsPick.author}
-            </span>
-          </Link>
+            <div className="p-5 flex flex-col gap-2">
+              <div className="text-xs font-semibold text-primary">
+                ✦ संपादक की पसंद
+              </div>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {editorialTypeLabel[editorsPick.editorialType]}
+              </span>
+              <Link
+                href={`/editorials/${editorsPick.slug}`}
+                className="group"
+              >
+                <h2 className="text-xl font-semibold group-hover:text-primary transition-colors leading-snug">
+                  {editorsPick.titleHindi || editorsPick.title}
+                </h2>
+              </Link>
+              {(editorsPick.excerptHindi || editorsPick.excerpt) && (
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {editorsPick.excerptHindi || editorsPick.excerpt}
+                </p>
+              )}
+              <div className="mt-auto flex items-center gap-2 text-xs text-muted-foreground">
+                <span>{editorsPick.author}</span>
+                {editorsPick.publishedDate && (
+                  <>
+                    <span>·</span>
+                    <time dateTime={editorsPick.publishedDate}>
+                      {new Date(editorsPick.publishedDate).toLocaleDateString(
+                        "hi-IN",
+                        { year: "numeric", month: "long", day: "numeric" },
+                      )}
+                    </time>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </section>
       )}
 
+      {/* Editorial grid */}
       {remaining.length === 0 ? (
         <p className="text-muted-foreground text-sm">
           अभी इस फिल्टर के लिए कोई लेख उपलब्ध नहीं है।
         </p>
       ) : (
         <section className="grid gap-6 md:grid-cols-2">
-          {remaining.map((article) => (
+          {remaining.map((editorial) => (
             <Link
-              key={article.id}
-              href={`/${article.category}/${article.slug}`}
-              className="group border rounded-xl p-5 hover:border-primary hover:bg-muted/40 transition-colors flex flex-col gap-3"
+              key={editorial.id}
+              href={`/editorials/${editorial.slug}`}
+              className="group border rounded-xl overflow-hidden hover:border-primary hover:bg-muted/40 transition-colors flex flex-col"
             >
-              <span className="text-xs font-semibold text-primary uppercase tracking-wide">
-                {article.categoryHindi || "संपादकीय"}
-              </span>
-              <h2 className="text-lg font-semibold leading-snug group-hover:text-primary line-clamp-2">
-                {article.title}
-              </h2>
-              {article.excerpt && (
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {article.excerpt}
-                </p>
+              {editorial.image && editorial.image !== "/placeholder.svg" && (
+                <div className="relative w-full h-40 flex-shrink-0">
+                  <Image
+                    src={editorial.image}
+                    alt={editorial.titleHindi || editorial.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                </div>
               )}
-              <span className="mt-auto text-xs text-muted-foreground">
-                {article.author}
-              </span>
+              <div className="p-5 flex flex-col gap-2 flex-1">
+                <span className="text-xs font-semibold text-primary uppercase tracking-wide">
+                  {editorialTypeLabel[editorial.editorialType]}
+                </span>
+                <h2 className="text-lg font-semibold leading-snug group-hover:text-primary line-clamp-2">
+                  {editorial.titleHindi || editorial.title}
+                </h2>
+                {(editorial.excerptHindi || editorial.excerpt) && (
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {editorial.excerptHindi || editorial.excerpt}
+                  </p>
+                )}
+                <div className="mt-auto flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>{editorial.author}</span>
+                  {editorial.publishedDate && (
+                    <>
+                      <span>·</span>
+                      <time dateTime={editorial.publishedDate}>
+                        {new Date(editorial.publishedDate).toLocaleDateString(
+                          "hi-IN",
+                          { year: "numeric", month: "long", day: "numeric" },
+                        )}
+                      </time>
+                    </>
+                  )}
+                  {editorial.readTime && (
+                    <>
+                      <span>·</span>
+                      <span>{editorial.readTime}</span>
+                    </>
+                  )}
+                </div>
+              </div>
             </Link>
           ))}
         </section>

@@ -387,4 +387,13 @@ export const mockCMSProvider: CMSProvider = {
     const result = await this.getArticles({ search: query, status: 'published', limit });
     return result.data;
   },
+
+  // Editorial operations — mock returns empty results
+  async getEditorials(_params?: import('./types').EditorialQueryParams): Promise<import('./types').PaginatedResponse<import('./types').CMSEditorial>> {
+    return { data: [], total: 0, page: 1, pageSize: 20, totalPages: 0 };
+  },
+
+  async getEditorialBySlug(_slug: string): Promise<import('./types').CMSEditorial | null> {
+    return null;
+  },
 };

@@ -8,7 +8,9 @@ import type {
   CMSTag,
   CMSSettings,
   ArticleQueryParams,
-  PaginatedResponse
+  PaginatedResponse,
+  CMSEditorial,
+  EditorialQueryParams,
 } from './types';
 import { mockCMSProvider } from './mockProvider';
 import { createWordPressProvider } from './wordpressProvider';
@@ -1111,6 +1113,95 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     async searchArticles(query: string, limit = 20): Promise<CMSArticle[]> {
       const result = await getArticles({ search: query, status: 'published', limit });
       return result.data;
+    },
+
+    // ─── Editorial methods ──────────────────────────────────────────────────
+
+    async getEditorials(params?: EditorialQueryParams): Promise<PaginatedResponse<CMSEditorial>> {
+      const query: Record<string, string | number | boolean | undefined> = {};
+
+      if (params?.editorialType && params.editorialType !== 'all') {
+        query.editorialType = params.editorialType;
+      }
+      if (params?.isEditorsPick !== undefined) query.isEditorsPick = params.isEditorsPick;
+      if (params?.isFeatured !== undefined) query.isFeatured = params.isFeatured;
+      if (params?.limit !== undefined) query.limit = params.limit;
+      if (params?.offset !== undefined) query.offset = params.offset;
+      if (params?.search) query.search = params.search;
+
+      const sortField = params?.orderBy === 'views' ? 'views' : params?.orderBy === 'title' ? 'title' : 'publishedAt';
+      const sortDir = params?.order === 'asc' ? 'asc' : 'desc';
+      query.sort = `${sortField}:${sortDir}`;
+
+      const tryFetch = async (useProxy: boolean) =>
+        fetchJson<PaginatedResponse<CMSEditorial>>(
+          useProxy ? buildProxyUrl('/editorials', query) : buildUrl('/editorials', query),
+          { method: 'GET', headers: getAuthHeaders(false) },
+        );
+
+      let result: PaginatedResponse<CMSEditorial> | null = null;
+      try {
+        result = await tryFetch(false);
+      } catch {
+        result = null;
+      }
+
+      if (!result) {
+        return {
+          data: [],
+          total: 0,
+          page: 1,
+          pageSize: params?.limit || 20,
+          totalPages: 0,
+        };
+      }
+
+      // Normalize media URLs in editorial list
+      const origin = getStrapiOrigin() || getStrapiMediaOriginFromEnv();
+      const data = (result.data || []).map((editorial) => {
+        if (!origin) return editorial;
+        const rawImage = extractStrapiMediaUrlLike((editorial as any)?.image);
+        if (!rawImage) return editorial;
+        const image = resolveStrapiMediaUrl(origin, rawImage);
+        return image && image !== (editorial as any).image ? { ...editorial, image } : editorial;
+      });
+
+      return { ...result, data };
+    },
+
+    async getEditorialBySlug(slug: string): Promise<CMSEditorial | null> {
+      const tryFetch = async (useProxy: boolean) =>
+        fetchJson<{ data: CMSEditorial } | CMSEditorial | null>(
+          useProxy
+            ? buildProxyUrl(`/editorials/slug/${encodeURIComponent(slug)}`)
+            : buildUrl(`/editorials/slug/${encodeURIComponent(slug)}`),
+          { method: 'GET', headers: getAuthHeaders(false) },
+        );
+
+      let raw: { data: CMSEditorial } | CMSEditorial | null = null;
+      try {
+        raw = await tryFetch(false);
+      } catch {
+        raw = null;
+      }
+
+      if (!raw) return null;
+
+      // Unwrap { data: ... } wrapper if present
+      const editorial: CMSEditorial | null =
+        raw && typeof raw === 'object' && 'data' in raw && raw.data
+          ? (raw as { data: CMSEditorial }).data
+          : (raw as CMSEditorial | null);
+
+      if (!editorial) return null;
+
+      // Normalize media URL
+      const origin = getStrapiOrigin() || getStrapiMediaOriginFromEnv();
+      if (!origin) return editorial;
+      const rawImage = extractStrapiMediaUrlLike((editorial as any)?.image);
+      if (!rawImage) return editorial;
+      const image = resolveStrapiMediaUrl(origin, rawImage);
+      return image && image !== (editorial as any).image ? { ...editorial, image } : editorial;
     },
   };
 };

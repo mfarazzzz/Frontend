@@ -661,6 +661,15 @@ export const createWordPressProvider = (config: WordPressConfig): CMSProvider =>
       const posts: WPPost[] = await response.json();
       return posts.map(transformPost);
     },
+
+    // Editorial operations — WordPress provider returns empty (editorials are Strapi-only)
+    async getEditorials(_params?: import('./types').EditorialQueryParams): Promise<import('./types').PaginatedResponse<import('./types').CMSEditorial>> {
+      return { data: [], total: 0, page: 1, pageSize: 20, totalPages: 0 };
+    },
+
+    async getEditorialBySlug(_slug: string): Promise<import('./types').CMSEditorial | null> {
+      return null;
+    },
   };
 };
 

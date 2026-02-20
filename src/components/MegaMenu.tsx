@@ -9,8 +9,8 @@ interface MegaMenuProps {
   onClose: () => void;
 }
 
-// Group categories for mega menu
-const categoryGroups = [
+// Group categories for mega menu and mobile navigation
+export const categoryGroups = [
   {
     title: "स्थानीय समाचार",
     items: categories.filter(c => ["rampur", "nearby", "up"].includes(c.slug))

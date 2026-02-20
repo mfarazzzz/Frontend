@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Menu, X, Search, Facebook, Twitter, Youtube, Instagram, ChevronDown, Clock } from "lucide-react";
 import { categories } from "@/data/categories";
-import { MegaMenu, DropdownMenu } from "./MegaMenu";
+import { MegaMenu, DropdownMenu, categoryGroups } from "./MegaMenu";
 import BreakingNewsTicker from "./BreakingNewsTicker";
 
 const Header = () => {
@@ -220,7 +220,8 @@ const Header = () => {
                     होम
                   </Link>
                 </li>
-                {categories.map((item) => (
+
+                {mainNavItems.map((item) => (
                   <li key={item.id}>
                     <Link
                       to={item.path}
@@ -233,9 +234,43 @@ const Header = () => {
                     </Link>
                   </li>
                 ))}
+
+                <li className="pt-4 border-t border-border mt-4">
+                  <span className="px-4 text-xs font-semibold text-muted-foreground uppercase">
+                    सभी श्रेणियां
+                  </span>
+                </li>
+
+                {categoryGroups.map((group, index) => (
+                  <li key={group.title + index}>
+                    <div className="px-4 py-2 text-xs font-semibold text-primary uppercase">
+                      {group.title}
+                    </div>
+                    <ul className="space-y-1">
+                      {group.items.map((cat) => (
+                        <li key={cat.id}>
+                          <Link
+                            to={cat.path}
+                            onClick={() => setIsMenuOpen(false)}
+                            className={`block px-6 py-2 text-sm font-medium rounded-lg transition-colors ${
+                              isActive(cat.path)
+                                ? "bg-primary text-primary-foreground"
+                                : "hover:bg-muted"
+                            }`}
+                          >
+                            {cat.titleHindi}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+
                 {/* Mobile About Section */}
                 <li className="pt-4 border-t border-border mt-4">
-                  <span className="px-4 text-xs font-semibold text-muted-foreground uppercase">हमारे बारे में</span>
+                  <span className="px-4 text-xs font-semibold text-muted-foreground uppercase">
+                    हमारे बारे में
+                  </span>
                 </li>
                 {aboutItems.map((item, index) => (
                   <li key={index}>
@@ -259,8 +294,8 @@ const Header = () => {
                     }`}
                   >
                     संपादकीय
-                    </Link>
-                  </li>
+                  </Link>
+                </li>
               </ul>
             </div>
           )}

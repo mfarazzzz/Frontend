@@ -7,7 +7,9 @@ import type {
   CMSTag,
   CMSSettings,
   ArticleQueryParams,
-  PaginatedResponse
+  PaginatedResponse,
+  CMSEditorial,
+  EditorialQueryParams,
 } from './types';
 
 export interface CMSProvider {
@@ -18,6 +20,10 @@ export interface CMSProvider {
   createArticle(article: Omit<CMSArticle, 'id'>): Promise<CMSArticle>;
   updateArticle(id: string, article: Partial<CMSArticle>): Promise<CMSArticle>;
   deleteArticle(id: string): Promise<void>;
+
+  // Editorial operations (separate collection from articles)
+  getEditorials(params?: EditorialQueryParams): Promise<PaginatedResponse<CMSEditorial>>;
+  getEditorialBySlug(slug: string): Promise<CMSEditorial | null>;
   
   // Category operations
   getCategories(): Promise<CMSCategory[]>;

@@ -159,29 +159,15 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
 
             {/* Nearby */}
             <CMSCategorySection slug="nearby" title="आस-पास" viewAllLink="/nearby" variant="default" />
+
+            {/* Editorials */}
             {editorsPicks.length > 0 && (
-              <section className="bg-card border border-border rounded-2xl p-5 mb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">
-                    संपादकीय चुनिंदा
-                  </h2>
-                  <a
-                    href="/editorials"
-                    className="text-sm text-primary hover:underline"
-                  >
-                    सभी संपादकीय देखें
-                  </a>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {editorsPicks.map((article) => (
-                    <NewsCard
-                      key={article.id}
-                      article={article}
-                      variant="default"
-                    />
-                  ))}
-                </div>
-              </section>
+              <CategorySection
+                title="संपादकीय चुनिंदा"
+                articles={editorsPicks}
+                viewAllLink="/editorials"
+                variant="default"
+              />
             )}
           </div>
 

@@ -82,9 +82,9 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
           <section className="mb-8">
             <Carousel className="relative" opts={{ loop: true }} setApi={setCarouselApi}>
               <CarouselContent>
-                {heroArticles.map((article) => (
+                {heroArticles.map((article, index) => (
                   <CarouselItem key={article.id}>
-                    <NewsCard article={article} variant="featured" />
+                    <NewsCard article={article} variant="featured" imagePriority={index === 0} />
                   </CarouselItem>
                 ))}
               </CarouselContent>

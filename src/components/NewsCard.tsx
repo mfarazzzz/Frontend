@@ -6,6 +6,7 @@ import Image from "next/image";
 interface NewsCardProps {
   article: CMSArticle;
   variant?: "default" | "featured" | "horizontal" | "compact";
+  imagePriority?: boolean;
 }
 
 const formatRelativeTimeHindi = (dateString: string) => {
@@ -47,7 +48,7 @@ const isLocalUpstreamImage = (src: string) => {
   }
 };
 
-const NewsCard = ({ article, variant = "default" }: NewsCardProps) => {
+const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsCardProps) => {
   const articleUrl = `/${article.category}/${article.slug}`;
   const unoptimizedImage = article.image ? isLocalUpstreamImage(article.image) : false;
   const editorialLabel = getEditorialLabel(article);
@@ -62,7 +63,7 @@ const NewsCard = ({ article, variant = "default" }: NewsCardProps) => {
                 src={article.image}
                 alt={article.title}
                 fill
-                priority
+                priority={imagePriority}
                 unoptimized={unoptimizedImage}
                 sizes="(min-width: 1024px) 66vw, 100vw"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"

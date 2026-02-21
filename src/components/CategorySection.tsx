@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { ChevronRight } from "lucide-react";
 import NewsCard from "./NewsCard";
@@ -30,11 +30,31 @@ const CategorySection = ({
   const secondaryArticles = articles.slice(3, 7);
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const carouselHostRef = useRef<HTMLDivElement | null>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const el = carouselHostRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setIsInView(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setIsInView(entries.some((entry) => entry.isIntersecting));
+      },
+      { threshold: 0.2 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!carouselApi) return;
     if (sliderArticles.length <= 1) return;
     if (isHovered) return;
+    if (!isInView) return;
     const id = window.setInterval(() => {
       const nextIndex = (carouselApi.selectedScrollSnap() + 1) % sliderArticles.length;
       carouselApi.scrollTo(nextIndex);
@@ -42,7 +62,7 @@ const CategorySection = ({
     return () => {
       window.clearInterval(id);
     };
-  }, [carouselApi, isHovered, sliderArticles.length]);
+  }, [carouselApi, isHovered, isInView, sliderArticles.length]);
 
   if (articles.length === 0) return null;
 
@@ -71,6 +91,7 @@ const CategorySection = ({
             className="lg:col-span-2"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            ref={carouselHostRef}
           >
             <Carousel className="w-full" opts={{ loop: sliderArticles.length > 1 }} setApi={setCarouselApi}>
               <CarouselContent>

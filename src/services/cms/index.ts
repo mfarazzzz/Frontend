@@ -309,7 +309,13 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     init?: RequestInit,
     options?: { allowNotFound?: boolean },
   ) => {
-    const response = await fetch(input, { cache: 'no-store', ...init });
+    const isServer = typeof window === 'undefined';
+    const method = String(init?.method || 'GET').toUpperCase();
+    const shouldCache = isServer && method === 'GET';
+    const defaultInit = shouldCache
+      ? ({ cache: 'force-cache', next: { revalidate: 30 } } as any)
+      : ({ cache: 'no-store' } as any);
+    const response = await fetch(input, { ...defaultInit, ...(init as any) } as any);
     if (response.status === 204) {
       return null as T;
     }

@@ -65,6 +65,14 @@ export const categories: Category[] = [
     path: "/education-jobs",
   },
   {
+    id: "career",
+    slug: "career",
+    titleHindi: "करियर",
+    titleEnglish: "Career",
+    description: "करियर गाइडेंस, नौकरियों और तैयारी से जुड़ी खबरें।",
+    path: "/education-jobs/career",
+  },
+  {
     id: "business",
     slug: "business",
     titleHindi: "व्यापार",

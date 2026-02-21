@@ -195,6 +195,7 @@ export interface CMSSettings {
 // Query parameters for fetching articles
 export interface ArticleQueryParams {
   category?: string;
+  parent?: string;
   status?: 'draft' | 'published' | 'scheduled';
   featured?: boolean;
   breaking?: boolean;

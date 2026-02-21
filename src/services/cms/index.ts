@@ -357,6 +357,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     const query: Record<string, string | number | boolean | undefined> = {};
     const input = params || {};
     if (input.category) query.category = input.category;
+    if (input.parent) query.parent = input.parent;
     if (input.status) query.status = input.status;
     if (input.featured !== undefined) query.featured = input.featured;
     if (input.breaking !== undefined) query.breaking = input.breaking;

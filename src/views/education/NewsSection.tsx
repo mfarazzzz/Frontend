@@ -9,12 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, Newspaper, Bell, Award, GraduationCap, FileText, 
   ClipboardCheck, Filter, TrendingUp, ArrowRight 
 } from "lucide-react";
-import { mockEducationNews } from "@/services/cms/extendedMockData";
+import { useEducationNews } from "@/hooks/useExtendedCMS";
 
 const CATEGORIES = [
   { id: 'all', label: 'सभी', icon: Newspaper },
@@ -30,15 +29,21 @@ const EducationNewsSection = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const breakingNews = mockEducationNews.filter(n => n.isBreaking);
-  const importantNews = mockEducationNews.filter(n => n.isImportant && !n.isBreaking);
+  const { data: educationNewsData, isLoading } = useEducationNews({ limit: 200, offset: 0, orderBy: "publishedAt", order: "desc" });
+  const allNews = educationNewsData?.data ?? [];
   
-  const filteredNews = mockEducationNews.filter(news => {
+  const breakingNews = allNews.filter(n => n.isBreaking);
+  const importantNews = allNews.filter(n => n.isImportant && !n.isBreaking);
+
+  const filteredNews = allNews.filter(news => {
     const matchesCategory = activeCategory === 'all' || news.category === activeCategory;
-    const matchesSearch = searchQuery === '' || 
-      news.titleHindi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      news.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      news.excerptHindi.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      searchQuery === '' ||
+      (news.titleHindi || '').toLowerCase().includes(q) ||
+      (news.title || '').toLowerCase().includes(q) ||
+      (news.excerptHindi || '').toLowerCase().includes(q) ||
+      (news.excerpt || '').toLowerCase().includes(q);
     return matchesCategory && matchesSearch;
   });
 
@@ -182,7 +187,7 @@ const EducationNewsSection = () => {
                 {filteredNews.length === 0 ? (
                   <Card className="p-8 text-center text-muted-foreground">
                     <Newspaper className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>इस श्रेणी में कोई समाचार नहीं मिला</p>
+                    <p>{isLoading ? "लोड हो रहा है..." : "इस श्रेणी में कोई समाचार नहीं मिला"}</p>
                   </Card>
                 ) : (
                   <div className="grid gap-4">
@@ -235,7 +240,7 @@ const EducationNewsSection = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {mockEducationNews
+                      {allNews
                         .filter(n => n.category === 'scholarship')
                         .slice(0, 3)
                         .map(news => (
@@ -266,7 +271,7 @@ const EducationNewsSection = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {mockEducationNews
+                      {allNews
                         .filter(n => n.category === 'result-news')
                         .slice(0, 3)
                         .map(news => (

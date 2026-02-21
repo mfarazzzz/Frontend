@@ -12,12 +12,13 @@ import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import { HeroSection, ExamCard, ResultCard, CareerCard, QuickNavCard, TestimonialCard, VideoCard } from "@/components/education";
 import NewsCard from "@/components/education/NewsCard";
-import { useExams, useResults } from "@/hooks/useExtendedCMS";
-import { mockCareerGuides, mockTestimonials, mockVideoTutorials, mockEducationNews } from "@/services/cms/extendedMockData";
+import { useEducationNews, useExams, useResults } from "@/hooks/useExtendedCMS";
+import { mockCareerGuides, mockTestimonials, mockVideoTutorials } from "@/services/cms/extendedMockData";
 
 const EducationHub = () => {
   const { data: examsData, isLoading: examsLoading } = useExams({ limit: 20, orderBy: "publishedAt", order: "desc" });
   const { data: resultsData, isLoading: resultsLoading } = useResults({ limit: 20, orderBy: "publishedAt", order: "desc" });
+  const { data: eduNewsData } = useEducationNews({ limit: 100, orderBy: "publishedAt", order: "desc" });
 
   const exams = examsData?.data ?? [];
   const results = resultsData?.data ?? [];
@@ -43,9 +44,9 @@ const EducationHub = () => {
     .filter((n) => n.date && !Number.isNaN(n.date.getTime()))
     .sort((a, b) => b.date!.getTime() - a.date!.getTime())
     .slice(0, 6);
-  const breakingNews = mockEducationNews.filter(n => n.isBreaking);
-  const scholarshipNews = mockEducationNews.filter(n => n.category === 'scholarship').slice(0, 3);
-  const examUpdates = mockEducationNews.filter(n => n.category === 'exam-news' || n.category === 'result-news').slice(0, 4);
+  const eduNews = eduNewsData?.data ?? [];
+  const scholarshipNews = eduNews.filter(n => n.category === 'scholarship').slice(0, 3);
+  const examUpdates = eduNews.filter(n => n.category === 'exam-news' || n.category === 'result-news').slice(0, 4);
 
   return (
     <>

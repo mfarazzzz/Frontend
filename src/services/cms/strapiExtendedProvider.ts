@@ -9,6 +9,7 @@ import type {
   CMSRestaurant,
   CMSResult,
   CMSShoppingCentre,
+  CMSEducationNews,
   ExtendedQueryParams,
 } from "./extendedTypes";
 import type { ExtendedCMSProvider } from "./extendedProvider";
@@ -167,6 +168,7 @@ const contentTypeConfig = {
   exams: { path: "/exams", dateField: "examDate", searchFields: ["titleHindi", "title", "organizationHindi", "organization"] },
   results: { path: "/results", dateField: "resultDate", searchFields: ["titleHindi", "title", "organizationHindi", "organization"] },
   institutions: { path: "/institutions", searchFields: ["nameHindi", "name", "city", "district", "state"] },
+  educationNews: { path: "/education-news", dateField: "publishedAt", searchFields: ["titleHindi", "title", "excerptHindi", "excerpt", "contentHindi", "content"] },
   holidays: { path: "/holidays", dateField: "date", searchFields: ["nameHindi", "name", "descriptionHindi", "description"] },
   restaurants: { path: "/restaurants", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
   fashionStores: { path: "/fashion-stores", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
@@ -611,6 +613,12 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
     },
     async getInstitutionBySlug(slug: string) {
       return bySlug<CMSInstitution>("institutions", slug);
+    },
+    async getEducationNews(params = {}) {
+      return list<CMSEducationNews>("educationNews", params);
+    },
+    async getEducationNewsBySlug(slug: string) {
+      return bySlug<CMSEducationNews>("educationNews", slug);
     },
     async getHolidays(params = {}) {
       return list<CMSHoliday>("holidays", params);

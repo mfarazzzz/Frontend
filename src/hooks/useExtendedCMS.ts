@@ -12,6 +12,8 @@ export const extendedCmsKeys = {
   result: (slug: string) => ['result', slug] as const,
   institutions: ['institutions'] as const,
   institution: (slug: string) => ['institution', slug] as const,
+  educationNews: ['educationNews'] as const,
+  educationNewsItem: (slug: string) => ['educationNews', slug] as const,
   holidays: ['holidays'] as const,
   holiday: (slug: string) => ['holiday', slug] as const,
   holidaysByMonth: (year: number, month: number) => ['holidays', 'month', year, month] as const,
@@ -77,6 +79,23 @@ export const useInstitutionBySlug = (slug: string) => {
   return useQuery({
     queryKey: [...extendedCmsKeys.institution(slug), providerKey],
     queryFn: () => getExtendedCMSProvider().getInstitutionBySlug(slug),
+    enabled: !!slug,
+  });
+};
+
+export const useEducationNews = (params?: ExtendedQueryParams) => {
+  const providerKey = `${getCMSConfig().provider}:${getCMSConfig().baseUrl || ''}`;
+  return useQuery({
+    queryKey: [...extendedCmsKeys.educationNews, providerKey, params],
+    queryFn: () => getExtendedCMSProvider().getEducationNews(params),
+  });
+};
+
+export const useEducationNewsBySlug = (slug: string) => {
+  const providerKey = `${getCMSConfig().provider}:${getCMSConfig().baseUrl || ''}`;
+  return useQuery({
+    queryKey: [...extendedCmsKeys.educationNewsItem(slug), providerKey],
+    queryFn: () => getExtendedCMSProvider().getEducationNewsBySlug(slug),
     enabled: !!slug,
   });
 };

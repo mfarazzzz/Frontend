@@ -10,6 +10,7 @@ import type {
   CMSFamousPlace,
   CMSEvent,
   CalendarEvent,
+  CMSEducationNews,
   ExtendedQueryParams,
 } from './extendedTypes';
 import {
@@ -22,6 +23,7 @@ import {
   mockShoppingCentres,
   mockFamousPlaces,
   mockEvents,
+  mockEducationNews,
 } from './extendedMockData';
 import type { PaginatedResponse } from './types';
 import { getCMSConfig } from './index';
@@ -58,6 +60,8 @@ export interface ExtendedCMSProvider {
   getResultBySlug: (slug: string) => Promise<CMSResult | null>;
   getInstitutions: (params?: ExtendedQueryParams) => Promise<PaginatedResponse<CMSInstitution>>;
   getInstitutionBySlug: (slug: string) => Promise<CMSInstitution | null>;
+  getEducationNews: (params?: ExtendedQueryParams) => Promise<PaginatedResponse<CMSEducationNews>>;
+  getEducationNewsBySlug: (slug: string) => Promise<CMSEducationNews | null>;
   
   // Culture
   getHolidays: (params?: ExtendedQueryParams) => Promise<PaginatedResponse<CMSHoliday>>;
@@ -130,6 +134,7 @@ let fashionStoresData = [...mockFashionStores];
 let shoppingCentresData = [...mockShoppingCentres];
 let famousPlacesData = [...mockFamousPlaces];
 let eventsData = [...mockEvents];
+const educationNewsData = [...mockEducationNews];
 
 export const extendedMockProvider: ExtendedCMSProvider = {
   // Education - Exams
@@ -172,6 +177,23 @@ export const extendedMockProvider: ExtendedCMSProvider = {
   
   async getInstitutionBySlug(slug) {
     return institutionsData.find(i => i.slug === slug) || null;
+  },
+
+  async getEducationNews(params = {}) {
+    return applyFiltersAndPagination(educationNewsData, params, (news) => {
+      if (params.category && news.category !== params.category) return false;
+      if (params.featured && !news.isFeatured) return false;
+      if (params.search) {
+        const q = params.search.toLowerCase();
+        const t = `${news.title} ${news.titleHindi} ${news.excerpt} ${news.excerptHindi}`.toLowerCase();
+        if (!t.includes(q)) return false;
+      }
+      return true;
+    });
+  },
+
+  async getEducationNewsBySlug(slug) {
+    return educationNewsData.find(n => n.slug === slug) || null;
   },
   
   // Culture - Holidays
@@ -645,6 +667,12 @@ const createRestExtendedProvider = (config: CMSConfig): ExtendedCMSProvider => {
     },
     async getInstitutionBySlug(slug) {
       return getItemBySlug<CMSInstitution>('institution', slug);
+    },
+    async getEducationNews(params = {}) {
+      return getItems<CMSEducationNews>('education-news', params);
+    },
+    async getEducationNewsBySlug(slug) {
+      return getItemBySlug<CMSEducationNews>('education-news', slug);
     },
     async getHolidays(params = {}) {
       const next: ExtendedQueryParams = { ...params };

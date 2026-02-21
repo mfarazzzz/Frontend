@@ -1,8 +1,17 @@
+"use client";
+import { useEffect, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { ChevronRight } from "lucide-react";
 import NewsCard from "./NewsCard";
 import type { CMSArticle } from "@/services/cms";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import type { CarouselApi } from "@/components/ui/carousel";
 
 interface CategorySectionProps {
   title: string;
@@ -17,14 +26,28 @@ const CategorySection = ({
   viewAllLink,
   variant = "default",
 }: CategorySectionProps) => {
-  if (articles.length === 0) return null;
-
   const sliderArticles = articles.slice(0, 3);
   const secondaryArticles = articles.slice(3, 7);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    if (sliderArticles.length <= 1) return;
+    if (isHovered) return;
+    const id = window.setInterval(() => {
+      const nextIndex = (carouselApi.selectedScrollSnap() + 1) % sliderArticles.length;
+      carouselApi.scrollTo(nextIndex);
+    }, 5000);
+    return () => {
+      window.clearInterval(id);
+    };
+  }, [carouselApi, isHovered, sliderArticles.length]);
+
+  if (articles.length === 0) return null;
 
   return (
     <section className="py-6">
-      {/* Section Header */}
       <div className="section-header">
         <h2 className="section-title">{title}</h2>
         <Link
@@ -36,7 +59,6 @@ const CategorySection = ({
         </Link>
       </div>
 
-      {/* Content Grid */}
       {variant === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {articles.map((article) => (
@@ -44,30 +66,33 @@ const CategorySection = ({
           ))}
         </div>
       ) : variant === "featured" ? (
-        <div className="space-y-4">
-          <Carousel className="w-full" opts={{ loop: sliderArticles.length > 1 }}>
-            <CarouselContent>
-              {sliderArticles.map((article) => (
-                <CarouselItem key={article.id}>
-                  <NewsCard article={article} variant="featured" />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            {sliderArticles.length > 1 && (
-              <>
-                <CarouselPrevious className="-left-4 md:-left-8" />
-                <CarouselNext className="-right-4 md:-right-8" />
-              </>
-            )}
-          </Carousel>
-
-          {secondaryArticles.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {secondaryArticles.map((article) => (
-                <NewsCard key={article.id} article={article} variant="horizontal" />
-              ))}
-            </div>
-          )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div
+            className="lg:col-span-2"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            <Carousel className="w-full" opts={{ loop: sliderArticles.length > 1 }} setApi={setCarouselApi}>
+              <CarouselContent>
+                {sliderArticles.map((article) => (
+                  <CarouselItem key={article.id}>
+                    <NewsCard article={article} variant="featured" />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {sliderArticles.length > 1 && (
+                <>
+                  <CarouselPrevious className="-left-4 md:-left-8" />
+                  <CarouselNext className="-right-4 md:-right-8" />
+                </>
+              )}
+            </Carousel>
+          </div>
+          <div className="space-y-4">
+            {secondaryArticles.map((article) => (
+              <NewsCard key={article.id} article={article} variant="horizontal" />
+            ))}
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

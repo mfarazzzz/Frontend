@@ -108,15 +108,15 @@ const NewsCard = ({ article, variant = "default" }: NewsCardProps) => {
     return (
       <article className="news-card group flex gap-4 p-3 bg-card rounded-lg border border-border">
         <Link to={articleUrl} className="flex-shrink-0">
-          <div className="w-24 h-24 md:w-32 md:h-24 rounded-lg overflow-hidden">
+          <div className="w-24 h-20 md:w-28 md:h-20 rounded-lg overflow-hidden">
             {article.image ? (
               <Image
                 src={article.image}
                 alt={article.title}
-                width={128}
-                height={96}
+                width={112}
+                height={80}
                 unoptimized={unoptimizedImage}
-                sizes="(min-width: 768px) 128px, 96px"
+                sizes="(min-width: 768px) 112px, 96px"
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             ) : null}
@@ -126,14 +126,16 @@ const NewsCard = ({ article, variant = "default" }: NewsCardProps) => {
           <Link to={articleUrl}>
             <div className="flex items-center gap-2">
               {article.isBreaking && (
-                <span className="live-badge text-[10px] px-1.5 py-0.5">ब्रेकिंग</span>
+                <span className="rounded-full bg-red-600 text-white text-[10px] px-2 py-0.5">
+                  ब्रेकिंग
+                </span>
               )}
               {article.isEditorsPick && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-black">
                   संपादक की पसंद
                 </span>
               )}
-              <span className="text-xs font-semibold text-primary">
+              <span className="text-[10px] px-2 py-0.5 rounded-full border border-red-200 bg-red-50 text-red-700 font-semibold">
                 {editorialLabel || article.categoryHindi}
               </span>
             </div>

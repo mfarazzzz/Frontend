@@ -1139,16 +1139,39 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const sortDir = params?.order === 'asc' ? 'asc' : 'desc';
       query.sort = `${sortField}:${sortDir}`;
 
-      const tryFetch = async (useProxy: boolean) =>
+      const isServer = typeof window === 'undefined';
+
+      // On the server, try the direct Strapi URL first (avoids the Next.js proxy hop).
+      // On the client, always use the proxy to avoid CORS issues.
+      const tryDirectFetch = () =>
         fetchJson<PaginatedResponse<CMSEditorial>>(
-          useProxy ? buildProxyUrl('/editorials', query) : buildUrl('/editorials', query),
+          buildUrl('/editorials', query),
+          { method: 'GET', headers: getAuthHeaders(false) },
+        );
+
+      const tryProxyFetch = () =>
+        fetchJson<PaginatedResponse<CMSEditorial>>(
+          buildProxyUrl('/editorials', query),
           { method: 'GET', headers: getAuthHeaders(false) },
         );
 
       let result: PaginatedResponse<CMSEditorial> | null = null;
       try {
-        result = await tryFetch(false);
-      } catch {
+        if (isServer) {
+          // Server-side: try direct URL first, fall back to proxy
+          try {
+            result = await tryDirectFetch();
+          } catch (directError) {
+            console.error('[CMS] getEditorials direct fetch failed, trying proxy:', directError);
+            result = await tryProxyFetch();
+          }
+        } else {
+          // Client-side: always use proxy
+          result = await tryProxyFetch();
+        }
+      } catch (error) {
+        // Log the actual error so it is visible in server/browser console for debugging
+        console.error('[CMS] getEditorials failed:', error);
         result = null;
       }
 
@@ -1176,18 +1199,38 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getEditorialBySlug(slug: string): Promise<CMSEditorial | null> {
-      const tryFetch = async (useProxy: boolean) =>
+      const isServer = typeof window === 'undefined';
+      const encodedSlug = encodeURIComponent(slug);
+
+      const tryDirectFetch = () =>
         fetchJson<{ data: CMSEditorial } | CMSEditorial | null>(
-          useProxy
-            ? buildProxyUrl(`/editorials/slug/${encodeURIComponent(slug)}`)
-            : buildUrl(`/editorials/slug/${encodeURIComponent(slug)}`),
+          buildUrl(`/editorials/slug/${encodedSlug}`),
+          { method: 'GET', headers: getAuthHeaders(false) },
+        );
+
+      const tryProxyFetch = () =>
+        fetchJson<{ data: CMSEditorial } | CMSEditorial | null>(
+          buildProxyUrl(`/editorials/slug/${encodedSlug}`),
           { method: 'GET', headers: getAuthHeaders(false) },
         );
 
       let raw: { data: CMSEditorial } | CMSEditorial | null = null;
       try {
-        raw = await tryFetch(false);
-      } catch {
+        if (isServer) {
+          // Server-side: try direct URL first, fall back to proxy
+          try {
+            raw = await tryDirectFetch();
+          } catch (directError) {
+            console.error('[CMS] getEditorialBySlug direct fetch failed, trying proxy:', directError);
+            raw = await tryProxyFetch();
+          }
+        } else {
+          // Client-side: always use proxy
+          raw = await tryProxyFetch();
+        }
+      } catch (error) {
+        // Log the actual error so it is visible in server/browser console for debugging
+        console.error('[CMS] getEditorialBySlug failed for slug:', slug, error);
         raw = null;
       }
 

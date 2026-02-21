@@ -206,9 +206,14 @@
   }
 
   .breaking-ticker-content {
-    @apply inline-block;
+    @apply flex;
+    width: max-content;
     animation: ticker 108s linear infinite;
     will-change: transform;
+  }
+
+  .breaking-ticker-segment {
+    @apply flex items-center;
   }
 
   .breaking-ticker:hover .breaking-ticker-content {
@@ -216,8 +221,8 @@
   }
 
   @keyframes ticker {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
   }
 
   /* Ad Placeholder */

@@ -250,6 +250,20 @@ const proxy = async (request: NextRequest, path: string[]) => {
       try {
         const data = await upstream.json();
         const rewritten = rewriteMediaDeep(origin, data);
+
+        // Add cache-control headers for public GET editorial/article responses
+        // so CDN and browsers can cache them appropriately.
+        const isPublicContentPath =
+          pathString.startsWith("editorials") ||
+          pathString.startsWith("articles");
+        if (isPublicContentPath && upstream.ok) {
+          // 5-minute CDN cache, 1-minute stale-while-revalidate
+          responseHeaders.set(
+            "Cache-Control",
+            "public, s-maxage=300, stale-while-revalidate=60"
+          );
+        }
+
         return NextResponse.json(rewritten, {
           status: upstream.status,
           headers: responseHeaders,

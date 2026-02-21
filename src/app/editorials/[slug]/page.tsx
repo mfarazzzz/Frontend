@@ -5,6 +5,9 @@ import { notFound } from "next/navigation";
 import { getCMSProvider } from "@/services/cms";
 import type { EditorialType } from "@/services/cms/types";
 
+// ISR: revalidate every 10 minutes for individual editorial pages
+export const revalidate = 600;
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const SITE_URL =
@@ -81,41 +84,51 @@ export default async function EditorialDetailPage(props: {
   const canonicalUrl =
     editorial.canonicalUrl || `${SITE_URL}/editorials/${editorial.slug}`;
 
-  // JSON-LD structured data
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
-    headline: editorial.titleHindi || editorial.title,
-    description: editorial.excerptHindi || editorial.excerpt,
-    image: editorial.image
-      ? {
-          "@type": "ImageObject",
-          url: editorial.image,
-          width: 1200,
-          height: 630,
-        }
-      : undefined,
-    datePublished: editorial.publishedAt,
-    dateModified: editorial.modifiedDate || editorial.publishedAt,
-    author: editorial.author
-      ? [{ "@type": "Person", name: editorial.author }]
-      : undefined,
-    publisher: {
-      "@type": "Organization",
-      name: "रामपुर न्यूज़ | Rampur News",
-      logo: {
-        "@type": "ImageObject",
-        url: `${SITE_URL}/logo.png`,
-        width: 768,
-        height: 768,
-      },
-    },
-    articleSection: editorialTypeLabel[editorial.editorialType],
-    inLanguage: "hi-IN",
-    isAccessibleForFree: true,
-    keywords: editorial.newsKeywords,
-  };
+  // JSON-LD structured data — prefer backend-generated schemaJson, fall back to frontend build
+  const jsonLd = editorial.schemaJson && typeof editorial.schemaJson === "object"
+    ? editorial.schemaJson
+    : {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
+        headline: editorial.titleHindi || editorial.title,
+        name: editorial.titleHindi || editorial.title,
+        description:
+          editorial.seoDescription ||
+          editorial.excerptHindi ||
+          editorial.excerpt,
+        image: editorial.image && editorial.image !== "/placeholder.svg"
+          ? {
+              "@type": "ImageObject",
+              url: editorial.image,
+              width: 1200,
+              height: 630,
+            }
+          : undefined,
+        thumbnailUrl:
+          editorial.image && editorial.image !== "/placeholder.svg"
+            ? editorial.image
+            : undefined,
+        datePublished: editorial.publishedAt,
+        dateModified: editorial.modifiedDate || editorial.publishedAt,
+        author: editorial.author
+          ? [{ "@type": "Person", name: editorial.author }]
+          : undefined,
+        publisher: {
+          "@type": "Organization",
+          name: "रामपुर न्यूज़ | Rampur News",
+          logo: {
+            "@type": "ImageObject",
+            url: `${SITE_URL}/logo.png`,
+            width: 768,
+            height: 768,
+          },
+        },
+        articleSection: editorialTypeLabel[editorial.editorialType],
+        inLanguage: "hi-IN",
+        isAccessibleForFree: true,
+        keywords: editorial.newsKeywords,
+      };
 
   const formattedDate = editorial.publishedDate
     ? new Date(editorial.publishedDate).toLocaleDateString("hi-IN", {

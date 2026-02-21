@@ -4,10 +4,31 @@ import Image from "next/image";
 import { getCMSProvider } from "@/services/cms";
 import type { EditorialType } from "@/services/cms/types";
 
+// ISR: revalidate every 5 minutes so new editorials appear without a full rebuild
+export const revalidate = 300;
+
 export const metadata: Metadata = {
-  title: "Editorials, Opinions and Special Reports | Rampur News",
+  title: "संपादकीय और विशेष लेख | Rampur News",
   description:
-    "Editorials, opinions, reviews, interviews and special reports from rampurnews.com.",
+    "रामपुर न्यूज़ पर संपादकीय, विचार, रिव्यू, इंटरव्यू और विशेष रिपोर्ट पढ़ें। Editorials, opinions, reviews, interviews and special reports from rampurnews.com.",
+  openGraph: {
+    title: "संपादकीय और विशेष लेख | Rampur News",
+    description:
+      "रामपुर न्यूज़ पर संपादकीय, विचार, रिव्यू, इंटरव्यू और विशेष रिपोर्ट पढ़ें।",
+    type: "website",
+    url: "https://rampurnews.com/editorials",
+    siteName: "रामपुर न्यूज़ | Rampur News",
+    locale: "hi_IN",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "संपादकीय और विशेष लेख | Rampur News",
+    description:
+      "रामपुर न्यूज़ पर संपादकीय, विचार, रिव्यू, इंटरव्यू और विशेष रिपोर्ट पढ़ें।",
+  },
+  alternates: {
+    canonical: "https://rampurnews.com/editorials",
+  },
 };
 
 const filters: { value: EditorialType | "all"; label: string }[] = [

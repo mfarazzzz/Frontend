@@ -136,7 +136,7 @@ export const extendedMockProvider: ExtendedCMSProvider = {
   async getExams(params = {}) {
     return applyFiltersAndPagination(examsData, params, (exam) => {
       if (params.category && exam.category !== params.category) return false;
-      if (params.status && exam.status !== params.status) return false;
+      if (params.status && exam.examStatus !== params.status) return false;
       if (params.search && !exam.titleHindi.includes(params.search) && !exam.title.toLowerCase().includes(params.search.toLowerCase())) return false;
       return true;
     });

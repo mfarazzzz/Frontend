@@ -383,8 +383,8 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
       return next as T;
     }
 
-    if (contentType === "exams" && !next.status && typeof next.examDate === "string") {
-      next.status = deriveStatus(next.examDate, todayIso);
+    if (contentType === "exams" && !next.examStatus && typeof next.examDate === "string") {
+      next.examStatus = deriveStatus(next.examDate, todayIso);
     }
     if (contentType === "results" && !next.status && typeof next.resultDate === "string") {
       next.status = deriveStatus(next.resultDate, todayIso);

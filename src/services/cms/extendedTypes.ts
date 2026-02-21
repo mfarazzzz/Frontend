@@ -22,7 +22,7 @@ export interface CMSExam {
   officialWebsite?: string;
   applicationLink?: string;
   image?: string;
-  status: 'upcoming' | 'ongoing' | 'completed';
+  examStatus: 'upcoming' | 'ongoing' | 'completed';
   applicationStatus: 'open' | 'closed' | 'upcoming' | 'extended';
   admitCardStatus: 'available' | 'upcoming' | 'notreleased';
   resultStatus: 'declared' | 'expected' | 'notdeclared';

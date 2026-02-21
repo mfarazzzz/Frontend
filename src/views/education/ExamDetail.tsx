@@ -62,9 +62,9 @@ export default function ExamDetailPage() {
                       <CardTitle className="text-2xl">{exam.titleHindi}</CardTitle>
                       {exam.title ? <p className="text-sm text-muted-foreground">{exam.title}</p> : null}
                     </div>
-                    {exam.status ? (
-                      <Badge className={STATUS_CLASS[exam.status] || "bg-gray-500"}>
-                        {STATUS_LABELS[exam.status] || exam.status}
+                    {exam.examStatus ? (
+                      <Badge className={STATUS_CLASS[exam.examStatus] || "bg-gray-500"}>
+                        {STATUS_LABELS[exam.examStatus] || exam.examStatus}
                       </Badge>
                     ) : null}
                   </div>

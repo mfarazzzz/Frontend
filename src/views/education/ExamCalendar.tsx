@@ -169,8 +169,8 @@ const ExamCalendarPage = () => {
                               <h3 className="font-bold text-lg">{exam.titleHindi}</h3>
                               <p className="text-sm text-muted-foreground">{exam.title}</p>
                             </div>
-                            <Badge className={getStatusColor(exam.status)}>
-                              {statusLabels[exam.status]}
+                            <Badge className={getStatusColor(exam.examStatus)}>
+                              {statusLabels[exam.examStatus]}
                             </Badge>
                           </div>
                           

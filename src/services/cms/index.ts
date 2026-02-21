@@ -354,20 +354,22 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
   };
 
   const buildArticleQuery = (params?: ArticleQueryParams) => {
-    if (!params) return undefined;
     const query: Record<string, string | number | boolean | undefined> = {};
-    if (params.category) query.category = params.category;
-    if (params.status) query.status = params.status;
-    if (params.featured !== undefined) query.featured = params.featured;
-    if (params.breaking !== undefined) query.breaking = params.breaking;
-    if (params.editorsPick !== undefined) query.editorsPick = params.editorsPick;
-    if (params.contentType) query.contentType = params.contentType;
-    if (params.limit !== undefined) query.limit = params.limit;
-    if (params.offset !== undefined) query.offset = params.offset;
-    if (params.search) query.search = params.search;
-    if (params.author) query.author = params.author;
-    if (params.orderBy) query.orderBy = params.orderBy;
-    if (params.order) query.order = params.order;
+    const input = params || {};
+    if (input.category) query.category = input.category;
+    if (input.status) query.status = input.status;
+    if (input.featured !== undefined) query.featured = input.featured;
+    if (input.breaking !== undefined) query.breaking = input.breaking;
+    if (input.editorsPick !== undefined) query.editorsPick = input.editorsPick;
+    if (input.contentType) query.contentType = input.contentType;
+    if (input.limit !== undefined) query.limit = input.limit;
+    if (input.offset !== undefined) query.offset = input.offset;
+    if (input.search) query.search = input.search;
+    if (input.author) query.author = input.author;
+    if (input.orderBy) query.orderBy = input.orderBy;
+    if (input.order) query.order = input.order;
+    if (!query.orderBy) query.orderBy = 'publishedDate';
+    if (!query.order) query.order = 'desc';
     return query;
   };
 
@@ -431,9 +433,21 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         totalPages: 0,
       };
     }
+    const normalized = normalizeArticleListMedia(result.data);
+    const orderBy = (params?.orderBy as unknown as string | undefined) || undefined;
+    const shouldDateSort = !orderBy || orderBy === 'publishedDate' || orderBy === 'publishedAt';
+    const dateSorted = shouldDateSort
+      ? [...normalized].sort((a, b) => {
+          const aDate = a.publishedDate || a.publishedAt || '';
+          const bDate = b.publishedDate || b.publishedAt || '';
+          const aTime = aDate ? new Date(aDate).getTime() : 0;
+          const bTime = bDate ? new Date(bDate).getTime() : 0;
+          return (params?.order || 'desc') === 'asc' ? aTime - bTime : bTime - aTime;
+        })
+      : normalized;
     return {
       ...result,
-      data: normalizeArticleListMedia(result.data),
+      data: dateSorted,
     };
   };
 

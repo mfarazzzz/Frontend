@@ -28,9 +28,11 @@ const Header = () => {
 
   const isActive = (path: string) => pathname === path;
 
+  const contactFormUrl =
+    "https://docs.google.com/forms/d/e/1FAIpQLSezmhkifh6B8qditlJR9Ja4g7R_oRG0stgq-Y3_cJfXXkl3Ug/viewform";
   const aboutItems = [
     { label: "हमारे बारे में", path: "/about" },
-    { label: "संपर्क करें", path: "/contact" },
+    { label: "संपर्क करें", path: contactFormUrl },
     { label: "संपादकीय नीति", path: "/editorial-policy" },
     { label: "स्वामित्व प्रकटीकरण", path: "/ownership" },
     { label: "शिकायत निवारण", path: "/grievance" },
@@ -272,19 +274,36 @@ const Header = () => {
                     हमारे बारे में
                   </span>
                 </li>
-                {aboutItems.map((item, index) => (
-                  <li key={index}>
-                    <Link
-                      to={item.path}
-                      onClick={() => setIsMenuOpen(false)}
-                      className={`block px-4 py-3 text-base font-medium rounded-lg transition-colors ${
-                        isActive(item.path) ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
+                {aboutItems.map((item, index) => {
+                  const isExternal = item.path.startsWith("http");
+                  const isCurrent = !isExternal && isActive(item.path);
+
+                  return (
+                    <li key={index}>
+                      {isExternal ? (
+                        <a
+                          href={item.path}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="block px-4 py-3 text-base font-medium rounded-lg transition-colors hover:bg-muted"
+                        >
+                          {item.label}
+                        </a>
+                      ) : (
+                        <Link
+                          to={item.path}
+                          onClick={() => setIsMenuOpen(false)}
+                          className={`block px-4 py-3 text-base font-medium rounded-lg transition-colors ${
+                            isCurrent ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
                 <li>
                   <Link
                     to="/editorials"

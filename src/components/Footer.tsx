@@ -141,9 +141,14 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-sm text-gray-300 hover:text-primary transition-colors">
+                <a
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSezmhkifh6B8qditlJR9Ja4g7R_oRG0stgq-Y3_cJfXXkl3Ug/viewform"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-gray-300 hover:text-primary transition-colors"
+                >
                   संपर्क करें
-                </Link>
+                </a>
               </li>
               <li>
                 <Link to="/editorial-policy" className="text-sm text-gray-300 hover:text-primary transition-colors">

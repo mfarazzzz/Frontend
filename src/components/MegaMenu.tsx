@@ -126,17 +126,33 @@ export const DropdownMenu = ({ trigger, items, align = "left" }: DropdownMenuPro
         <ul 
           className={`absolute top-full ${align === "right" ? "right-0" : "left-0"} bg-white dark:bg-gray-900 shadow-xl rounded-lg py-2 min-w-48 z-[100] border border-gray-200 dark:border-gray-700 animate-fade-in`}
         >
-          {items.map((item, index) => (
-            <li key={index}>
-              <Link
-                to={item.path}
-                onClick={() => setIsOpen(false)}
-                className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary transition-colors"
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
+          {items.map((item, index) => {
+            const isExternal = item.path.startsWith("http");
+
+            return (
+              <li key={index}>
+                {isExternal ? (
+                  <a
+                    href={item.path}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => setIsOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link
+                    to={item.path}
+                    onClick={() => setIsOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

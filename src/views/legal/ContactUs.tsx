@@ -2,43 +2,10 @@
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { MapPin, Phone, Mail, Clock, Send, MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 
 const ContactUs = () => {
-  const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: ""
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "संदेश भेजा गया!",
-      description: "हम जल्द ही आपसे संपर्क करेंगे।",
-    });
-    
-    setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
-    setIsSubmitting(false);
-  };
+  const contactFormUrl =
+    "https://docs.google.com/forms/d/e/1FAIpQLSezmhkifh6B8qditlJR9Ja4g7R_oRG0stgq-Y3_cJfXXkl3Ug/viewform";
 
   return (
     <div className="min-h-screen bg-background">
@@ -214,95 +181,24 @@ const ContactUs = () => {
                   </div>
                   <h2 className="text-xl font-bold text-foreground">हमें संदेश भेजें</h2>
                 </div>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
-                        आपका नाम *
-                      </label>
-                      <Input
-                        id="name"
-                        name="name"
-                        type="text"
-                        placeholder="अपना पूरा नाम लिखें"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
-                        ईमेल पता *
-                      </label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
-                        फ़ोन नंबर
-                      </label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        placeholder="+91 XXXXXXXXXX"
-                        value={formData.phone}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="subject" className="block text-sm font-medium text-foreground mb-2">
-                        विषय *
-                      </label>
-                      <Input
-                        id="subject"
-                        name="subject"
-                        type="text"
-                        placeholder="संदेश का विषय"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
-                      आपका संदेश *
-                    </label>
-                    <Textarea
-                      id="message"
-                      name="message"
-                      placeholder="अपना संदेश यहाँ लिखें..."
-                      rows={6}
-                      value={formData.message}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>भेजा जा रहा है...</>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 mr-2" />
-                        संदेश भेजें
-                      </>
-                    )}
-                  </Button>
-                </form>
+                <div className="flex items-center justify-between flex-wrap gap-3 text-sm text-muted-foreground">
+                  <span>कृपया नीचे दिए गए फॉर्म को भरें।</span>
+                  <a
+                    href={contactFormUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    नए टैब में खोलें
+                  </a>
+                </div>
+                <div className="mt-6 overflow-hidden rounded-lg border border-border bg-white">
+                  <iframe
+                    src={contactFormUrl}
+                    title="Rampur News संपर्क फॉर्म"
+                    className="w-full min-h-[900px]"
+                  />
+                </div>
               </div>
 
               {/* News Tips */}

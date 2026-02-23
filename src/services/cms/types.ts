@@ -138,6 +138,7 @@ export interface CMSAuthor {
   nameHindi: string;
   email: string;
   avatar?: string;
+  coverImage?: string;
   bio?: string;
   designation?: string;
   profession?: string;

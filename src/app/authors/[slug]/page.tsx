@@ -20,6 +20,12 @@ const toSlug = (value: string) =>
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
 
+const getFarazLongBio = () => [
+  "Mohammad Faraz Raza Khan is the Founder & Editor of rampurnews.com and a multidisciplinary professional with a background in law and engineering.",
+  "He has over ten years of experience across technology, business growth, EdTech, digital advertising, and digital marketing, focusing on building sustainable, audience-first media products.",
+  "His work combines editorial leadership with product strategy, emphasizing credibility, community impact, and accessibility for readers in Rampur and beyond.",
+];
+
 const findAuthorBySlug = async (slug: string): Promise<CMSAuthor | null> => {
   const provider = getCMSProvider();
   const authors = await provider.getAuthors();
@@ -290,6 +296,14 @@ export default async function Page(props: { params: Promise<PageParams> }) {
     ? "Founder & Editor at rampurnews.com, advocate (lawyer), engineer and digital media entrepreneur with more than ten years' experience in technology, business growth, EdTech, digital advertising and digital marketing."
     : truncateText(rawBio || fallbackBio, 200);
 
+  const detailedBioText = rawBio || fallbackBio;
+  const detailedBioParagraphs =
+    isFaraz && !rawBio
+      ? getFarazLongBio()
+      : detailedBioText
+        ? [detailedBioText]
+        : [];
+
   const socialSources = {
     website: author.websiteUrl,
     linkedin: author.linkedinUrl || author.socialLinks?.linkedin,
@@ -309,11 +323,13 @@ export default async function Page(props: { params: Promise<PageParams> }) {
   }
   const socialLinks = Array.from(socialMap.entries()).map(([key, url]) => ({ key, url }));
   const coverImage =
-    typeof author.socialLinks?.coverImage === "string"
-      ? author.socialLinks.coverImage.trim()
-      : typeof author.socialLinks?.banner === "string"
-        ? author.socialLinks.banner.trim()
-        : `${SITE_URL}/og-image.jpg`;
+    typeof author.coverImage === "string" && author.coverImage.trim().length > 0
+      ? author.coverImage.trim()
+      : typeof author.socialLinks?.coverImage === "string"
+        ? author.socialLinks.coverImage.trim()
+        : typeof author.socialLinks?.banner === "string"
+          ? author.socialLinks.banner.trim()
+          : `${SITE_URL}/og-image.jpg`;
   const stats = [
     { label: "कुल लेख", value: String(total) },
     { label: "श्रेणियां", value: String(categories.length) },
@@ -428,6 +444,24 @@ export default async function Page(props: { params: Promise<PageParams> }) {
             </div>
           </div>
         </section>
+
+        {detailedBioParagraphs.length > 0 && (
+          <section className="max-w-6xl mx-auto px-4 pb-6">
+            <div className="rounded-2xl border border-border bg-card p-6 md:p-8 space-y-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+                  परिचय
+                </p>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground">लेखक के बारे में</h2>
+              </div>
+              <div className="space-y-4 text-sm sm:text-base text-muted-foreground leading-relaxed">
+                {detailedBioParagraphs.map((paragraph, index) => (
+                  <p key={`${slug}-bio-${index}`}>{paragraph}</p>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="max-w-6xl mx-auto px-4 pb-12">
           <AuthorArticleTabs articles={articles} categories={categories} />

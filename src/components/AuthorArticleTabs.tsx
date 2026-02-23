@@ -64,8 +64,8 @@ export default function AuthorArticleTabs({ articles, categories }: AuthorArticl
   const activeTab = tabs.find((tab) => tab.id === activeTabId) || tabs[0];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+    <div className="space-y-8">
+      <div className="flex items-center gap-3 overflow-x-auto pb-2">
         {tabs.map((tab) => {
           const isActive = tab.id === activeTab.id;
           return (
@@ -75,8 +75,8 @@ export default function AuthorArticleTabs({ articles, categories }: AuthorArticl
               onClick={() => setActiveTabId(tab.id)}
               className={
                 isActive
-                  ? "whitespace-nowrap rounded-full bg-primary text-primary-foreground px-4 py-2 text-sm font-medium shadow-sm"
-                  : "whitespace-nowrap rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+                  ? "whitespace-nowrap rounded-full bg-foreground text-background px-5 py-2.5 text-sm font-medium shadow-sm"
+                  : "whitespace-nowrap rounded-full border border-border/70 bg-background px-5 py-2.5 text-sm font-medium text-muted-foreground transition hover:-translate-y-0.5 hover:text-foreground hover:shadow-sm"
               }
             >
               {tab.label}
@@ -91,7 +91,7 @@ export default function AuthorArticleTabs({ articles, categories }: AuthorArticl
           इस श्रेणी में अभी कोई लेख उपलब्ध नहीं है।
         </div>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {activeTab.articles.map((article) => {
             const imageUrl = article.image || "/og-image.jpg";
             const excerpt = getExcerpt(article);
@@ -101,22 +101,22 @@ export default function AuthorArticleTabs({ articles, categories }: AuthorArticl
               <Link
                 key={article.id}
                 href={`/${article.category}/${article.slug}`}
-                className="group overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-0.5 hover:shadow-lg"
+                className="group overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
-                <div className="relative aspect-[16/9] overflow-hidden">
+                <div className="relative aspect-[4/3] overflow-hidden">
                   <Image
                     src={imageUrl}
                     alt={article.title}
                     fill
-                    className="object-cover transition duration-300 group-hover:scale-105"
+                    className="object-cover transition duration-500 group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                   />
-                  <div className="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                  <div className="absolute left-3 top-3 rounded-full bg-background/90 px-3 py-1 text-xs font-semibold text-foreground shadow-sm">
                     {categoryLabel}
                   </div>
                 </div>
-                <div className="p-4 space-y-2">
-                  <h3 className="text-base font-semibold leading-snug line-clamp-2 group-hover:text-primary">
+                <div className="p-5 space-y-2">
+                  <h3 className="text-base font-semibold leading-snug line-clamp-2 group-hover:text-foreground">
                     {article.title}
                   </h3>
                   {excerpt && (

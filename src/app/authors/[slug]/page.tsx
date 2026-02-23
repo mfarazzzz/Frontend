@@ -343,111 +343,110 @@ export default async function Page(props: { params: Promise<PageParams> }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
       <main className="bg-background">
-        <section className="relative">
-          <div className="relative h-48 md:h-64 w-full overflow-hidden">
-            <img
-              src={coverImage}
-              alt={`${name} cover`}
-              className="w-full h-full object-cover"
-              loading="eager"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-          </div>
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="-mt-16 md:-mt-20 pb-8 flex flex-col md:flex-row gap-6 items-start">
-              <div className="relative">
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-background bg-muted shadow-lg flex items-center justify-center">
-                  {author.avatar ? (
-                    <img
-                      src={author.avatar}
-                      alt={name}
-                      loading="lazy"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-10 h-10 text-muted-foreground" />
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-muted/50 via-background to-background" />
+          <div className="relative max-w-6xl mx-auto px-4 pt-12 pb-10">
+            <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                <div className="relative">
+                  <div className="w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white/80 bg-muted shadow-xl ring-1 ring-black/5 flex items-center justify-center">
+                    {author.avatar ? (
+                      <img
+                        src={author.avatar}
+                        alt={name}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-10 h-10 text-muted-foreground" />
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground/80">
+                    Author Profile
+                  </p>
+                  <div className="space-y-2">
+                    <h1 className="text-4xl md:text-[40px] font-bold tracking-tight text-foreground">
+                      {name}
+                    </h1>
+                    <p className="text-sm sm:text-base text-muted-foreground/80">
+                      {designation}
+                    </p>
+                  </div>
+                  {shortBio && (
+                    <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl">
+                      {shortBio}
+                    </p>
                   )}
                 </div>
               </div>
-              <div className="flex-1 w-full space-y-4">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                  <div className="space-y-1">
-                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{name}</h1>
-                    <p className="text-base md:text-lg text-muted-foreground">{designation}</p>
+              <div className="flex flex-wrap gap-3 text-xs sm:text-sm text-muted-foreground">
+                {stats.map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/90 px-4 py-2 shadow-sm"
+                  >
+                    <span className="text-sm font-semibold text-foreground">{stat.value}</span>
+                    <span>{stat.label}</span>
                   </div>
-                  <div className="flex flex-wrap gap-2 text-xs sm:text-sm text-muted-foreground">
-                    {stats.map((stat) => (
-                      <div
-                        key={stat.label}
-                        className="inline-flex items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-1.5"
-                      >
-                        <span className="font-semibold text-foreground">{stat.value}</span>
-                        <span>{stat.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {shortBio && (
-                  <p className="text-sm sm:text-base text-muted-foreground max-w-3xl leading-relaxed">
-                    {shortBio}
-                  </p>
-                )}
-                {socialLinks.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    {socialLinks.map((link) => {
-                      const icon =
-                        link.key === "linkedin"
-                          ? <Linkedin className="w-4 h-4" />
-                          : link.key === "twitter"
-                            ? <Twitter className="w-4 h-4" />
-                            : link.key === "instagram"
-                              ? <Instagram className="w-4 h-4" />
-                              : link.key === "facebook"
-                                ? <Facebook className="w-4 h-4" />
-                                : link.key === "youtube"
-                                  ? <Youtube className="w-4 h-4" />
-                                  : link.key === "telegram"
-                                    ? <Send className="w-4 h-4" />
-                                    : <Globe2 className="w-4 h-4" />;
-                      const label =
-                        link.key === "linkedin"
-                          ? "LinkedIn"
-                          : link.key === "twitter"
-                            ? "Twitter"
-                            : link.key === "instagram"
-                              ? "Instagram"
-                              : link.key === "facebook"
-                                ? "Facebook"
-                                : link.key === "youtube"
-                                  ? "YouTube"
-                                  : link.key === "whatsapp"
-                                    ? "WhatsApp"
-                                    : link.key === "telegram"
-                                      ? "Telegram"
-                                      : "Website";
-                      return (
-                        <a
-                          key={link.key}
-                          href={link.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs sm:text-sm text-foreground transition hover:bg-muted"
-                        >
-                          {icon}
-                          <span>{label}</span>
-                        </a>
-                      );
-                    })}
-                  </div>
-                )}
+                ))}
               </div>
             </div>
+            {socialLinks.length > 0 && (
+              <div className="mt-6 flex flex-wrap items-center gap-2">
+                {socialLinks.map((link) => {
+                  const icon =
+                    link.key === "linkedin"
+                      ? <Linkedin className="w-4 h-4" />
+                      : link.key === "twitter"
+                        ? <Twitter className="w-4 h-4" />
+                        : link.key === "instagram"
+                          ? <Instagram className="w-4 h-4" />
+                          : link.key === "facebook"
+                            ? <Facebook className="w-4 h-4" />
+                            : link.key === "youtube"
+                              ? <Youtube className="w-4 h-4" />
+                              : link.key === "telegram"
+                                ? <Send className="w-4 h-4" />
+                                : <Globe2 className="w-4 h-4" />;
+                  const label =
+                    link.key === "linkedin"
+                      ? "LinkedIn"
+                      : link.key === "twitter"
+                        ? "Twitter"
+                        : link.key === "instagram"
+                          ? "Instagram"
+                          : link.key === "facebook"
+                            ? "Facebook"
+                            : link.key === "youtube"
+                              ? "YouTube"
+                              : link.key === "whatsapp"
+                                ? "WhatsApp"
+                                : link.key === "telegram"
+                                  ? "Telegram"
+                                  : "Website";
+                  return (
+                    <a
+                      key={link.key}
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-4 py-2 text-xs sm:text-sm text-foreground transition hover:-translate-y-0.5 hover:bg-muted hover:shadow-sm"
+                    >
+                      {icon}
+                      <span>{label}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
 
         {detailedBioParagraphs.length > 0 && (
-          <section className="max-w-6xl mx-auto px-4 pb-6">
-            <div className="rounded-2xl border border-border bg-card p-6 md:p-8 space-y-4">
+          <section className="max-w-6xl mx-auto px-4 pb-8">
+            <div className="rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm space-y-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
                   परिचय
@@ -462,8 +461,11 @@ export default async function Page(props: { params: Promise<PageParams> }) {
             </div>
           </section>
         )}
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="border-t border-border/70" />
+        </div>
 
-        <section className="max-w-6xl mx-auto px-4 pb-12">
+        <section className="max-w-6xl mx-auto px-4 pt-8 pb-14">
           <AuthorArticleTabs articles={articles} categories={categories} />
         </section>
       </main>

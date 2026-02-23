@@ -5,12 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-type RoleOption = {
-  title: string;
-};
-
 type VolunteerFormProps = {
-  roles: RoleOption[];
+  roleOptions: string[];
 };
 
 const ENDPOINT =
@@ -18,8 +14,8 @@ const ENDPOINT =
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
-const VolunteerForm = ({ roles }: VolunteerFormProps) => {
-  const roleOptions = useMemo(() => roles.map((r) => r.title).filter(Boolean), [roles]);
+const VolunteerForm = ({ roleOptions }: VolunteerFormProps) => {
+  const normalizedRoleOptions = useMemo(() => roleOptions.filter(Boolean), [roleOptions]);
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
@@ -131,7 +127,7 @@ const VolunteerForm = ({ roles }: VolunteerFormProps) => {
             <option value="" disabled>
               भूमिका चुनें
             </option>
-            {roleOptions.map((role) => (
+            {normalizedRoleOptions.map((role) => (
               <option key={role} value={role}>
                 {role}
               </option>

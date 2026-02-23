@@ -96,6 +96,8 @@ const roles = [
   },
 ];
 
+const roleOptions = roles.map((role) => role.title);
+
 export default function Page() {
   return (
     <div className="min-h-screen bg-background scroll-smooth font-hindi">
@@ -399,7 +401,7 @@ export default function Page() {
                 </ul>
               </div>
             </div>
-            <VolunteerForm roles={roles} />
+            <VolunteerForm roleOptions={roleOptions} />
           </div>
         </section>
       </main>

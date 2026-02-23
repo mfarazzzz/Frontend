@@ -40,6 +40,15 @@ export const metadata: Metadata = {
 const applyUrl =
   "https://docs.google.com/forms/d/e/1FAIpQLSezmhkifh6B8qditlJR9Ja4g7R_oRG0stgq-Y3_cJfXXkl3Ug/viewform";
 
+const premiumTickerMessage =
+  "हम सिर्फ खबरें नहीं दिखाते, हम बदलाव की आवाज़ उठाते हैं। हम एक स्वयंसेवी समाचार समूह हैं जो समाज में सकारात्मक परिवर्तन लाने के लिए समर्पित है। अगर आप सीखना चाहते हैं, आगे बढ़ना चाहते हैं और समाज पर वास्तविक प्रभाव डालना चाहते हैं — तो हमारे साथ जुड़ें। हम समर्पित स्वयंसेवकों की तलाश में हैं। यह एक स्वैच्छिक पहल है — यहाँ वेतन नहीं, बल्कि उद्देश्य और सम्मान मिलता है।";
+
+const youthTickerMessage =
+  "युवा शक्ति ही बदलाव की असली ताकत है। हम एक सोशल इम्पैक्ट न्यूज़ ग्रुप हैं, जो समाज में सकारात्मक परिवर्तन के लिए कार्य करता है। यदि आप कंटेंट बनाना, रिपोर्टिंग सीखना और समाज के लिए काम करना चाहते हैं — तो आज ही हमारे साथ जुड़ें। हम उत्साही स्वयंसेवकों की तलाश में हैं। यह पूर्णतः स्वैच्छिक अवसर है — कोई वेतन नहीं, लेकिन सीखने और पहचान बनाने का अवसर ज़रूर।";
+
+const professionalTickerMessage =
+  "हम एक स्वतंत्र एवं स्वयंसेवी समाचार समूह हैं, जो सामाजिक उत्तरदायित्व और सकारात्मक प्रभाव में विश्वास रखता है। हमारा उद्देश्य जागरूकता, पारदर्शिता और परिवर्तन को बढ़ावा देना है। वर्तमान में हम समर्पित स्वयंसेवकों को आमंत्रित कर रहे हैं। यह पूर्णतः स्वैच्छिक भूमिका है — इसमें किसी प्रकार का वेतन प्रदान नहीं किया जाता।";
+
 export default function Page() {
   return (
     <div className="min-h-screen bg-background scroll-smooth font-hindi">
@@ -62,6 +71,50 @@ export default function Page() {
               <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-2 text-sm font-bold text-white uppercase tracking-widest shadow-lg">
                 युवा जोश + न्यूज़रूम एनर्जी
                 <Sparkles className="h-4 w-4 text-yellow-400" />
+              </div>
+              <div className="space-y-3">
+                <div className="ticker-shell ticker-premium">
+                  <div className="ticker-track ticker-slow">
+                    <div className="ticker-content">
+                      <span>{premiumTickerMessage}</span>
+                      <span className="ticker-dot">•</span>
+                      <span>{premiumTickerMessage}</span>
+                    </div>
+                    <div className="ticker-content">
+                      <span>{premiumTickerMessage}</span>
+                      <span className="ticker-dot">•</span>
+                      <span>{premiumTickerMessage}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="ticker-shell ticker-youth">
+                  <div className="ticker-track ticker-fast">
+                    <div className="ticker-content">
+                      <span>{youthTickerMessage}</span>
+                      <span className="ticker-dot">•</span>
+                      <span>{youthTickerMessage}</span>
+                    </div>
+                    <div className="ticker-content">
+                      <span>{youthTickerMessage}</span>
+                      <span className="ticker-dot">•</span>
+                      <span>{youthTickerMessage}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="ticker-shell ticker-pro">
+                  <div className="ticker-track ticker-mid">
+                    <div className="ticker-content">
+                      <span>{professionalTickerMessage}</span>
+                      <span className="ticker-dot">•</span>
+                      <span>{professionalTickerMessage}</span>
+                    </div>
+                    <div className="ticker-content">
+                      <span>{professionalTickerMessage}</span>
+                      <span className="ticker-dot">•</span>
+                      <span>{professionalTickerMessage}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
               <h1 className="text-5xl md:text-7xl font-black leading-tight text-white drop-shadow-xl">
                 सिर्फ़ खबरें पढ़ेंगे, <br /> 
@@ -353,6 +406,96 @@ export default function Page() {
         </section>
       </main>
       <Footer />
+      <style jsx global>{`
+        .ticker-shell {
+          position: relative;
+          overflow: hidden;
+          border-radius: 9999px;
+          padding: 0.5rem 0;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+        .ticker-track {
+          display: flex;
+          width: max-content;
+          white-space: nowrap;
+          animation: ticker-scroll 45s linear infinite;
+        }
+        .ticker-content {
+          display: inline-flex;
+          align-items: center;
+          gap: 1.75rem;
+          padding: 0 2.5rem;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+        }
+        .ticker-dot {
+          opacity: 0.6;
+        }
+        .ticker-slow {
+          animation-duration: 58s;
+        }
+        .ticker-mid {
+          animation-duration: 48s;
+        }
+        .ticker-fast {
+          animation-duration: 38s;
+        }
+        .ticker-premium {
+          background: linear-gradient(90deg, rgba(255, 56, 92, 0.16), rgba(255, 130, 67, 0.22));
+          box-shadow: 0 0 18px rgba(255, 90, 90, 0.25);
+          color: rgba(255, 244, 244, 0.95);
+          animation: ticker-glow-premium 4.5s ease-in-out infinite;
+        }
+        .ticker-youth {
+          background: linear-gradient(90deg, rgba(88, 166, 255, 0.2), rgba(112, 255, 214, 0.18));
+          box-shadow: 0 0 16px rgba(80, 180, 255, 0.25);
+          color: rgba(236, 248, 255, 0.95);
+          animation: ticker-pulse-youth 3.5s ease-in-out infinite;
+        }
+        .ticker-pro {
+          background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(200, 200, 200, 0.08));
+          box-shadow: 0 0 14px rgba(255, 255, 255, 0.18);
+          color: rgba(245, 245, 245, 0.9);
+          animation: ticker-glow-pro 6s ease-in-out infinite;
+        }
+        @keyframes ticker-scroll {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+        @keyframes ticker-glow-premium {
+          0%,
+          100% {
+            box-shadow: 0 0 14px rgba(255, 95, 80, 0.25);
+          }
+          50% {
+            box-shadow: 0 0 26px rgba(255, 130, 90, 0.4);
+          }
+        }
+        @keyframes ticker-pulse-youth {
+          0%,
+          100% {
+            box-shadow: 0 0 12px rgba(120, 200, 255, 0.25);
+          }
+          50% {
+            box-shadow: 0 0 24px rgba(120, 255, 210, 0.35);
+          }
+        }
+        @keyframes ticker-glow-pro {
+          0%,
+          100% {
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.16);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.28);
+          }
+        }
+      `}</style>
     </div>
   );
 }

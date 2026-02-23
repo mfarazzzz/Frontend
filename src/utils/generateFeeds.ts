@@ -142,8 +142,9 @@ export const generateNewsSitemap = (articles: FeedArticle[], hours: number = 48)
   const recentArticles = getRecentNews(articles, hours);
   
   const urlEntries = recentArticles.map((article) => {
-    const keywords = [article.categoryHindi, "रामपुर", "उत्तर प्रदेश", "ताज़ा खबर"].join(", ");
-    const genre = article.isBreaking ? "Blog, Breaking" : "Blog";
+    const keywords = [article.categoryHindi, "रामपुर", "उत्तर प्रदेश", "ताज़ा खबर"]
+      .filter((value) => typeof value === "string" && value.trim().length > 0)
+      .join(", ");
     const publishedIso = article.publishedDate ? new Date(article.publishedDate).toISOString() : new Date().toISOString();
     const imageUrl = article.image || `${SITE_URL}/api/og?title=${encodeURIComponent(article.title)}`;
     
@@ -156,7 +157,6 @@ export const generateNewsSitemap = (articles: FeedArticle[], hours: number = 48)
         <news:name>${SITE_NAME}</news:name>
         <news:language>hi</news:language>
       </news:publication>
-      <news:genres>${genre}</news:genres>
       <news:publication_date>${publishedIso}</news:publication_date>
       <news:title>${escapeXml(article.title)}</news:title>
       <news:keywords>${escapeXml(keywords)}</news:keywords>

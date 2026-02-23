@@ -2,15 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import VolunteerForm from "./VolunteerForm";
 import {
   AlertTriangle,
   ArrowRight,
@@ -27,8 +19,6 @@ import {
 } from "lucide-react";
 
 const SITE_URL = "https://rampurnews.com";
-const applyUrl =
-  "https://docs.google.com/forms/d/e/1FAIpQLSezmhkifh6B8qditlJR9Ja4g7R_oRG0stgq-Y3_cJfXXkl3Ug/viewform";
 
 export const metadata: Metadata = {
   title: "हमसे जुड़ें | Volunteer Journalism India | Rampur News",
@@ -409,79 +399,7 @@ export default function Page() {
                 </ul>
               </div>
             </div>
-            <form
-              className="rounded-3xl border border-border bg-card p-6 md:p-8 shadow-sm"
-              action={applyUrl}
-              method="get"
-              target="_blank"
-            >
-              <div className="grid gap-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">नाम</label>
-                    <Input name="name" placeholder="आपका नाम" required />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">ईमेल</label>
-                    <Input name="email" type="email" placeholder="आपका ईमेल" required />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">मोबाइल नंबर</label>
-                  <Input name="phone" type="tel" placeholder="मोबाइल नंबर" required />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    आप किस भूमिका में जुड़ना चाहते हैं?
-                  </label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="भूमिका चुनें" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.title} value={role.title}>
-                          {role.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    आप क्यों जुड़ना चाहते हैं?
-                  </label>
-                  <Textarea
-                    name="reason"
-                    rows={4}
-                    placeholder="संक्षेप में बताएं..."
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    उपलब्ध समय (Weekly commitment)
-                  </label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="समय चुनें" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2-4">2-4 घंटे</SelectItem>
-                      <SelectItem value="4-6">4-6 घंटे</SelectItem>
-                      <SelectItem value="6-10">6-10 घंटे</SelectItem>
-                      <SelectItem value="10+">10+ घंटे</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white">
-                  आवेदन सबमिट करें
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  सबमिट करने पर ऑफिशियल फॉर्म नए टैब में खुलेगा।
-                </p>
-              </div>
-            </form>
+            <VolunteerForm roles={roles} />
           </div>
         </section>
       </main>

@@ -64,7 +64,7 @@ export default function Page() {
               </p>
               <div className="flex flex-wrap gap-4 pt-2">
                 <Button size="lg" asChild>
-                  <a href={applyUrl} target="_blank" rel="noreferrer">
+                  <a href="#apply">
                     Join the Mission
                     <ArrowRight className="h-4 w-4" />
                   </a>
@@ -75,7 +75,7 @@ export default function Page() {
                   className="border-white/30 text-white hover:bg-white/10"
                   asChild
                 >
-                  <a href={applyUrl} target="_blank" rel="noreferrer">
+                  <a href="#apply">
                     Start Writing Today
                   </a>
                 </Button>
@@ -248,7 +248,7 @@ export default function Page() {
               </div>
               <div className="flex flex-wrap gap-4">
                 <Button size="lg" asChild>
-                  <a href={applyUrl} target="_blank" rel="noreferrer">
+                  <a href="#apply">
                     Apply Now
                     <ArrowRight className="h-4 w-4" />
                   </a>
@@ -259,11 +259,35 @@ export default function Page() {
                   className="border-white/30 text-white hover:bg-white/10"
                   asChild
                 >
-                  <a href={applyUrl} target="_blank" rel="noreferrer">
+                  <a href="#apply">
                     Become a Contributor
                   </a>
                 </Button>
               </div>
+            </div>
+          </div>
+        </section>
+        <section id="apply" className="container py-16 md:py-20">
+          <div className="rounded-3xl border border-border bg-card p-6 md:p-10 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="space-y-2">
+                <h2 className="text-3xl md:text-4xl font-bold text-foreground">अब अप्लाई करें</h2>
+                <p className="text-muted-foreground">
+                  फॉर्म भरकर अपनी आवाज़ और पहचान को Rampur News के साथ जोड़ें।
+                </p>
+              </div>
+              <Button variant="outline" asChild>
+                <a href={applyUrl} target="_blank" rel="noreferrer">
+                  नए टैब में खोलें
+                </a>
+              </Button>
+            </div>
+            <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-white">
+              <iframe
+                src={applyUrl}
+                title="Rampur News Join Us Form"
+                className="w-full min-h-[900px]"
+              />
             </div>
           </div>
         </section>

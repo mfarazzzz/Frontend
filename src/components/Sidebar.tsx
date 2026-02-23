@@ -4,7 +4,7 @@ import { TrendingUp, Eye } from "lucide-react";
 import { useTrendingArticles } from "@/hooks/useCMS";
 
 const Sidebar = () => {
-  const { data: trendingNews = [] } = useTrendingArticles(10);
+  const { data: trendingNews = [] } = useTrendingArticles(6);
 
   const formatRelativeTimeHindi = (dateString: string) => {
     const timestamp = new Date(dateString).getTime();

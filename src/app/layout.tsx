@@ -10,11 +10,9 @@ const GA_ID = GA_ID_RAW
   : undefined;
 const GA_MEASUREMENT_ID = GA_ID && /^G-[A-Z0-9]+$/.test(GA_ID) ? GA_ID : undefined;
 
-console.log("GA:", GA_MEASUREMENT_ID ?? null);
-
 const notoSansDevanagari = Noto_Sans_Devanagari({
   subsets: ["devanagari", "latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-noto-sans-devanagari",
   display: "swap",
 });
@@ -145,9 +143,9 @@ export default function RootLayout({
           <>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-              strategy="afterInteractive"
+              strategy="lazyOnload"
             />
-            <Script id="ga-script" strategy="afterInteractive">
+            <Script id="ga-script" strategy="lazyOnload">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}

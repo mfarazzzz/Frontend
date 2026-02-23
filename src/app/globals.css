@@ -225,6 +225,109 @@
     100% { transform: translateX(-50%); }
   }
 
+  .ticker-shell {
+    position: relative;
+    overflow: hidden;
+    border-radius: 9999px;
+    padding: 0.5rem 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    white-space: nowrap;
+    animation: ticker-scroll 45s linear infinite;
+    will-change: transform;
+  }
+
+  .ticker-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.75rem;
+    padding: 0 2.5rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .ticker-dot {
+    opacity: 0.6;
+  }
+
+  .ticker-slow {
+    animation-duration: 58s;
+  }
+
+  .ticker-mid {
+    animation-duration: 48s;
+  }
+
+  .ticker-fast {
+    animation-duration: 38s;
+  }
+
+  .ticker-premium {
+    background: linear-gradient(90deg, rgba(255, 56, 92, 0.16), rgba(255, 130, 67, 0.22));
+    box-shadow: 0 0 18px rgba(255, 90, 90, 0.25);
+    color: rgba(255, 244, 244, 0.95);
+    animation: ticker-glow-premium 4.5s ease-in-out infinite;
+  }
+
+  .ticker-youth {
+    background: linear-gradient(90deg, rgba(88, 166, 255, 0.2), rgba(112, 255, 214, 0.18));
+    box-shadow: 0 0 16px rgba(80, 180, 255, 0.25);
+    color: rgba(236, 248, 255, 0.95);
+    animation: ticker-pulse-youth 3.5s ease-in-out infinite;
+  }
+
+  .ticker-pro {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(200, 200, 200, 0.08));
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.18);
+    color: rgba(245, 245, 245, 0.9);
+    animation: ticker-glow-pro 6s ease-in-out infinite;
+  }
+
+  @keyframes ticker-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes ticker-glow-premium {
+    0%,
+    100% {
+      box-shadow: 0 0 14px rgba(255, 95, 80, 0.25);
+    }
+    50% {
+      box-shadow: 0 0 26px rgba(255, 130, 90, 0.4);
+    }
+  }
+
+  @keyframes ticker-pulse-youth {
+    0%,
+    100% {
+      box-shadow: 0 0 12px rgba(120, 200, 255, 0.25);
+    }
+    50% {
+      box-shadow: 0 0 24px rgba(120, 255, 210, 0.35);
+    }
+  }
+
+  @keyframes ticker-glow-pro {
+    0%,
+    100% {
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.16);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.28);
+    }
+  }
+
   /* Ad Placeholder */
   .ad-placeholder {
     @apply flex items-center justify-center border-2 border-dashed rounded-lg;

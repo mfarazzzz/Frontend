@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategorySection from "@/components/CategorySection";
@@ -16,33 +16,61 @@ type DynamicCategorySectionProps = {
 };
 
 const DynamicCategorySection = ({ category, limit = 7 }: DynamicCategorySectionProps) => {
-  const { data } = useArticles({
-    category: category.slug,
-    status: "published",
-    orderBy: "publishedDate",
-    order: "desc",
-    limit,
-  });
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const el = hostRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setIsInView(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setIsInView(entries.some((entry) => entry.isIntersecting));
+      },
+      { rootMargin: "300px 0px", threshold: 0.1 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const { data } = useArticles(
+    {
+      category: category.slug,
+      status: "published",
+      orderBy: "publishedDate",
+      order: "desc",
+      limit,
+    },
+    { enabled: isInView },
+  );
   const articles = data?.data ?? [];
+  if (!isInView) {
+    return <div ref={hostRef} className="py-6 min-h-[220px]" />;
+  }
   if (articles.length === 0) return null;
 
   return (
-    <CategorySection
-      title={category.titleHindi}
-      articles={articles}
-      viewAllLink={category.path || `/${category.slug}`}
-      variant="featured"
-    />
+    <div ref={hostRef}>
+      <CategorySection
+        title={category.titleHindi}
+        articles={articles}
+        viewAllLink={category.path || `/${category.slug}`}
+        variant="featured"
+      />
+    </div>
   );
 };
 
 const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) => {
-  const { data: heroArticlesRaw = [] } = useHeroArticles(15, { initialData: initialHeroArticles });
+  const { data: heroArticlesRaw = [] } = useHeroArticles(8, { initialData: initialHeroArticles });
   const { data: featuredFallback = [] } = useFeaturedArticles(3);
   const heroArticles = heroArticlesRaw.length > 0 ? heroArticlesRaw : featuredFallback;
   const { data: categories = [] } = useCategories();
   const { data: editorialResponse } = useEditorials({
-    limit: 7,
+    limit: 5,
     orderBy: "publishedDate",
     order: "desc",
   });

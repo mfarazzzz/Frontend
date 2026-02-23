@@ -1,7 +1,7 @@
 import type { CMSArticle } from "@/services/cms";
 
-const SITE_URL = "https://rampurnews.com";
-const SITE_NAME = "रामपुर न्यूज़";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
+const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || "रामपुर न्यूज़";
 const SITE_DESCRIPTION = "रामपुर न्यूज़ - रामपुर जिले और उत्तर प्रदेश की ताज़ा, विश्वसनीय खबरें। Breaking News, Local Updates, Education, Sports, Entertainment.";
 
 type FeedArticle = Pick<

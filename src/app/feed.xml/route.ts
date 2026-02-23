@@ -9,7 +9,7 @@ export async function GET() {
     const provider = getCMSProvider();
     const res = await provider.getArticles({
       status: "published",
-      limit: 200,
+      limit: 500,
       orderBy: "publishedDate",
       order: "desc",
     });

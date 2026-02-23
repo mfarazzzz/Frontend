@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCMSProvider } from "@/services/cms";
 import type { CMSArticle } from "@/services/cms";
 
-const SITE_URL = "https://rampurnews.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
 const PAGE_SIZE = 200;
 const RECENT_WINDOW_MS = 48 * 60 * 60 * 1000;
 

@@ -314,7 +314,7 @@ export default function Page() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="h-14 px-8 text-lg border-2 border-white text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
+                  className="h-14 px-8 text-lg border-2 border-white bg-transparent text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
                   asChild
                 >
                   <a href="#apply">

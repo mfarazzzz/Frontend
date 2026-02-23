@@ -42,37 +42,48 @@ const applyUrl =
 
 export default function Page() {
   return (
-    <div className="min-h-screen bg-background scroll-smooth">
+    <div className="min-h-screen bg-background scroll-smooth font-hindi">
       <Header />
       <main>
-        <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-background text-white">
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-primary/30 blur-3xl" />
-            <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
+        <section className="relative overflow-hidden min-h-[90vh] flex items-center">
+          {/* Background Image with Overlay */}
+          <div 
+            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+            style={{ 
+              backgroundImage: "url('/images/join-us-bg.jpg')",
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-background" />
           </div>
+
           <div className="container relative z-10 py-16 md:py-24">
-            <div className="max-w-3xl space-y-6 animate-fade-in">
-              <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold uppercase tracking-widest">
+            <div className="max-w-3xl space-y-8 animate-fade-in">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-2 text-sm font-bold text-white uppercase tracking-widest shadow-lg">
                 युवा जोश + न्यूज़रूम एनर्जी
-                <Sparkles className="h-4 w-4 text-primary" />
-              </p>
-              <h1 className="text-4xl md:text-6xl font-black leading-tight">
-                सिर्फ़ खबरें पढ़ेंगे, <br /> या खबरें बनाएंगे?
+                <Sparkles className="h-4 w-4 text-yellow-400" />
+              </div>
+              <h1 className="text-5xl md:text-7xl font-black leading-tight text-white drop-shadow-xl">
+                सिर्फ़ खबरें पढ़ेंगे, <br /> 
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
+                  या खबरें बनाएंगे?
+                </span>
               </h1>
-              <p className="text-lg md:text-xl text-white/80">
-                अगर आपकी आवाज़ में दम है, तो उसे दुनिया तक पहुँचाने का वक़्त आ गया है।
+              <p className="text-xl md:text-2xl text-gray-200 font-medium max-w-2xl leading-relaxed drop-shadow-md">
+                अगर आपकी आवाज़ में दम है, तो उसे दुनिया तक पहुँचाने का वक़्त आ गया है। 
+                <span className="block mt-2 text-white/90">रामपुर न्यूज़ के साथ अपनी पत्रकारिता की शुरुआत करें।</span>
               </p>
-              <div className="flex flex-wrap gap-4 pt-2">
-                <Button size="lg" asChild>
+              <div className="flex flex-wrap gap-4 pt-4">
+                <Button size="lg" className="text-lg px-8 py-6 bg-red-600 hover:bg-red-700 text-white border-none shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300" asChild>
                   <a href="#apply">
                     मिशन से जुड़ें
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                    <ArrowRight className="h-5 w-5 ml-2" />
                   </a>
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10"
+                  className="text-lg px-8 py-6 border-2 border-white/50 bg-white/10 backdrop-blur-sm text-white hover:bg-white hover:text-black hover:border-white transition-all duration-300 shadow-lg"
                   asChild
                 >
                   <a href="#apply">
@@ -80,17 +91,17 @@ export default function Page() {
                   </a>
                 </Button>
               </div>
-              <div className="grid gap-4 pt-8 sm:grid-cols-3 text-sm text-white/70">
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 flex items-center gap-2">
-                  <BadgeCheck className="h-4 w-4 text-primary" />
+              <div className="grid gap-4 pt-8 sm:grid-cols-3 text-sm text-white/90 font-medium">
+                <div className="rounded-2xl border border-white/20 bg-black/40 backdrop-blur-md px-5 py-4 flex items-center gap-3 shadow-lg hover:bg-black/50 transition-colors">
+                  <BadgeCheck className="h-5 w-5 text-red-500" />
                   असली न्यूज़रूम अनुभव
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-primary" />
+                <div className="rounded-2xl border border-white/20 bg-black/40 backdrop-blur-md px-5 py-4 flex items-center gap-3 shadow-lg hover:bg-black/50 transition-colors">
+                  <TrendingUp className="h-5 w-5 text-green-500" />
                   गूगल पर पहचान
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" />
+                <div className="rounded-2xl border border-white/20 bg-black/40 backdrop-blur-md px-5 py-4 flex items-center gap-3 shadow-lg hover:bg-black/50 transition-colors">
+                  <Users className="h-5 w-5 text-blue-500" />
                   पहचान + विश्वसनीयता
                 </div>
               </div>
@@ -271,21 +282,30 @@ export default function Page() {
           </div>
         </section>
 
-        <section className="bg-slate-950 text-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
-          <div className="container py-20 md:py-24 relative z-10">
+        <section className="relative overflow-hidden py-20 md:py-24 text-white">
+          <div 
+            className="absolute inset-0 z-0 bg-cover bg-center bg-fixed"
+            style={{ 
+              backgroundImage: "url('/images/join-us-bg.jpg')",
+            }}
+          >
+             <div className="absolute inset-0 bg-red-900/90 mix-blend-multiply" />
+             <div className="absolute inset-0 bg-black/60" />
+          </div>
+          
+          <div className="container relative z-10">
             <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
               <div className="space-y-6">
-                <h2 className="text-3xl md:text-5xl font-black leading-tight">
+                <h2 className="text-3xl md:text-5xl font-black leading-tight drop-shadow-lg">
                   अवसर सबको मिलते हैं, <br />
-                  <span className="text-primary">लेकिन मंच सबको नहीं मिलता।</span>
+                  <span className="text-yellow-400">लेकिन मंच सबको नहीं मिलता।</span>
                 </h2>
-                <p className="text-xl text-white/80 max-w-xl">
+                <p className="text-xl text-white/90 max-w-xl font-medium drop-shadow-md">
                   अगर आप अपनी आवाज़ को एक मंच देना चाहते हैं, तो अभी कदम बढ़ाएं। यह मौका आपकी पहचान बना सकता है।
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-end">
-                <Button size="lg" className="text-lg px-8 py-6" asChild>
+                <Button size="lg" className="h-14 px-8 text-lg bg-white text-red-700 hover:bg-gray-100 shadow-xl" asChild>
                   <a href="#apply">
                     अभी आवेदन करें
                     <ArrowRight className="h-5 w-5 ml-2" />
@@ -294,7 +314,7 @@ export default function Page() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-lg px-8 py-6 border-white/30 text-white hover:bg-white/10 hover:text-white"
+                  className="h-14 px-8 text-lg border-2 border-white text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
                   asChild
                 >
                   <a href="#apply">

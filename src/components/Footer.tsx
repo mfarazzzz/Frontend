@@ -142,12 +142,12 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/join-us" className="text-sm text-gray-300 hover:text-primary transition-colors">
-                  Join Us
+                  हमसे जुड़ें
                 </Link>
               </li>
               <li>
                 <Link to="/authors" className="text-sm text-gray-300 hover:text-primary transition-colors">
-                  Authors
+                  लेखक परिचय
                 </Link>
               </li>
               <li>

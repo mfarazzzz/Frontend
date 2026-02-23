@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Join Us | रामपुर न्यूज़ - युवा पत्रकारों के लिए मंच",
+  title: "हमसे जुड़ें | रामपुर न्यूज़ - युवा पत्रकारों के लिए मंच",
   description:
     "Rampur News का युवा, प्रभावशाली और पहचान बनाने वाला प्लेटफॉर्म। अपनी आवाज़ को पहचान, पहुंच और भविष्य के अवसरों में बदलें।",
   alternates: {
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    title: "Join Us | रामपुर न्यूज़",
+    title: "हमसे जुड़ें | रामपुर न्यूज़",
     description:
       "एक ऐसा प्लेटफॉर्म जहाँ आपकी आवाज़ पहचान बनती है। युवा पत्रकारों, क्रिएटर्स और फ्रीलांसर्स के लिए अवसर।",
     url: "/join-us",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Join Us | रामपुर न्यूज़",
+    title: "हमसे जुड़ें | रामपुर न्यूज़",
     description:
       "अपनी पहचान, प्रोफाइल और प्रभाव बनाने के लिए Rampur News से जुड़ें।",
   },

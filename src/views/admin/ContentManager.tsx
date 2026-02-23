@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +25,7 @@ import {
   useCreateShoppingCentre, useDeleteShoppingCentre, useUpdateShoppingCentre,
   useCreateFamousPlace, useDeleteFamousPlace, useUpdateFamousPlace,
 } from '@/hooks/useExtendedCMS';
-import { useArticles, useCreateArticle, useDeleteArticle, useUpdateArticle } from '@/hooks/useCMS';
+import { useArticles, useDeleteArticle } from '@/hooks/useCMS';
 import type { CMSArticle } from '@/services/cms';
 import type {
   CMSExam,
@@ -80,8 +81,7 @@ const ContentManagerPage = () => {
     | CMSEvent
     | null
   >(null);
-  const [newsEditDialogOpen, setNewsEditDialogOpen] = useState(false);
-  const [editingNews, setEditingNews] = useState<CMSArticle | null>(null);
+  const router = useRouter();
 
   // Data hooks
   const { data: examsData, isLoading: loadingExams } = useExams({ limit: 100 });
@@ -132,7 +132,6 @@ const ContentManagerPage = () => {
   const deleteFashionStore = useDeleteFashionStore();
   const deleteShoppingCentre = useDeleteShoppingCentre();
   const deleteFamousPlace = useDeleteFamousPlace();
-  const updateNewsArticle = useUpdateArticle();
   const deleteNewsArticle = useDeleteArticle();
 
   const exams = examsData?.data || [];
@@ -294,11 +293,6 @@ const ContentManagerPage = () => {
     setEditDialogOpen(true);
   };
 
-  const handleEditNews = (news: CMSArticle) => {
-    setEditingNews(news);
-    setNewsEditDialogOpen(true);
-  };
-
   const handleDeleteNews = async (news: CMSArticle) => {
     if (!confirm(`क्या आप "${news.title}" को हटाना चाहते हैं?`)) {
       return;
@@ -397,7 +391,7 @@ const ContentManagerPage = () => {
                       variant="ghost"
                       size="icon"
                       className="text-primary hover:text-primary"
-                      onClick={() => handleEditNews(item)}
+                      onClick={() => router.push(`/admin/articles/${item.id}`)}
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -442,53 +436,52 @@ const ContentManagerPage = () => {
               data={getBulkData()}
               onImport={handleBulkImport}
             />
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  नया जोड़ें
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>नई सामग्री जोड़ें</DialogTitle>
-                </DialogHeader>
-                {activeSection === 'news' || activeTab === 'edu-news' || activeTab === 'lifestyle-news' ? (
-                  <AddNewsForm 
-                    category={activeSection === 'news' ? activeTab : (activeTab === 'edu-news' ? 'education-jobs' : 'food-lifestyle')}
-                    onSuccess={() => {
-                      setIsAddDialogOpen(false);
-                      toast.success('समाचार जोड़ा गया');
-                    }}
-                  />
-                ) : activeTab === 'results' ? (
-                  <AddResultForm 
-                    onSuccess={() => {
-                      setIsAddDialogOpen(false);
-                      toast.success('परिणाम जोड़ा गया');
-                    }}
-                  />
-                ) : (
-                  <AddContentForm 
-                    type={activeTab} 
-                    onSuccess={() => {
-                      setIsAddDialogOpen(false);
-                      toast.success('सफलतापूर्वक जोड़ा गया');
-                    }}
-                    onCreate={{
-                      exam: createExam.mutateAsync,
-                      holiday: createHoliday.mutateAsync,
-                      restaurant: createRestaurant.mutateAsync,
-                      event: createEvent.mutateAsync,
-                      institution: createInstitution.mutateAsync,
-                      fashion: createFashionStore.mutateAsync,
-                      shopping: createShoppingCentre.mutateAsync,
-                      place: createFamousPlace.mutateAsync,
-                    }}
-                  />
-                )}
-              </DialogContent>
-            </Dialog>
+            {activeSection === 'news' ? (
+              <Button className="gap-2" onClick={() => router.push('/admin/articles/new')}>
+                <Plus className="h-4 w-4" />
+                नया लेख
+              </Button>
+            ) : (
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    नया जोड़ें
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>नई सामग्री जोड़ें</DialogTitle>
+                  </DialogHeader>
+                  {activeTab === 'results' ? (
+                    <AddResultForm 
+                      onSuccess={() => {
+                        setIsAddDialogOpen(false);
+                        toast.success('परिणाम जोड़ा गया');
+                      }}
+                    />
+                  ) : (
+                    <AddContentForm 
+                      type={activeTab} 
+                      onSuccess={() => {
+                        setIsAddDialogOpen(false);
+                        toast.success('सफलतापूर्वक जोड़ा गया');
+                      }}
+                      onCreate={{
+                        exam: createExam.mutateAsync,
+                        holiday: createHoliday.mutateAsync,
+                        restaurant: createRestaurant.mutateAsync,
+                        event: createEvent.mutateAsync,
+                        institution: createInstitution.mutateAsync,
+                        fashion: createFashionStore.mutateAsync,
+                        shopping: createShoppingCentre.mutateAsync,
+                        place: createFamousPlace.mutateAsync,
+                      }}
+                    />
+                  )}
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
 
@@ -693,22 +686,6 @@ const ContentManagerPage = () => {
         onSave={handleSaveEdit}
       />
 
-      {/* News Edit Dialog */}
-      <NewsEditDialog
-        open={newsEditDialogOpen}
-        onOpenChange={setNewsEditDialogOpen}
-        news={editingNews}
-        onSave={async (data) => {
-          if (!editingNews) return;
-          try {
-            await updateNewsArticle.mutateAsync({ id: editingNews.id, updates: data });
-            toast.success('समाचार अपडेट किया गया');
-            setNewsEditDialogOpen(false);
-          } catch {
-            toast.error('अपडेट में त्रुटि');
-          }
-        }}
-      />
     </>
   );
 };
@@ -797,229 +774,6 @@ const ContentTable = ({ data, columns, columnLabels, onDelete, onEdit, isLoading
         </Table>
       </CardContent>
     </Card>
-  );
-};
-
-// Add News Form Component
-interface AddNewsFormProps {
-  category: string;
-  onSuccess: () => void;
-}
-
-type AddNewsFormState = Partial<
-  Pick<CMSArticle, 'category' | 'title' | 'excerpt' | 'content' | 'author' | 'publishedDate' | 'image' | 'featuredMediaId'>
-> & {
-  slug?: string;
-  slugManual?: boolean;
-  isFeatured?: boolean;
-  isBreaking?: boolean;
-  metaDescription?: string;
-  keywords?: string;
-};
-
-const AddNewsForm = ({ category, onSuccess }: AddNewsFormProps) => {
-  const [formData, setFormData] = useState<AddNewsFormState>({
-    category,
-    isFeatured: false,
-    isBreaking: false,
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const createArticle = useCreateArticle();
-
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim()
-      .replace(/^-+|-+$/g, '');
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      const title = (formData.title || '').trim();
-      const slug = (formData.slug || '').trim() || generateSlug(title) || `article-${Date.now()}`;
-      const excerpt = (formData.excerpt || '').trim();
-      const content = (formData.content || '').trim();
-
-      const publishedDate = formData.publishedDate
-        ? new Date(formData.publishedDate).toISOString()
-        : new Date().toISOString();
-
-      const categoryHindi = newsCategories.find((c) => c.id === category)?.label || category;
-      const keywords = (formData.keywords || '')
-        .split(',')
-        .map((k) => k.trim())
-        .filter(Boolean);
-
-      await createArticle.mutateAsync({
-        title,
-        slug,
-        excerpt,
-        content,
-        image: formData.image || '/placeholder.svg',
-        featuredMediaId: formData.featuredMediaId,
-        category,
-        categoryHindi,
-        author: (formData.author || 'Admin').trim(),
-        publishedDate,
-        status: 'published',
-        isFeatured: formData.isFeatured || false,
-        isBreaking: formData.isBreaking || false,
-        seoTitle: title,
-        seoDescription: (formData.metaDescription || excerpt).trim(),
-        tags: keywords.length > 0 ? keywords : undefined,
-      });
-
-      toast.success('समाचार जोड़ा गया');
-      onSuccess();
-    } catch {
-      toast.error('त्रुटि हुई');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const updateField = <K extends keyof AddNewsFormState>(key: K, value: AddNewsFormState[K]) => {
-    setFormData(prev => {
-      const updated: AddNewsFormState = { ...prev, [key]: value };
-      if (key === 'title' && !prev.slugManual && typeof value === 'string') {
-        const generated = generateSlug(value);
-        updated.slug = generated || prev.slug || `article-${Date.now()}`;
-      }
-      return updated;
-    });
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label>शीर्षक *</Label>
-        <Input 
-          value={formData.title || ''}
-          onChange={(e) => updateField('title', e.target.value)} 
-          placeholder="समाचार का शीर्षक..."
-          required 
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>स्लग (URL) *</Label>
-        <Input 
-          value={formData.slug || ''}
-          onChange={(e) => {
-            setFormData(prev => ({ ...prev, slug: e.target.value, slugManual: true }));
-          }} 
-          placeholder="news-slug-url"
-          className="font-mono"
-          required 
-        />
-        <p className="text-xs text-muted-foreground">URL में उपयोग होगा: /news/{formData.slug || 'slug'}</p>
-      </div>
-
-      <div className="space-y-2">
-        <Label>सारांश *</Label>
-        <Textarea 
-          value={formData.excerpt || ''}
-          onChange={(e) => updateField('excerpt', e.target.value)} 
-          placeholder="समाचार का संक्षिप्त विवरण..."
-          rows={3}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>पूर्ण विवरण</Label>
-        <Textarea 
-          value={formData.content || ''}
-          onChange={(e) => updateField('content', e.target.value)} 
-          placeholder="समाचार का पूर्ण विवरण..."
-          rows={6}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>लेखक</Label>
-          <Input 
-            value={formData.author || ''}
-            onChange={(e) => updateField('author', e.target.value)} 
-            placeholder="लेखक का नाम"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>प्रकाशन तारीख</Label>
-          <Input 
-            type="datetime-local"
-            value={formData.publishedDate || ''}
-            onChange={(e) => updateField('publishedDate', e.target.value)} 
-          />
-        </div>
-      </div>
-
-      <ImageUploader
-        value={formData.image}
-        onChange={(v) => updateField('image', v as string)}
-        onMediaChange={(media) => {
-          const single = Array.isArray(media) ? media[0] : media;
-          updateField('featuredMediaId', single?.id);
-        }}
-        label="फीचर्ड इमेज"
-      />
-
-      <div className="flex items-center justify-between py-2">
-        <div>
-          <Label>फीचर्ड</Label>
-          <p className="text-sm text-muted-foreground">होम पेज पर दिखाएं</p>
-        </div>
-        <Switch 
-          checked={formData.isFeatured || false}
-          onCheckedChange={(v) => updateField('isFeatured', v)}
-        />
-      </div>
-
-      <div className="flex items-center justify-between py-2">
-        <div>
-          <Label>ब्रेकिंग न्यूज़</Label>
-          <p className="text-sm text-muted-foreground">ब्रेकिंग टिकर में दिखाएं</p>
-        </div>
-        <Switch 
-          checked={formData.isBreaking || false}
-          onCheckedChange={(v) => updateField('isBreaking', v)}
-        />
-      </div>
-
-      <div className="border-t pt-4 space-y-4">
-        <h4 className="font-medium">SEO सेटिंग्स</h4>
-        <div className="space-y-2">
-          <Label>मेटा विवरण</Label>
-          <Textarea 
-            value={formData.metaDescription || ''}
-            onChange={(e) => updateField('metaDescription', e.target.value)} 
-            placeholder="सर्च इंजन के लिए विवरण (160 अक्षर तक)"
-            rows={2}
-            maxLength={160}
-          />
-          <p className="text-xs text-muted-foreground">{(formData.metaDescription || '').length}/160</p>
-        </div>
-        <div className="space-y-2">
-          <Label>कीवर्ड्स (कॉमा से अलग)</Label>
-          <Input 
-            value={formData.keywords || ''}
-            onChange={(e) => updateField('keywords', e.target.value)} 
-            placeholder="रामपुर, न्यूज़, ब्रेकिंग"
-          />
-        </div>
-      </div>
-
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? 'जोड़ रहे हैं...' : 'समाचार जोड़ें'}
-      </Button>
-    </form>
   );
 };
 
@@ -1173,254 +927,6 @@ const AddResultForm = ({ onSuccess }: AddResultFormProps) => {
         {isSubmitting ? 'जोड़ रहे हैं...' : 'परिणाम जोड़ें'}
       </Button>
     </form>
-  );
-};
-
-// News Edit Dialog
-interface NewsEditDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  news: CMSArticle | null;
-  onSave: (data: Partial<CMSArticle>) => Promise<void>;
-}
-
-type NewsEditFormState = Partial<CMSArticle> & {
-  metaTitle?: string;
-  metaDescription?: string;
-  keywords?: string;
-  ogImage?: string;
-};
-
-const NewsEditDialog = ({ open, onOpenChange, news, onSave }: NewsEditDialogProps) => {
-  const [formData, setFormData] = useState<NewsEditFormState>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState('basic');
-
-  useEffect(() => {
-    if (news) {
-      setFormData({ ...news });
-    }
-  }, [news]);
-
-  const updateField = <K extends keyof NewsEditFormState>(key: K, value: NewsEditFormState[K]) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const updates: Partial<CMSArticle> = {};
-
-      if (formData.title !== undefined) updates.title = formData.title;
-      if (formData.slug !== undefined) updates.slug = formData.slug;
-      if (formData.author !== undefined) updates.author = formData.author;
-
-      if (formData.category !== undefined) {
-        updates.category = formData.category;
-        updates.categoryHindi =
-          newsCategories.find((c) => c.id === formData.category)?.label || formData.category;
-      }
-
-      if (formData.excerpt !== undefined) updates.excerpt = formData.excerpt;
-      if (formData.content !== undefined) updates.content = formData.content;
-
-      if (formData.image !== undefined) updates.image = formData.image;
-      if (formData.featuredMediaId !== undefined) updates.featuredMediaId = formData.featuredMediaId;
-
-      if (formData.isFeatured !== undefined) updates.isFeatured = formData.isFeatured;
-      if (formData.isBreaking !== undefined) updates.isBreaking = formData.isBreaking;
-
-      if (formData.publishedDate !== undefined) {
-        updates.publishedDate = formData.publishedDate
-          ? new Date(formData.publishedDate).toISOString()
-          : formData.publishedDate;
-      }
-
-      if (formData.metaTitle !== undefined) updates.seoTitle = formData.metaTitle;
-      if (formData.metaDescription !== undefined) updates.seoDescription = formData.metaDescription;
-      if (formData.keywords !== undefined) {
-        const tags = formData.keywords
-          .split(',')
-          .map((t) => t.trim())
-          .filter(Boolean);
-        updates.tags = tags.length > 0 ? tags : [];
-      }
-
-      await onSave(updates);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (!news) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>समाचार संपादित करें</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="basic">मूल जानकारी</TabsTrigger>
-              <TabsTrigger value="content">कंटेंट</TabsTrigger>
-              <TabsTrigger value="seo">SEO</TabsTrigger>
-              <TabsTrigger value="settings">सेटिंग्स</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="basic" className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label>शीर्षक *</Label>
-                <Input 
-                  value={formData.title || news.title}
-                  onChange={(e) => updateField('title', e.target.value)} 
-                  required 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>स्लग (URL) *</Label>
-                <Input 
-                  value={formData.slug || news.slug}
-                  onChange={(e) => updateField('slug', e.target.value)} 
-                  className="font-mono"
-                  required 
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>लेखक</Label>
-                  <Input 
-                    value={formData.author || news.author}
-                    onChange={(e) => updateField('author', e.target.value)} 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>श्रेणी</Label>
-                  <Select 
-                    value={formData.category || news.category} 
-                    onValueChange={(v) => updateField('category', v)}
-                  >
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {newsCategories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id}>{cat.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="content" className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label>सारांश</Label>
-                <Textarea 
-                  value={formData.excerpt || news.excerpt}
-                  onChange={(e) => updateField('excerpt', e.target.value)} 
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>पूर्ण विवरण</Label>
-                <Textarea 
-                  value={formData.content || news.content || ''}
-                  onChange={(e) => updateField('content', e.target.value)} 
-                  rows={8}
-                />
-              </div>
-              <ImageUploader
-                value={formData.image || news.image}
-                onChange={(v) => updateField('image', v as string)}
-                onMediaChange={(media) => {
-                  const single = Array.isArray(media) ? media[0] : media;
-                  updateField('featuredMediaId', single?.id);
-                }}
-                label="फीचर्ड इमेज"
-              />
-            </TabsContent>
-
-            <TabsContent value="seo" className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label>मेटा टाइटल</Label>
-                <Input 
-                  value={formData.metaTitle || formData.title || news.title}
-                  onChange={(e) => updateField('metaTitle', e.target.value)} 
-                  maxLength={60}
-                />
-                <p className="text-xs text-muted-foreground">{(formData.metaTitle || formData.title || news.title).length}/60</p>
-              </div>
-              <div className="space-y-2">
-                <Label>मेटा विवरण</Label>
-                <Textarea 
-                  value={formData.metaDescription || formData.excerpt || news.excerpt}
-                  onChange={(e) => updateField('metaDescription', e.target.value)} 
-                  rows={2}
-                  maxLength={160}
-                />
-                <p className="text-xs text-muted-foreground">{(formData.metaDescription || formData.excerpt || news.excerpt).length}/160</p>
-              </div>
-              <div className="space-y-2">
-                <Label>कीवर्ड्स</Label>
-                <Input 
-                  value={formData.keywords || ''}
-                  onChange={(e) => updateField('keywords', e.target.value)} 
-                  placeholder="रामपुर, समाचार, ब्रेकिंग"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>OG इमेज URL</Label>
-                <Input 
-                  value={formData.ogImage || formData.image || news.image}
-                  onChange={(e) => updateField('ogImage', e.target.value)} 
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="settings" className="space-y-4 pt-4">
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <Label>फीचर्ड</Label>
-                  <p className="text-sm text-muted-foreground">होम पेज पर दिखाएं</p>
-                </div>
-                <Switch 
-                  checked={formData.isFeatured ?? news.isFeatured ?? false}
-                  onCheckedChange={(v) => updateField('isFeatured', v)}
-                />
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <Label>ब्रेकिंग न्यूज़</Label>
-                  <p className="text-sm text-muted-foreground">ब्रेकिंग टिकर में दिखाएं</p>
-                </div>
-                <Switch 
-                  checked={formData.isBreaking ?? news.isBreaking ?? false}
-                  onCheckedChange={(v) => updateField('isBreaking', v)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>प्रकाशन तारीख</Label>
-                <Input 
-                  type="datetime-local"
-                  value={formData.publishedDate?.split('.')[0] || news.publishedDate?.split('.')[0] || ''}
-                  onChange={(e) => updateField('publishedDate', e.target.value)} 
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              रद्द करें
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'सेव हो रहा है...' : 'सेव करें'}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 };
 

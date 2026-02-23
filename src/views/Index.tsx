@@ -1,145 +1,53 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategorySection from "@/components/CategorySection";
-import Sidebar from "@/components/Sidebar";
 import NewsCard from "@/components/NewsCard";
-import { useArticles, useHeroArticles, useFeaturedArticles, useCategories, useEditorials } from "@/hooks/useCMS";
 import type { CMSArticle, CMSCategory, CMSEditorial } from "@/services/cms";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import type { CarouselApi } from "@/components/ui/carousel";
-
-type DynamicCategorySectionProps = {
-  category: CMSCategory;
-  limit?: number;
+type IndexProps = {
+  heroArticles: CMSArticle[];
+  categories: CMSCategory[];
+  categoryArticles: Record<string, CMSArticle[]>;
+  editorials: CMSEditorial[];
+  trendingArticles: CMSArticle[];
 };
 
-const DynamicCategorySection = ({ category, limit = 7 }: DynamicCategorySectionProps) => {
-  const hostRef = useRef<HTMLDivElement | null>(null);
-  const [isInView, setIsInView] = useState(false);
-
-  useEffect(() => {
-    const el = hostRef.current;
-    if (!el) return;
-    if (typeof IntersectionObserver === "undefined") {
-      setIsInView(true);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        setIsInView(entries.some((entry) => entry.isIntersecting));
-      },
-      { rootMargin: "300px 0px", threshold: 0.1 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  const { data } = useArticles(
-    {
-      category: category.slug,
-      status: "published",
-      orderBy: "publishedDate",
-      order: "desc",
-      limit,
-    },
-    { enabled: isInView },
-  );
-  const articles = data?.data ?? [];
-  if (!isInView) {
-    return <div ref={hostRef} className="py-6 min-h-[220px]" />;
-  }
-  if (articles.length === 0) return null;
-
-  return (
-    <div ref={hostRef}>
-      <CategorySection
-        title={category.titleHindi}
-        articles={articles}
-        viewAllLink={category.path || `/${category.slug}`}
-        variant="featured"
-      />
-    </div>
-  );
+const formatRelativeTimeHindi = (dateString?: string) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "";
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  if (seconds < 60) return "अभी";
+  if (minutes < 60) return `${minutes} मिनट पहले`;
+  if (hours < 24) return `${hours} घंटे पहले`;
+  return `${days} दिन पहले`;
 };
 
-const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) => {
-  const { data: heroArticlesRaw = [] } = useHeroArticles(8, { initialData: initialHeroArticles });
-  const { data: featuredFallback = [] } = useFeaturedArticles(3);
-  const heroArticles = heroArticlesRaw.length > 0 ? heroArticlesRaw : featuredFallback;
-  const { data: categories = [] } = useCategories();
-  const { data: editorialResponse } = useEditorials({
-    limit: 5,
-    orderBy: "publishedDate",
-    order: "desc",
-  });
-  const editorials: CMSEditorial[] = editorialResponse?.data ?? [];
-  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-
-  useEffect(() => {
-    if (!carouselApi) return;
-    setSelectedIndex(carouselApi.selectedScrollSnap());
-    const handler = () => {
-      setSelectedIndex(carouselApi.selectedScrollSnap());
-    };
-    carouselApi.on("select", handler);
-    return () => {
-      carouselApi.off("select", handler);
-    };
-  }, [carouselApi]);
-
-  useEffect(() => {
-    if (!carouselApi || heroArticles.length <= 1) return;
-    const id = window.setInterval(() => {
-      const nextIndex = (carouselApi.selectedScrollSnap() + 1) % heroArticles.length;
-      carouselApi.scrollTo(nextIndex);
-    }, 5000);
-    return () => {
-      window.clearInterval(id);
-    };
-  }, [carouselApi, heroArticles.length]);
+const Index = ({ heroArticles, categories, categoryArticles, editorials, trendingArticles }: IndexProps) => {
+  const heroPrimary = heroArticles[0];
+  const heroSecondary = heroArticles.slice(1, 5);
+  const sidebarTrending = trendingArticles.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
       <main className="container py-6">
-        {heroArticles.length > 0 && (
-          <section className="mb-8">
-            <Carousel className="relative" opts={{ loop: true }} setApi={setCarouselApi}>
-              <CarouselContent>
-                {heroArticles.map((article, index) => (
-                  <CarouselItem key={article.id}>
-                    <NewsCard article={article} variant="featured" imagePriority={index === 0} />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              {heroArticles.length > 1 && (
-                <>
-                  <CarouselPrevious className="-left-4 md:-left-12" />
-                  <CarouselNext className="-right-4 md:-right-12" />
-                </>
-              )}
-            </Carousel>
-            {heroArticles.length > 1 && (
-              <div className="mt-4 flex justify-center gap-2">
-                {heroArticles.map((article, index) => (
-                  <button
-                    key={article.id}
-                    type="button"
-                    onClick={() => carouselApi?.scrollTo(index)}
-                    className={
-                      index === selectedIndex
-                        ? "h-2 w-6 rounded-full bg-primary"
-                        : "h-2 w-2 rounded-full bg-muted-foreground/50"
-                    }
-                    aria-label={`Slide ${index + 1}`}
-                  />
-                ))}
-              </div>
-            )}
+        {heroPrimary && (
+          <section className="mb-8 grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
+            <div>
+              <NewsCard article={heroPrimary} variant="featured" imagePriority />
+            </div>
+            <div className="space-y-4">
+              {heroSecondary.map((article) => (
+                <NewsCard key={article.id} article={article} variant="horizontal" />
+              ))}
+            </div>
           </section>
         )}
 
@@ -147,39 +55,19 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-8 space-y-8">
-            {(() => {
-              const preferredOrder = [
-                "rampur",
-                "up",
-                "nearby",
-                "national",
-                "religion-culture",
-                "sports",
-                "education-jobs",
-                "international",
-              ];
-
-              const bySlug: Record<string, CMSCategory> = {};
-              for (const cat of categories) {
-                bySlug[cat.slug] = cat;
-              }
-
-              const ordered: CMSCategory[] = [];
-              for (const slug of preferredOrder) {
-                const cat = bySlug[slug];
-                if (cat) ordered.push(cat);
-              }
-
-              for (const cat of categories) {
-                if (!preferredOrder.includes(cat.slug)) {
-                  ordered.push(cat);
-                }
-              }
-
-              return ordered.map((category) => (
-                <DynamicCategorySection key={category.id} category={category} />
-              ));
-            })()}
+            {categories.map((category) => {
+              const articles = categoryArticles[category.slug] ?? [];
+              if (!articles.length) return null;
+              return (
+                <CategorySection
+                  key={category.id}
+                  title={category.titleHindi}
+                  articles={articles}
+                  viewAllLink={category.path || `/${category.slug}`}
+                  variant="featured"
+                />
+              );
+            })}
 
             {editorials.length > 0 && (
               <CategorySection
@@ -209,7 +97,79 @@ const Index = ({ initialHeroArticles }: { initialHeroArticles?: CMSArticle[] }) 
           {/* Sidebar */}
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-24">
-              <Sidebar />
+              <aside className="space-y-6">
+                <div className="bg-card rounded-lg p-4">
+                  <h3 className="text-lg font-bold mb-4 border-b border-primary pb-2">ट्रेंडिंग</h3>
+                  <div className="space-y-4">
+                    {sidebarTrending.map((article) => (
+                      <Link
+                        key={article.id}
+                        href={`/news/${article.slug}`}
+                        className="flex gap-3 items-start hover:text-primary transition-colors"
+                      >
+                        <div className="relative w-20 h-16 rounded-md overflow-hidden bg-muted">
+                          <Image
+                            src={article.image || "/news-placeholder.jpg"}
+                            alt={article.title}
+                            fill
+                            sizes="80px"
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-medium line-clamp-2">{article.title}</h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {formatRelativeTimeHindi(article.publishedDate || article.publishedAt)}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-card rounded-lg p-4">
+                  <h3 className="text-lg font-bold mb-4 border-b border-primary pb-2">लोकप्रिय खबरें</h3>
+                  <div className="space-y-3">
+                    {sidebarTrending.slice(0, 5).map((article, index) => (
+                      <Link
+                        key={article.id}
+                        href={`/news/${article.slug}`}
+                        className="flex gap-3 items-start hover:text-primary transition-colors"
+                      >
+                        <span className="text-lg font-bold text-primary">{index + 1}</span>
+                        <div>
+                          <h4 className="text-sm font-medium line-clamp-2">{article.title}</h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {formatRelativeTimeHindi(article.publishedDate || article.publishedAt)}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-card rounded-lg p-4">
+                  <h3 className="text-lg font-bold mb-4 border-b border-primary pb-2">हमसे जुड़ें</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <a
+                      href="https://whatsapp.com/channel/0029Vb7TEPsLI8Yg4gbsqe3O"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center rounded-lg bg-[#25D366] text-white py-2 text-sm font-medium"
+                    >
+                      WhatsApp
+                    </a>
+                    <a
+                      href="https://t.me/rampurnewsofficial"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center rounded-lg bg-[#0088cc] text-white py-2 text-sm font-medium"
+                    >
+                      Telegram
+                    </a>
+                  </div>
+                </div>
+              </aside>
             </div>
           </div>
         </div>

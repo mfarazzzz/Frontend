@@ -1,17 +1,7 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import { Link } from "@/lib/router-compat";
+import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import NewsCard from "./NewsCard";
 import type { CMSArticle } from "@/services/cms";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import type { CarouselApi } from "@/components/ui/carousel";
 
 interface CategorySectionProps {
   title: string;
@@ -26,54 +16,16 @@ const CategorySection = ({
   viewAllLink,
   variant = "default",
 }: CategorySectionProps) => {
-  const sliderArticles = articles.slice(0, 3);
-  const secondaryArticles = articles.slice(3, 7);
-  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const carouselHostRef = useRef<HTMLDivElement | null>(null);
-  const [isInView, setIsInView] = useState(false);
-
-  useEffect(() => {
-    const el = carouselHostRef.current;
-    if (!el) return;
-    if (typeof IntersectionObserver === "undefined") {
-      setIsInView(true);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        setIsInView(entries.some((entry) => entry.isIntersecting));
-      },
-      { threshold: 0.2 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!carouselApi) return;
-    if (sliderArticles.length <= 1) return;
-    if (isHovered) return;
-    if (!isInView) return;
-    const id = window.setInterval(() => {
-      const nextIndex = (carouselApi.selectedScrollSnap() + 1) % sliderArticles.length;
-      carouselApi.scrollTo(nextIndex);
-    }, 5000);
-    return () => {
-      window.clearInterval(id);
-    };
-  }, [carouselApi, isHovered, isInView, sliderArticles.length]);
-
   if (articles.length === 0) return null;
+
+  const featuredPrimary = articles[0];
+  const featuredSecondary = articles.slice(1, 5);
 
   return (
     <section className="py-6">
       <div className="section-header">
         <h2 className="section-title">{title}</h2>
-        <Link
-          to={viewAllLink}
-          className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-        >
+        <Link className="flex items-center gap-1 text-sm font-medium text-primary hover:underline" href={viewAllLink}>
           और देखें
           <ChevronRight size={16} />
         </Link>
@@ -86,31 +38,10 @@ const CategorySection = ({
           ))}
         </div>
       ) : variant === "featured" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div
-            className="lg:col-span-2"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            ref={carouselHostRef}
-          >
-            <Carousel className="w-full" opts={{ loop: sliderArticles.length > 1 }} setApi={setCarouselApi}>
-              <CarouselContent>
-                {sliderArticles.map((article) => (
-                  <CarouselItem key={article.id}>
-                    <NewsCard article={article} variant="featured" />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              {sliderArticles.length > 1 && (
-                <>
-                  <CarouselPrevious className="-left-4 md:-left-8" />
-                  <CarouselNext className="-right-4 md:-right-8" />
-                </>
-              )}
-            </Carousel>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
+          <div>{featuredPrimary && <NewsCard article={featuredPrimary} variant="featured" />}</div>
           <div className="space-y-4">
-            {secondaryArticles.map((article) => (
+            {featuredSecondary.map((article) => (
               <NewsCard key={article.id} article={article} variant="horizontal" />
             ))}
           </div>

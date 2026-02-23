@@ -34,10 +34,53 @@ export default async function Page() {
   const siteUrl = "https://rampurnews.com";
   const siteName = "रामपुर न्यूज़ | Rampur News";
 
-  let heroArticles = await getCMSProvider().getHeroArticles(8).catch(() => []);
+  const provider = getCMSProvider();
+  let heroArticles = await provider.getHeroArticles(8).catch(() => []);
   if (!heroArticles || heroArticles.length === 0) {
-    heroArticles = await getCMSProvider().getFeaturedArticles(3).catch(() => []);
+    heroArticles = await provider.getFeaturedArticles(3).catch(() => []);
   }
+
+  const preferredOrder = [
+    "rampur",
+    "up",
+    "nearby",
+    "national",
+    "religion-culture",
+    "sports",
+    "education-jobs",
+    "international",
+  ];
+
+  const categoriesRaw = await provider.getCategories().catch(() => []);
+  const bySlug: Record<string, (typeof categoriesRaw)[number]> = {};
+  for (const cat of categoriesRaw) {
+    bySlug[cat.slug] = cat;
+  }
+
+  const ordered: (typeof categoriesRaw)[number][] = [];
+  for (const slug of preferredOrder) {
+    const cat = bySlug[slug];
+    if (cat) ordered.push(cat);
+  }
+  for (const cat of categoriesRaw) {
+    if (!preferredOrder.includes(cat.slug)) ordered.push(cat);
+  }
+  const categories = ordered.slice(0, 8);
+
+  const categoryArticlesEntries = await Promise.all(
+    categories.map(async (category) => {
+      const articles = await provider.getArticlesByCategory(category.slug, 7).catch(() => []);
+      return [category.slug, articles] as const;
+    }),
+  );
+  const categoryArticles = Object.fromEntries(categoryArticlesEntries);
+
+  const editorialPage = await provider
+    .getEditorials({ limit: 5, orderBy: "publishedDate", order: "desc" })
+    .catch(() => ({ data: [] }));
+  const editorials = editorialPage?.data ?? [];
+
+  const trendingArticles = await provider.getTrendingArticles(8).catch(() => []);
   
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -135,7 +178,13 @@ export default async function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <Index initialHeroArticles={heroArticles} />
+      <Index
+        heroArticles={heroArticles}
+        categories={categories}
+        categoryArticles={categoryArticles}
+        editorials={editorials}
+        trendingArticles={trendingArticles}
+      />
     </>
   );
 }

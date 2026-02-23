@@ -71,7 +71,12 @@ const organizationSchema = {
   "@type": "Organization",
   name: "रामपुर न्यूज़ | Rampur News",
   url: "https://rampurnews.com",
-  logo: "https://rampurnews.com/logo.png",
+  logo: {
+    "@type": "ImageObject",
+    url: "https://rampurnews.com/logo.png",
+    width: 768,
+    height: 768,
+  },
   sameAs: [
     "https://www.facebook.com/rampurnews",
     "https://twitter.com/RampurNews",
@@ -98,7 +103,12 @@ const websiteSchema = {
   publisher: {
     "@type": "Organization",
     name: "रामपुर न्यूज़ | Rampur News",
-    logo: "https://rampurnews.com/logo.png"
+    logo: {
+      "@type": "ImageObject",
+      url: "https://rampurnews.com/logo.png",
+      width: 768,
+      height: 768,
+    },
   },
   potentialAction: {
     "@type": "SearchAction",

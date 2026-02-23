@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Save, Loader2, Globe, Share2, Mail, Database, CheckCircle2, XCircle, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { Save, Loader2, Globe, Share2, Mail, Database, CheckCircle2, XCircle, RefreshCw, Eye, EyeOff, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { configureCMS, getCMSConfig } from '@/services/cms';
 import type { CMSSettings, CMSProviderType, CMSAuthor } from '@/services/cms';
@@ -57,6 +57,12 @@ const SettingsPage = () => {
     contactPhone: '',
     address: '',
     defaultAuthorRole: 'author' as CMSAuthor['role'],
+    gscPropertyUrl: '',
+    gscExportUrl: '',
+    backlinkReportUrl: '',
+    referringDomains: [],
+    backlinkNotes: '',
+    lastBacklinkSync: '',
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -153,6 +159,14 @@ const SettingsPage = () => {
         [platform]: value,
       },
     }));
+  };
+
+  const updateReferringDomains = (value: string) => {
+    const domains = value
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    setFormData((prev) => ({ ...prev, referringDomains: domains }));
   };
 
   const testWordPressConnection = async () => {
@@ -344,6 +358,10 @@ const SettingsPage = () => {
           <TabsTrigger value="cms" className="gap-2">
             <Database className="w-4 h-4" />
             CMS / WordPress
+          </TabsTrigger>
+          <TabsTrigger value="backlinks" className="gap-2">
+            <TrendingUp className="w-4 h-4" />
+            Backlinks
           </TabsTrigger>
         </TabsList>
 
@@ -886,6 +904,82 @@ const SettingsPage = () => {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="backlinks" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Backlink Tracking</CardTitle>
+              <CardDescription>Google Search Console और रेफरिंग डोमेन ट्रैकिंग सेट करें</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="gscPropertyUrl">GSC प्रॉपर्टी URL</Label>
+                <Input
+                  id="gscPropertyUrl"
+                  value={formData.gscPropertyUrl || ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, gscPropertyUrl: e.target.value }))}
+                  placeholder="https://rampurnews.com/"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gscExportUrl">GSC Export CSV/Sheet URL</Label>
+                <Input
+                  id="gscExportUrl"
+                  value={formData.gscExportUrl || ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, gscExportUrl: e.target.value }))}
+                  placeholder="https://docs.google.com/..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="backlinkReportUrl">Backlink Report URL</Label>
+                <Input
+                  id="backlinkReportUrl"
+                  value={formData.backlinkReportUrl || ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, backlinkReportUrl: e.target.value }))}
+                  placeholder="https://app.ahrefs.com/..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="referringDomains">Referring Domains (प्रति पंक्ति एक)</Label>
+                <Textarea
+                  id="referringDomains"
+                  value={(formData.referringDomains || []).join('\n')}
+                  onChange={(e) => updateReferringDomains(e.target.value)}
+                  placeholder="example.com"
+                  rows={6}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="backlinkNotes">Backlink Notes</Label>
+                <Textarea
+                  id="backlinkNotes"
+                  value={formData.backlinkNotes || ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, backlinkNotes: e.target.value }))}
+                  placeholder="Outreach status, top referrers, और अगले कदम"
+                  rows={4}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastBacklinkSync">Last Backlink Sync</Label>
+                <Input
+                  id="lastBacklinkSync"
+                  value={formData.lastBacklinkSync || ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, lastBacklinkSync: e.target.value }))}
+                  placeholder="2026-02-23T10:30:00Z"
+                />
+              </div>
+              <div className="p-4 bg-muted rounded-lg space-y-2">
+                <h4 className="font-medium text-sm">GSC इंटीग्रेशन गाइड</h4>
+                <ol className="text-xs text-muted-foreground list-decimal list-inside space-y-1">
+                  <li>Search Console में RampurNews.com प्रॉपर्टी जोड़ें और वेरीफाई करें</li>
+                  <li>Links → Export External Links से CSV डाउनलोड करें</li>
+                  <li>CSV को Google Sheet में अपलोड कर ऊपर वाला लिंक पेस्ट करें</li>
+                  <li>Referring Domains सूची अपडेट कर सहेजें</li>
+                </ol>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

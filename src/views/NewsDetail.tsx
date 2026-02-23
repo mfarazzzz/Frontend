@@ -83,7 +83,7 @@ const convertPlainContentToHtml = (value: string): string => {
   text = text.replace(
     /!\[([^\]]*)]\(([^)]+)\)/g,
     (_, alt, url) =>
-      `<figure class="my-4"><img src="${url.trim()}" alt="${alt.trim()}" class="mx-auto rounded-lg" /></figure>`,
+      `<figure class="my-4"><img src="${url.trim()}" alt="${alt.trim()}" class="mx-auto rounded-lg" loading="lazy" decoding="async" /></figure>`,
   );
 
   text = text.replace(
@@ -98,7 +98,7 @@ const convertPlainContentToHtml = (value: string): string => {
   text = text.replace(
     /(https?:\/\/[^\s]+?\.(?:png|jpe?g|gif|webp))/gi,
     (match) =>
-      `<figure class="my-4"><img src="${match}" alt="" class="mx-auto rounded-lg" /></figure>`,
+      `<figure class="my-4"><img src="${match}" alt="" class="mx-auto rounded-lg" loading="lazy" decoding="async" /></figure>`,
   );
 
   const paragraphs = text.split(/\n{2,}/);
@@ -186,7 +186,6 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
     return <Navigate to={`/${article.category}/${article.slug || slug}`} replace />;
   }
 
-  const relatedNews = categoryNews.filter((a) => a.id !== article.id).slice(0, 4);
   const moreFromAuthor =
     article.author && categoryNews.length > 0
       ? categoryNews
@@ -200,24 +199,115 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
   const shareUrl = `${siteUrl}${articleUrl}`;
   const embedUrl = article.videoType === "youtube" && article.videoUrl ? getYouTubeEmbedUrl(article.videoUrl) : "";
+  const buildOgImageUrl = (title: string) => `${siteUrl}/api/og?title=${encodeURIComponent(title)}`;
+  const displayImage = article.image || buildOgImageUrl(article.title);
+
+  const stopWords = new Set([
+    "और",
+    "या",
+    "में",
+    "का",
+    "की",
+    "के",
+    "से",
+    "पर",
+    "है",
+    "था",
+    "थे",
+    "थी",
+    "इस",
+    "उस",
+    "ये",
+    "वे",
+    "भी",
+    "तो",
+    "ही",
+    "का",
+    "की",
+    "कर",
+    "करके",
+    "रहा",
+    "रही",
+    "रहे",
+  ]);
+
+  const extractKeywords = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]+/gu, " ")
+      .split(/\s+/)
+      .map((w) => w.trim())
+      .filter((w) => w.length >= 4 && !stopWords.has(w));
+
+  const keywordPool = Array.from(
+    new Set([
+      ...extractKeywords(article.title || ""),
+      ...extractKeywords(article.excerpt || ""),
+      ...(Array.isArray(article.tags) ? article.tags.map((t) => String(t).toLowerCase()) : []),
+    ]),
+  ).slice(0, 12);
+
+  const keywordMatches = categoryNews.filter((item) => {
+    if (item.id === article.id) return false;
+    const hay = `${item.title || ""} ${item.excerpt || ""}`.toLowerCase();
+    return keywordPool.some((k) => hay.includes(k));
+  });
+
+  const relatedNews = Array.from(
+    new Map(
+      [...keywordMatches, ...categoryNews]
+        .filter((item) => item.id !== article.id)
+        .map((item) => [item.id, item]),
+    ).values(),
+  ).slice(0, 6);
 
   const contentWithInternalLinks = (() => {
     const baseHtml = convertPlainContentToHtml(article.content || "");
-    const links = relatedNews
-      .slice(0, 2)
+    const internalLinks: Array<{ href: string; title: string }> = [];
+
+    if (effectiveCategory) {
+      internalLinks.push({
+        href: `/${effectiveCategory}`,
+        title: `${getCategoryHindi(effectiveCategory)} की सभी खबरें`,
+      });
+    }
+    if (authorSlug) {
+      internalLinks.push({
+        href: `/authors/${authorSlug}`,
+        title: `${article.author} की प्रोफाइल`,
+      });
+    }
+
+    relatedNews
       .filter((n) => n.slug && n.title)
-      .map((n) => ({
-        href: `/${effectiveCategory}/${n.slug}`,
-        title: n.title,
-      }));
+      .slice(0, 4)
+      .forEach((n) => {
+        internalLinks.push({
+          href: `/${effectiveCategory}/${n.slug}`,
+          title: n.title,
+        });
+      });
 
-    if (links.length === 0) return baseHtml;
+    const fallbackLinks = [
+      { href: "/", title: "मुख्य समाचार" },
+      { href: "/rampur", title: "रामपुर समाचार" },
+      { href: "/up", title: "उत्तर प्रदेश समाचार" },
+    ];
 
-    const linksHtml = links
+    for (const link of fallbackLinks) {
+      if (internalLinks.length >= 3) break;
+      if (!internalLinks.find((l) => l.href === link.href)) internalLinks.push(link);
+    }
+
+    const uniqueLinks = Array.from(new Map(internalLinks.map((l) => [l.href, l])).values()).slice(0, 6);
+
+    if (uniqueLinks.length === 0) return baseHtml;
+
+    const linksHtml = uniqueLinks
       .map((l) => `<a href="${escapeHtml(l.href)}" class="underline">${escapeHtml(l.title)}</a>`)
       .join(" • ");
 
-    const injection = `<div class="my-6 rounded-lg border border-border bg-muted/40 p-4"><div class="text-sm font-semibold text-foreground mb-2">संबंधित खबरें</div><div class="text-sm">${linksHtml}</div></div>`;
+    const injection = `<div class="my-6 rounded-lg border border-border bg-muted/40 p-4"><div class="text-sm font-semibold text-foreground mb-2">इस विषय पर और पढ़ें</div><div class="text-sm">${linksHtml}</div></div>`;
 
     const marker = "</p>";
     const idx = baseHtml.toLowerCase().indexOf(marker);
@@ -298,18 +388,18 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
               )}
             </div>
 
-            {article.image ? (
+            {displayImage ? (
               <figure className="rounded-lg overflow-hidden mb-6">
                 <Image
-                  src={article.image}
+                  src={displayImage}
                   alt={article.title}
-                  width={800}
-                  height={450}
-                  priority
+                  width={1200}
+                  height={630}
+                  loading="lazy"
                   className="w-full h-auto object-cover"
-                  sizes="(min-width: 1024px) 800px, 100vw"
+                  sizes="(min-width: 1024px) 1200px, 100vw"
                 />
-                <meta itemProp="thumbnailUrl" content={article.image} />
+                <meta itemProp="thumbnailUrl" content={displayImage} />
               </figure>
             ) : null}
 

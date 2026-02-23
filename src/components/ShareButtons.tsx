@@ -83,7 +83,7 @@ const ShareButtons = ({
     {
       id: 'twitter',
       icon: Twitter,
-      label: 'Twitter',
+      label: 'X',
       className: 'bg-[#1DA1F2] hover:bg-[#1A94DA] text-white',
       onClick: () => handleShare('twitter'),
     },

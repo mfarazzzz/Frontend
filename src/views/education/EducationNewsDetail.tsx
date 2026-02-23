@@ -40,7 +40,7 @@ const convertPlainContentToHtml = (value: string): string => {
   text = text.replace(
     /!\[([^\]]*)]\(([^)]+)\)/g,
     (_, alt, url) =>
-      `<figure class="my-4"><img src="${url.trim()}" alt="${escapeHtml(String(alt || "").trim())}" class="mx-auto rounded-lg" /></figure>`,
+      `<figure class="my-4"><img src="${url.trim()}" alt="${escapeHtml(String(alt || "").trim())}" class="mx-auto rounded-lg" loading="lazy" decoding="async" /></figure>`,
   );
 
   text = text.replace(
@@ -70,6 +70,9 @@ export default function EducationNewsDetailPage() {
 
   const title = news?.seoTitle?.trim() || news?.titleHindi || "शिक्षा समाचार";
   const description = news?.seoDescription?.trim() || news?.excerptHindi || news?.excerpt || "शिक्षा समाचार और अपडेट";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
+  const fallbackImage = `${siteUrl}/api/og?title=${encodeURIComponent(title)}`;
+  const displayImage = news?.image || fallbackImage;
 
   const breadcrumbs = [
     { label: "Home", labelHindi: "होम", path: "/" },
@@ -97,9 +100,9 @@ export default function EducationNewsDetailPage() {
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 space-y-6">
               <Card>
-                {news.image ? (
+                {displayImage ? (
                   <div className="aspect-video overflow-hidden rounded-t-lg">
-                    <img src={news.image} alt={news.titleHindi || news.title} className="w-full h-full object-cover" />
+                    <img src={displayImage} alt={news.titleHindi || news.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   </div>
                 ) : null}
                 <CardHeader>
@@ -172,4 +175,3 @@ export default function EducationNewsDetailPage() {
     </div>
   );
 }
-

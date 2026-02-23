@@ -11,6 +11,36 @@ import { redirect } from "next/navigation";
 
 const SITE_URL = "https://rampurnews.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const buildOgImageUrl = (title: string) => `${SITE_URL}/api/og?title=${encodeURIComponent(title)}`;
+const normalizeHeadline = (value: string) =>
+  value
+    .replace(/([!?]){2,}/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+const isNonEmpty = (value?: string) => typeof value === "string" && value.trim().length > 0;
+const pruneSchema = (input: unknown): unknown => {
+  if (Array.isArray(input)) {
+    const cleaned = input.map(pruneSchema).filter((value) => value !== undefined);
+    return cleaned.length > 0 ? cleaned : undefined;
+  }
+  if (input && typeof input === "object") {
+    const entries = Object.entries(input as Record<string, unknown>)
+      .map(([key, value]) => [key, pruneSchema(value)])
+      .filter(([, value]) => {
+        if (value === undefined || value === null) return false;
+        if (typeof value === "string" && value.trim() === "") return false;
+        if (Array.isArray(value) && value.length === 0) return false;
+        return true;
+      });
+    if (entries.length === 0) return undefined;
+    return Object.fromEntries(entries);
+  }
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    return trimmed ? trimmed : undefined;
+  }
+  return input === null || input === undefined ? undefined : input;
+};
 
 const fetchArticleForSeo = async (slug: string): Promise<CMSArticle | null> => {
   try {
@@ -60,7 +90,7 @@ export async function generateMetadata(props: {
     };
   }
 
-  const seoTitle = article.seoTitle?.trim() || article.title;
+  const seoTitle = normalizeHeadline(article.seoTitle?.trim() || article.title);
   const bodyText = stripHtmlToText(article.content || "");
   const seoDescription =
     article.seoDescription?.trim() ||
@@ -68,7 +98,7 @@ export async function generateMetadata(props: {
     truncateText(bodyText, 150) ||
     "ताज़ा खबरें पढ़ें | रामपुर न्यूज़";
 
-  const imageUrl = article.image || DEFAULT_OG_IMAGE;
+  const imageUrl = article.image || buildOgImageUrl(article.title || seoTitle) || DEFAULT_OG_IMAGE;
   const authorName = article.author?.trim() || "Rampur News Desk";
   const publishedTime = article.publishedAt || article.publishedDate;
   const modifiedTime = article.modifiedDate || article.publishedAt || article.publishedDate;
@@ -88,6 +118,8 @@ export async function generateMetadata(props: {
   const keywordList = ai.keywords.length > 0 ? ai.keywords : [article.categoryHindi, "रामपुर", "Rampur"];
   const canonical = article.canonicalUrl?.trim() || canonicalPath;
   const absoluteCanonical = canonical.startsWith("http") ? canonical : `${SITE_URL}${canonical}`;
+  const ampPath = `/amp${canonicalPath}`;
+  const ampUrl = `${SITE_URL}${ampPath}`;
   const articleSection = article.categoryHindi || getCategoryHindi(effectiveCategory);
 
   return {
@@ -95,6 +127,9 @@ export async function generateMetadata(props: {
     description: seoDescription,
     alternates: {
       canonical,
+      types: {
+        "application/amp+html": ampUrl,
+      },
     },
     authors: [{ name: authorName }],
     keywords: keywordList,
@@ -170,17 +205,20 @@ export default async function Page(props: { params: Promise<PageParams> }) {
 
   const canInjectSchema = !!article && (!category || !article?.category || article.category === category);
 
-  const title = article?.seoTitle?.trim() || article?.title || "";
+  const title = normalizeHeadline(article?.seoTitle?.trim() || article?.title || "");
   const bodyText = article ? stripHtmlToText(article.content || "") : "";
   const description = article
     ? article.seoDescription?.trim() ||
       article.excerpt?.trim() ||
       truncateText(bodyText, 150)
     : "";
-  const imageUrl = (article?.image || DEFAULT_OG_IMAGE).trim();
+  const imageUrl = (article?.image || buildOgImageUrl(title || article?.title || "") || DEFAULT_OG_IMAGE).trim();
   const authorName = article?.author?.trim() || "Rampur News Desk";
   const publishedDate = article?.publishedDate || "";
   const modifiedDate = article?.modifiedDate || article?.publishedDate || "";
+  const schemaImageUrl = (article?.image || "").trim();
+  const schemaAuthorName = (article?.author || "").trim();
+  const schemaPublishedDate = (article?.publishedDate || article?.publishedAt || "").trim();
 
   const ai = article
     ? deriveAiSeoSignals({
@@ -207,6 +245,8 @@ export default async function Page(props: { params: Promise<PageParams> }) {
     ? article.canonicalUrl.trim()
     : `${SITE_URL}${canonicalPath}`;
   const categoryLabelHindi = getCategoryHindi(effectiveCategory || category);
+  const hasRequiredSchemaFields =
+    isNonEmpty(schemaAuthorName) && isNonEmpty(schemaImageUrl) && isNonEmpty(schemaPublishedDate);
 
   // Safe schema injection
   const schemaFromCms =
@@ -218,52 +258,73 @@ export default async function Page(props: { params: Promise<PageParams> }) {
       ? (article.schemaJson as { [key: string]: unknown })
       : null;
 
-  const newsArticleSchema = schemaFromCms
-    ? {
-        ...schemaFromCms,
-        mainEntityOfPage: { "@type": "WebPage", "@id": absoluteCanonical },
-        url: absoluteCanonical,
-      }
-    : canInjectSchema && article
-      ? {
-          "@context": "https://schema.org",
-          "@type": "NewsArticle",
-          mainEntityOfPage: { "@type": "WebPage", "@id": absoluteCanonical },
-          headline: title || article.title,
-          name: title || article.title,
-          description: description || article.excerpt,
-          image: {
-            "@type": "ImageObject",
-            url: imageUrl,
-            width: 1200,
-            height: 630,
-          },
-          thumbnailUrl: imageUrl,
-          datePublished: publishedDate,
-          dateModified: modifiedDate,
-          author: [{ "@type": "Person", name: authorName }],
-          publisher: {
-            "@type": "Organization",
-            name: "रामपुर न्यूज़ | Rampur News",
-            logo: {
-              "@type": "ImageObject",
-              url: `${SITE_URL}/logo.png`,
-              width: 768,
-              height: 768,
-            },
-          },
-          articleSection: article.categoryHindi || categoryLabelHindi,
-          inLanguage: "hi-IN",
-          isAccessibleForFree: true,
-          keywords: keywordList.join(", "),
-          about: ai?.primaryEntity
-            ? { "@type": ai.primaryEntity.type, name: ai.primaryEntity.name }
-            : undefined,
-          mentions: ai?.mentions?.length
-            ? ai.mentions.map((m) => ({ "@type": m.type, name: m.name }))
-            : undefined,
-        }
-      : null;
+  if (canInjectSchema && article && !hasRequiredSchemaFields) {
+    console.warn("Skipping NewsArticle schema due to missing required fields.", {
+      slug: article.slug,
+      authorName: schemaAuthorName,
+      imageUrl: schemaImageUrl,
+      publishedDate: schemaPublishedDate,
+    });
+  }
+
+  const newsArticleSchema = hasRequiredSchemaFields
+    ? (pruneSchema(
+        schemaFromCms
+          ? {
+              ...schemaFromCms,
+              mainEntityOfPage: { "@type": "WebPage", "@id": absoluteCanonical },
+              url: absoluteCanonical,
+            }
+          : canInjectSchema && article
+            ? {
+                "@context": "https://schema.org",
+                "@type": "NewsArticle",
+                mainEntityOfPage: { "@type": "WebPage", "@id": absoluteCanonical },
+                headline: title || article.title,
+                name: title || article.title,
+                description: isNonEmpty(description) ? description : undefined,
+                image: isNonEmpty(schemaImageUrl)
+                  ? {
+                      "@type": "ImageObject",
+                      url: schemaImageUrl,
+                      width: 1200,
+                      height: 630,
+                    }
+                  : undefined,
+                thumbnailUrl: isNonEmpty(schemaImageUrl) ? schemaImageUrl : undefined,
+                datePublished: schemaPublishedDate,
+                dateModified: isNonEmpty(modifiedDate) ? modifiedDate : undefined,
+                author: isNonEmpty(schemaAuthorName)
+                  ? [{ "@type": "Person", name: schemaAuthorName }]
+                  : undefined,
+                publisher: {
+                  "@type": "Organization",
+                  name: "रामपुर न्यूज़ | Rampur News",
+                  logo: {
+                    "@type": "ImageObject",
+                    url: `${SITE_URL}/logo.png`,
+                    width: 768,
+                    height: 768,
+                  },
+                },
+                articleSection: isNonEmpty(article.categoryHindi)
+                  ? article.categoryHindi
+                  : isNonEmpty(categoryLabelHindi)
+                    ? categoryLabelHindi
+                    : undefined,
+                inLanguage: "hi-IN",
+                isAccessibleForFree: true,
+                keywords: keywordList.length > 0 ? keywordList.join(", ") : undefined,
+                about: ai?.primaryEntity
+                  ? { "@type": ai.primaryEntity.type, name: ai.primaryEntity.name }
+                  : undefined,
+                mentions: ai?.mentions?.length
+                  ? ai.mentions.map((m) => ({ "@type": m.type, name: m.name }))
+                  : undefined,
+              }
+            : null,
+      ) as Record<string, unknown>)
+    : null;
 
   const breadcrumbSchema =
     canInjectSchema && article

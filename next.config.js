@@ -84,6 +84,7 @@ if (strapiOriginRemotePattern) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  compress: true,
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns,
@@ -98,6 +99,30 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   turbopack: {},
+  async headers() {
+    return [
+      {
+        source: "/_next/static/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        source: "/images/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
+        source: "/api/og",
+        headers: [{ key: "Cache-Control", value: "public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400" }],
+      },
+      {
+        source: "/sitemap.xml",
+        headers: [{ key: "Cache-Control", value: "public, max-age=900, s-maxage=3600" }],
+      },
+      {
+        source: "/news-sitemap.xml",
+        headers: [{ key: "Cache-Control", value: "public, max-age=300, s-maxage=1800" }],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

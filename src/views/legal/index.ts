@@ -7,5 +7,6 @@ export { default as TermsConditions } from './TermsConditions';
 export { default as Disclaimer } from './Disclaimer';
 export { default as ContactUs } from './ContactUs';
 export { default as GrievanceRedressal } from './GrievanceRedressal';
+export { default as PressRelease } from './PressRelease';
 const LegalIndex = () => null;
 export default LegalIndex;

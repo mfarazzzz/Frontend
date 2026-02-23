@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { User, Globe2, Linkedin, Twitter, Instagram, Facebook } from "lucide-react";
+import { User, Globe2, Linkedin, Twitter, Instagram, Facebook, Youtube, Send } from "lucide-react";
 import { getCMSProvider } from "@/services/cms";
 import type { CMSAuthor, CMSArticle } from "@/services/cms";
 import { stripHtmlToText, truncateText } from "@/lib/utils";
+import AuthorArticleTabs from "@/components/AuthorArticleTabs";
 
 const SITE_URL = "https://rampurnews.com";
 
@@ -45,13 +45,14 @@ type AuthorArticlesInfo = {
   articles: CMSArticle[];
   total: number;
   categories: { slug: string; name: string }[];
+  publishedSince?: string;
 };
 
 const getArticlesByAuthor = async (author: CMSAuthor): Promise<AuthorArticlesInfo> => {
   const provider = getCMSProvider();
   const page = await provider.getArticles({
     author: author.email || author.name,
-    limit: 16,
+    limit: 50,
     orderBy: "publishedDate",
     order: "desc",
   });
@@ -60,7 +61,7 @@ const getArticlesByAuthor = async (author: CMSAuthor): Promise<AuthorArticlesInf
       article.author === author.name || article.author === author.nameHindi,
   );
 
-  const articles = list.slice(0, 8);
+  const articles = list;
   const total = typeof page?.total === "number" ? page.total : list.length;
 
   const categoriesMap = new Map<string, string>();
@@ -77,7 +78,21 @@ const getArticlesByAuthor = async (author: CMSAuthor): Promise<AuthorArticlesInf
     name,
   }));
 
-  return { articles, total, categories };
+  let publishedSince: string | undefined;
+  try {
+    const earliest = await provider.getArticles({
+      author: author.email || author.name,
+      limit: 1,
+      orderBy: "publishedDate",
+      order: "asc",
+    });
+    const first = earliest?.data?.[0];
+    publishedSince = first?.publishedDate || first?.publishedAt || undefined;
+  } catch {
+    publishedSince = undefined;
+  }
+
+  return { articles, total, categories, publishedSince };
 };
 
 export async function generateMetadata(props: { params: Promise<PageParams> }): Promise<Metadata> {
@@ -155,18 +170,6 @@ export async function generateMetadata(props: { params: Promise<PageParams> }): 
     },
   };
 }
-
-const getFarazLongBio = () =>
-  [
-    "Mohammad Faraz Raza Khan is the Founder and Editor of rampurnews.com, a digital news platform focused on contemporary issues, public interest stories and local developments. Combining training in both law and engineering, he works at the intersection of media, technology and civic life. Over more than a decade, he has been active in technology, business growth, EdTech, digital advertising and digital marketing, bringing that experience into the editorial and strategic direction of the publication.",
-    "Beginning his professional journey as an engineer, Mohammad Faraz Raza Khan developed an early interest in how digital systems, infrastructure and products can be used to solve practical problems. This technical foundation later informed his work in technology-led businesses and digital ventures, where he contributed to projects involving online platforms, digital services and technology-enabled education. His exposure to EdTech and digital advertising gave him a close view of how audiences consume information online and how media brands can build sustainable digital reach.",
-    "Alongside his technical work, he pursued the legal profession as an advocate. As a lawyer, he developed a structured understanding of constitutional principles, rights, due process and regulatory frameworks. This legal background has been important in shaping his approach to journalism and public communication. It informs how he thinks about freedom of expression, responsibility in reporting, and the ethical dimensions of public discourse. The combination of law and engineering has given him a dual perspective on both the systems that power digital media and the legal context in which it operates.",
-    "In his role as Founder and Editor of rampurnews.com, Mohammad Faraz Raza Khan oversees editorial strategy, story selection and content standards. He focuses on clarity, neutrality and public relevance in news coverage, with attention to accuracy and verifiable information. He encourages the use of data, on-the-ground context and multi-source verification in the reporting process. His experience in digital marketing and business growth helps guide decisions on audience engagement, platform strategy and long-term sustainability of the news brand.",
-    "As a digital media entrepreneur, he has been involved in building rampurnews.com as an independent online news outlet. This involves product decisions, technology stack choices and workflows that allow reporters, editors and contributors to publish efficiently while maintaining editorial checks. His background in digital advertising and marketing is applied to understanding how content is discovered, how audiences interact with headlines and formats, and how to balance reach with editorial responsibility.",
-    "Beyond his editorial and entrepreneurial roles, Mohammad Faraz Raza Khan is active as a social worker and counsellor. In these capacities, he engages with individuals and community initiatives on issues such as education, career guidance and social awareness. His counselling experience contributes to a people-centric view of public issues, and often informs the choice of topics that rampurnews.com highlights, especially in areas related to youth, education and local development.",
-    "His professional experience of more than ten years spans technology implementation, business growth strategies, EdTech product work, digital advertising campaigns and digital marketing initiatives. This broad exposure to the digital ecosystem has helped him understand how different stakeholders—platforms, advertisers, institutions, and audiences—interact with news and information. It also supports his interest in building a news platform that is technically robust, search-friendly and aligned with modern standards for web performance and accessibility.",
-    "Through rampurnews.com, Mohammad Faraz Raza Khan works to combine legal understanding, technical knowledge and community engagement in a single digital news project. His author profile presents verifiable information about his roles and professional experience, with the intent of offering readers clear attribution and accountability for the content associated with his name. The profile emphasizes his responsibilities as Founder and Editor, his professional disciplines as an advocate and engineer, his activities in digital media entrepreneurship, and his work as a social worker and counsellor.",
-  ];
 
 const buildAuthorSchema = (author: CMSAuthor, slug: string) => {
   const isFaraz = slug === "mohammad-faraz-raza-khan";
@@ -262,20 +265,60 @@ export default async function Page(props: { params: Promise<PageParams> }) {
     author.designation ||
     (isFaraz ? "Founder & Editor, rampurnews.com" : "Author at rampurnews.com");
 
-  const longBioParagraphs = isFaraz
-    ? getFarazLongBio()
-    : author.bio
-      ? [stripHtmlToText(author.bio)]
-      : [];
+  const schema = buildAuthorSchema(author, slug);
+  const { articles, total, categories, publishedSince } = await getArticlesByAuthor(author);
+  const rawBio = author.bio ? stripHtmlToText(author.bio) : "";
+
+  const publishedSinceDate = publishedSince ? new Date(publishedSince) : null;
+  const publishedSinceLabel = publishedSinceDate && !Number.isNaN(publishedSinceDate.getTime())
+    ? publishedSinceDate.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })
+    : "";
+
+  const fallbackBioParts = [
+    `${name} ${designation ? `(${designation})` : ""} लिखते हैं और rampurnews.com के लिए समाचार कवरेज करते हैं।`,
+    author.profession ? `पेशा: ${author.profession}.` : "",
+    author.experience ? `अनुभव: ${author.experience}.` : "",
+    categories.length > 0 ? `कवर की गई श्रेणियां: ${categories.map((c) => c.name).join(", ")}.` : "",
+    publishedSinceLabel ? `प्रकाशन से: ${publishedSinceLabel}.` : "",
+  ].filter(Boolean);
+  let fallbackBio = fallbackBioParts.join(" ");
+  if (fallbackBio.length < 200) {
+    fallbackBio = `${fallbackBio} लेखक का विस्तृत परिचय संपादकीय अपडेट के लिए लंबित है और शीघ्र अपडेट किया जाएगा।`;
+  }
 
   const shortBio = isFaraz
     ? "Founder & Editor at rampurnews.com, advocate (lawyer), engineer and digital media entrepreneur with more than ten years' experience in technology, business growth, EdTech, digital advertising and digital marketing."
-    : author.bio
-      ? truncateText(stripHtmlToText(author.bio), 200)
-      : "";
+    : truncateText(rawBio || fallbackBio, 200);
 
-  const schema = buildAuthorSchema(author, slug);
-  const { articles, total, categories } = await getArticlesByAuthor(author);
+  const socialSources = {
+    website: author.websiteUrl,
+    linkedin: author.linkedinUrl || author.socialLinks?.linkedin,
+    twitter: author.twitterUrl || author.socialLinks?.twitter,
+    instagram: author.instagramUrl || author.socialLinks?.instagram,
+    facebook: author.facebookUrl || author.socialLinks?.facebook,
+    youtube: author.socialLinks?.youtube,
+    whatsapp: author.whatsappUrl || author.socialLinks?.whatsapp,
+    telegram: author.socialLinks?.telegram,
+  };
+  const socialEntries = Object.entries(socialSources)
+    .filter(([, value]) => typeof value === "string" && value.trim().length > 0)
+    .map(([key, value]) => ({ key, url: (value as string).trim() }));
+  const socialMap = new Map<string, string>();
+  for (const entry of socialEntries) {
+    if (!socialMap.has(entry.key)) socialMap.set(entry.key, entry.url);
+  }
+  const socialLinks = Array.from(socialMap.entries()).map(([key, url]) => ({ key, url }));
+  const coverImage =
+    typeof author.socialLinks?.coverImage === "string"
+      ? author.socialLinks.coverImage.trim()
+      : typeof author.socialLinks?.banner === "string"
+        ? author.socialLinks.banner.trim()
+        : `${SITE_URL}/og-image.jpg`;
+  const stats = [
+    { label: "कुल लेख", value: String(total) },
+    { label: "श्रेणियां", value: String(categories.length) },
+    ...(publishedSinceLabel ? [{ label: "प्रकाशन से", value: publishedSinceLabel }] : []),
+  ];
 
   return (
     <>
@@ -283,177 +326,112 @@ export default async function Page(props: { params: Promise<PageParams> }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
-      <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        <header className="bg-card border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start">
-          <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden bg-muted shrink-0 flex items-center justify-center">
-            {author.avatar ? (
-              <img
-                src={author.avatar}
-                alt={name}
-                loading="lazy"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <User className="w-10 h-10 text-muted-foreground" />
-            )}
+      <main className="bg-background">
+        <section className="relative">
+          <div className="relative h-48 md:h-64 w-full overflow-hidden">
+            <img
+              src={coverImage}
+              alt={`${name} cover`}
+              className="w-full h-full object-cover"
+              loading="eager"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
           </div>
-          <div className="flex-1 space-y-4">
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tight">{name}</h1>
-              <p className="text-lg text-muted-foreground">{designation}</p>
-            </div>
-            {shortBio && (
-              <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-                {shortBio}
-              </p>
-            )}
-            <div className="flex flex-wrap gap-4 text-xs sm:text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-muted">
-                <span className="font-semibold text-foreground">
-                  {total}
-                </span>
-                <span>कुल लेख</span>
-              </span>
-              {categories.length > 0 && (
-                <span className="inline-flex flex-wrap items-center gap-1">
-                  <span className="font-medium text-foreground">
-                    कवर की गई श्रेणियां:
-                  </span>
-                  {categories.map((category, index) => (
-                    <span key={category.slug} className="inline-flex items-center">
-                      {index > 0 && <span className="mx-1 text-muted-foreground/60">•</span>}
-                      <Link
-                        href={`/${category.slug}`}
-                        className="hover:text-primary transition-colors"
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="-mt-16 md:-mt-20 pb-8 flex flex-col md:flex-row gap-6 items-start">
+              <div className="relative">
+                <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-background bg-muted shadow-lg flex items-center justify-center">
+                  {author.avatar ? (
+                    <img
+                      src={author.avatar}
+                      alt={name}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-10 h-10 text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+              <div className="flex-1 w-full space-y-4">
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                  <div className="space-y-1">
+                    <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{name}</h1>
+                    <p className="text-base md:text-lg text-muted-foreground">{designation}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs sm:text-sm text-muted-foreground">
+                    {stats.map((stat) => (
+                      <div
+                        key={stat.label}
+                        className="inline-flex items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-1.5"
                       >
-                        {category.name}
-                      </Link>
-                    </span>
-                  ))}
-                </span>
-              )}
+                        <span className="font-semibold text-foreground">{stat.value}</span>
+                        <span>{stat.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {shortBio && (
+                  <p className="text-sm sm:text-base text-muted-foreground max-w-3xl leading-relaxed">
+                    {shortBio}
+                  </p>
+                )}
+                {socialLinks.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {socialLinks.map((link) => {
+                      const icon =
+                        link.key === "linkedin"
+                          ? <Linkedin className="w-4 h-4" />
+                          : link.key === "twitter"
+                            ? <Twitter className="w-4 h-4" />
+                            : link.key === "instagram"
+                              ? <Instagram className="w-4 h-4" />
+                              : link.key === "facebook"
+                                ? <Facebook className="w-4 h-4" />
+                                : link.key === "youtube"
+                                  ? <Youtube className="w-4 h-4" />
+                                  : link.key === "telegram"
+                                    ? <Send className="w-4 h-4" />
+                                    : <Globe2 className="w-4 h-4" />;
+                      const label =
+                        link.key === "linkedin"
+                          ? "LinkedIn"
+                          : link.key === "twitter"
+                            ? "Twitter"
+                            : link.key === "instagram"
+                              ? "Instagram"
+                              : link.key === "facebook"
+                                ? "Facebook"
+                                : link.key === "youtube"
+                                  ? "YouTube"
+                                  : link.key === "whatsapp"
+                                    ? "WhatsApp"
+                                    : link.key === "telegram"
+                                      ? "Telegram"
+                                      : "Website";
+                      return (
+                        <a
+                          key={link.key}
+                          href={link.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs sm:text-sm text-foreground transition hover:bg-muted"
+                        >
+                          {icon}
+                          <span>{label}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              {author.websiteUrl && (
-                <a
-                  href={author.websiteUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs sm:text-sm text-primary hover:underline"
-                >
-                  <Globe2 className="w-4 h-4" />
-                  <span>Website</span>
-                </a>
-              )}
-              {author.linkedinUrl && (
-                <a
-                  href={author.linkedinUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs sm:text-sm text-primary hover:underline"
-                >
-                  <Linkedin className="w-4 h-4" />
-                  <span>LinkedIn</span>
-                </a>
-              )}
-              {author.twitterUrl && (
-                <a
-                  href={author.twitterUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs sm:text-sm text-primary hover:underline"
-                >
-                  <Twitter className="w-4 h-4" />
-                  <span>Twitter</span>
-                </a>
-              )}
-              {author.instagramUrl && (
-                <a
-                  href={author.instagramUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs sm:text-sm text-primary hover:underline"
-                >
-                  <Instagram className="w-4 h-4" />
-                  <span>Instagram</span>
-                </a>
-              )}
-              {author.facebookUrl && (
-                <a
-                  href={author.facebookUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs sm:text-sm text-primary hover:underline"
-                >
-                  <Facebook className="w-4 h-4" />
-                  <span>Facebook</span>
-                </a>
-              )}
-            </div>
-          </div>
-        </header>
-
-        {longBioParagraphs.length > 0 && (
-          <section className="prose prose-sm max-w-none prose-headings:scroll-mt-24">
-            <h2>Biography</h2>
-            {longBioParagraphs.map((p, idx) => (
-              <p key={idx}>{p}</p>
-            ))}
-          </section>
-        )}
-
-        <section className="grid md:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Professional Background</h2>
-            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-              {isFaraz && (
-                <>
-                  <li>Advocate (lawyer) with interest in legal awareness and public policy.</li>
-                  <li>Engineering background with experience in technology-led projects.</li>
-                  <li>
-                    10+ years in technology, business growth, EdTech, digital advertising and
-                    digital marketing.
-                  </li>
-                </>
-              )}
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Areas of Knowledge</h2>
-            <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-              {schema.knowsAbout &&
-                Array.isArray(schema.knowsAbout) &&
-                schema.knowsAbout.map((topic: string, idx: number) => (
-                  <li key={idx}>{topic}</li>
-                ))}
-            </ul>
           </div>
         </section>
 
-        {articles.length > 0 && (
-          <section className="space-y-4">
-            <h2 className="text-xl font-semibold">इसी लेखक की खबरें</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {articles.map((article) => (
-                <Link
-                  key={article.id}
-                  href={`/${article.category}/${article.slug}`}
-                  className="block p-4 rounded-lg border hover:bg-muted transition-colors"
-                >
-                  <div className="font-semibold line-clamp-2">
-                    {article.title}
-                  </div>
-                  {article.excerpt && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                      {article.excerpt}
-                    </p>
-                  )}
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
+        <section className="max-w-6xl mx-auto px-4 pb-12">
+          <AuthorArticleTabs articles={articles} categories={categories} />
+        </section>
       </main>
     </>
   );

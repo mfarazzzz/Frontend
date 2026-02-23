@@ -1036,6 +1036,12 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         logo: '/logo.png',
         favicon: '/favicon.ico',
         socialLinks: {},
+        gscPropertyUrl: '',
+        gscExportUrl: '',
+        backlinkReportUrl: '',
+        referringDomains: [],
+        backlinkNotes: '',
+        lastBacklinkSync: '',
       };
       return fallback;
     },

@@ -60,7 +60,14 @@ const SEO = ({
 }: SEOProps) => {
   const siteName = "रामपुर न्यूज़ | Rampur News";
   const fullTitle = `${title} | ${siteName}`;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
+  const rawSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com").trim();
+  const normalizedSiteUrl = rawSiteUrl.startsWith("http://")
+    ? rawSiteUrl.replace(/^http:\/\//, "https://")
+    : rawSiteUrl;
+  const siteUrl = normalizedSiteUrl.startsWith("https://")
+    ? normalizedSiteUrl.replace(/\/+$/, "")
+    : "https://rampurnews.com";
+  const publisherLogoUrl = `${siteUrl}/logo.png`;
   const canonicalUrl = canonical ? `${siteUrl}${canonical}` : siteUrl;
   const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
   const contactPhone = process.env.NEXT_PUBLIC_CONTACT_PHONE;
@@ -101,7 +108,7 @@ const SEO = ({
       url: siteUrl,
       logo: {
         "@type": "ImageObject",
-        url: `${siteUrl}/logo.png`,
+        url: publisherLogoUrl,
         width: 768,
         height: 768,
       },
@@ -118,7 +125,7 @@ const SEO = ({
     url: siteUrl,
     logo: {
       "@type": "ImageObject",
-      url: `${siteUrl}/logo.png`,
+      url: publisherLogoUrl,
       width: 768,
       height: 768,
     },
@@ -181,7 +188,7 @@ const SEO = ({
           name: siteName,
           logo: {
             "@type": "ImageObject",
-            url: `${siteUrl}/logo.png`,
+          url: publisherLogoUrl,
             width: 768,
             height: 768,
           },

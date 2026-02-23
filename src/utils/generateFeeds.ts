@@ -144,22 +144,25 @@ export const generateNewsSitemap = (articles: FeedArticle[], hours: number = 48)
   const urlEntries = recentArticles.map((article) => {
     const keywords = [article.categoryHindi, "रामपुर", "उत्तर प्रदेश", "ताज़ा खबर"].join(", ");
     const genre = article.isBreaking ? "Blog, Breaking" : "Blog";
+    const publishedIso = article.publishedDate ? new Date(article.publishedDate).toISOString() : new Date().toISOString();
+    const imageUrl = article.image || `${SITE_URL}/api/og?title=${encodeURIComponent(article.title)}`;
     
     return `
   <url>
     <loc>${SITE_URL}/${article.category}/${article.slug}</loc>
+    <lastmod>${publishedIso}</lastmod>
     <news:news>
       <news:publication>
         <news:name>${SITE_NAME}</news:name>
         <news:language>hi</news:language>
       </news:publication>
       <news:genres>${genre}</news:genres>
-      <news:publication_date>${new Date(article.publishedDate).toISOString()}</news:publication_date>
+      <news:publication_date>${publishedIso}</news:publication_date>
       <news:title>${escapeXml(article.title)}</news:title>
       <news:keywords>${escapeXml(keywords)}</news:keywords>
     </news:news>
     <image:image>
-      <image:loc>${article.image}</image:loc>
+      <image:loc>${escapeXml(imageUrl)}</image:loc>
       <image:caption>${escapeXml(article.title)}</image:caption>
     </image:image>
   </url>`;

@@ -95,6 +95,7 @@ export interface CMSArticle {
   isBreaking?: boolean;
   views?: number;
   status: 'draft' | 'published' | 'scheduled';
+  discoverEligible?: boolean;
   contentType?:
     | 'news'
     | 'editorial'
@@ -190,6 +191,12 @@ export interface CMSSettings {
   contactPhone?: string;
   address?: string;
   defaultAuthorRole?: CMSAuthor['role'];
+  gscPropertyUrl?: string;
+  gscExportUrl?: string;
+  backlinkReportUrl?: string;
+  referringDomains?: string[];
+  backlinkNotes?: string;
+  lastBacklinkSync?: string;
 }
 
 // Query parameters for fetching articles

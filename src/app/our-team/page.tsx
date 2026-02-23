@@ -54,7 +54,11 @@ export const metadata: Metadata = {
 
 const getAuthors = async () => {
   const provider = getCMSProvider();
-  return provider.getAuthors();
+  try {
+    return await provider.getAuthors();
+  } catch {
+    return [];
+  }
 };
 
 export default async function Page() {

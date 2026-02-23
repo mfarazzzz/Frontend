@@ -4,6 +4,14 @@ import { Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
+const GA_ID_RAW = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+const GA_ID = GA_ID_RAW
+  ? GA_ID_RAW.trim().replace(/^['"]|['"]$/g, "")
+  : undefined;
+const GA_MEASUREMENT_ID = GA_ID && /^G-[A-Z0-9]+$/.test(GA_ID) ? GA_ID : undefined;
+
+console.log("GA:", GA_MEASUREMENT_ID ?? null);
+
 const notoSansDevanagari = Noto_Sans_Devanagari({
   subsets: ["devanagari", "latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
@@ -122,7 +130,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   return (
     <html lang="hi" suppressHydrationWarning>
       <head>
@@ -134,28 +141,24 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
-      </head>
-      <body className={`min-h-screen bg-background ${notoSansDevanagari.variable} font-sans`} suppressHydrationWarning>
-        {gaId ? (
+        {GA_MEASUREMENT_ID ? (
           <>
             <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
               strategy="afterInteractive"
             />
-            <Script
-              id="ga4-init"
-              strategy="afterInteractive"
-              dangerouslySetInnerHTML={{
-                __html: `
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);}
-                  gtag('js', new Date());
-                  gtag('config', '${gaId}', { send_page_view: true });
-                `,
-              }}
-            />
+            <Script id="ga-script" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}');
+              `}
+            </Script>
           </>
         ) : null}
+      </head>
+      <body className={`min-h-screen bg-background ${notoSansDevanagari.variable} font-sans`} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

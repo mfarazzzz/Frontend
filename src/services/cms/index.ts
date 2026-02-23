@@ -363,8 +363,20 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     if (input.breaking !== undefined) query.breaking = input.breaking;
     if (input.editorsPick !== undefined) query.editorsPick = input.editorsPick;
     if (input.contentType) query.contentType = input.contentType;
-    if (input.limit !== undefined) query.limit = input.limit;
-    if (input.offset !== undefined) query.offset = input.offset;
+    if (input.limit !== undefined) {
+      if (isStrapi) {
+        query.limit = input.limit;
+      } else {
+        query.limit = input.limit;
+      }
+    }
+    if (input.offset !== undefined) {
+      if (isStrapi) {
+        query.offset = input.offset;
+      } else {
+        query.offset = input.offset;
+      }
+    }
     if (input.search) query.search = input.search;
     if (input.author) query.author = input.author;
     if (input.orderBy) query.orderBy = input.orderBy;
@@ -673,8 +685,9 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getCategories(): Promise<CMSCategory[]> {
+      const query = isStrapi ? { 'pagination[limit]': 1000 } : { limit: 1000 };
       const tryFetch = async (includeApiKey: boolean) =>
-        fetchJson<CMSCategory[] | null>(buildUrl('/categories'), {
+        fetchJson<CMSCategory[] | null>(buildUrl('/categories', query), {
           method: 'GET',
           headers: getAuthHeaders(includeApiKey),
         });
@@ -780,8 +793,9 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getAuthors(): Promise<CMSAuthor[]> {
+      const query = isStrapi ? { 'pagination[limit]': 1000 } : { limit: 1000 };
       const tryFetch = async (includeApiKey: boolean) =>
-        fetchJson<CMSAuthor[] | null>(buildUrl('/authors'), {
+        fetchJson<CMSAuthor[] | null>(buildUrl('/authors', query), {
           method: 'GET',
           headers: getAuthHeaders(includeApiKey),
         });
@@ -865,8 +879,9 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getTags(): Promise<CMSTag[]> {
+      const query = isStrapi ? { 'pagination[limit]': 1000 } : { limit: 1000 };
       const tryFetch = async (includeApiKey: boolean) =>
-        fetchJson<CMSTag[] | null>(buildUrl('/tags'), {
+        fetchJson<CMSTag[] | null>(buildUrl('/tags', query), {
           method: 'GET',
           headers: getAuthHeaders(includeApiKey),
         });
@@ -1152,8 +1167,20 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       }
       if (params?.isEditorsPick !== undefined) query.isEditorsPick = params.isEditorsPick;
       if (params?.isFeatured !== undefined) query.isFeatured = params.isFeatured;
-      if (params?.limit !== undefined) query.limit = params.limit;
-      if (params?.offset !== undefined) query.offset = params.offset;
+      if (params?.limit !== undefined) {
+        if (isStrapi) {
+          query['pagination[limit]'] = params.limit;
+        } else {
+          query.limit = params.limit;
+        }
+      }
+      if (params?.offset !== undefined) {
+        if (isStrapi) {
+          query['pagination[start]'] = params.offset;
+        } else {
+          query.offset = params.offset;
+        }
+      }
       if (params?.search) query.search = params.search;
 
       const sortField = params?.orderBy === 'views' ? 'views' : params?.orderBy === 'title' ? 'title' : 'publishedAt';

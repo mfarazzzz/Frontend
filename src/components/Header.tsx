@@ -7,7 +7,7 @@ import { categories } from "@/data/categories";
 import { MegaMenu, DropdownMenu, categoryGroups } from "./MegaMenu";
 import BreakingNewsTicker from "./BreakingNewsTicker";
 
-const Header = () => {
+const Header = ({ showBreakingTicker = true }: { showBreakingTicker?: boolean }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
@@ -321,7 +321,7 @@ const Header = () => {
         </div>
       </nav>
 
-      <BreakingNewsTicker />
+      {showBreakingTicker ? <BreakingNewsTicker /> : null}
     </header>
   );
 };

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import {
   ArrowRight,
   BadgeCheck,
@@ -52,16 +53,19 @@ const professionalTickerMessage =
 export default function Page() {
   return (
     <div className="min-h-screen bg-background scroll-smooth font-hindi">
-      <Header />
+      <Header showBreakingTicker={false} />
       <main>
         <section className="relative overflow-hidden min-h-[90vh] flex items-center">
           {/* Background Image with Overlay */}
-          <div 
-            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-            style={{ 
-              backgroundImage: "url('/images/join-us-bg.jpg')",
-            }}
-          >
+          <div className="absolute inset-0 z-0">
+            <Image
+              src="/images/join-us-bg.jpg"
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-center"
+            />
             <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/30" />
             <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-background" />
           </div>
@@ -162,7 +166,10 @@ export default function Page() {
           </div>
         </section>
 
-        <section className="container py-16 md:py-20">
+        <section
+          className="container py-16 md:py-20"
+          style={{ contentVisibility: "auto", containIntrinsicSize: "900px" }}
+        >
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
@@ -225,7 +232,10 @@ export default function Page() {
           </div>
         </section>
 
-        <section className="container py-16 md:py-20 bg-muted/30">
+        <section
+          className="container py-16 md:py-20 bg-muted/30"
+          style={{ contentVisibility: "auto", containIntrinsicSize: "1100px" }}
+        >
           <div className="space-y-10">
             <div className="text-center max-w-2xl mx-auto space-y-4">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
@@ -421,6 +431,7 @@ export default function Page() {
           width: max-content;
           white-space: nowrap;
           animation: ticker-scroll 45s linear infinite;
+          will-change: transform;
         }
         .ticker-content {
           display: inline-flex;

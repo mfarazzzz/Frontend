@@ -21,14 +21,11 @@ export const API_URL = (() => {
       return `${trimmed}/api`;
     }
     
-    // Fallback for production if env vars are missing
     if (process.env.NODE_ENV === 'production') {
       return 'https://api.rampur.cloud/api';
     }
     
-    if (process.env.NODE_ENV !== 'production') {
-      return 'http://localhost:1337/api';
-    }
+    return 'http://localhost:1337/api';
   }
   return '';
 })();

@@ -27,22 +27,8 @@ export function Providers({ children }: { children: ReactNode }) {
       }
     };
 
-    const hasSavedWordPressConfig = () => {
-      try {
-        return Boolean(localStorage.getItem("wordpress_config"));
-      } catch (error) {
-        void error;
-        return false;
-      }
-    };
-
     void (async () => {
       const provider = process.env.NEXT_PUBLIC_CMS_PROVIDER;
-
-      if (provider === "wordpress") {
-        applyConfig({ provider: "wordpress", baseUrl: "/api/cms/wordpress" });
-        return;
-      }
 
       if (provider === "mock") {
         applyConfig({ provider: "mock" });
@@ -99,10 +85,6 @@ export function Providers({ children }: { children: ReactNode }) {
         }
       }
 
-      if (hasSavedWordPressConfig()) {
-        applyConfig({ provider: "wordpress", baseUrl: "/api/cms/wordpress" });
-        return;
-      }
     })();
   }, [queryClient]);
 

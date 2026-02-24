@@ -62,12 +62,12 @@ export interface CMSProvider {
   getArticlesByCategory(
     categorySlug: string,
     limit?: number,
-    options?: { orderBy?: string; order?: 'asc' | 'desc' }
+    options?: { orderBy?: ArticleQueryParams['orderBy']; order?: ArticleQueryParams['order'] }
   ): Promise<CMSArticle[]>;
   searchArticles(query: string, limit?: number): Promise<CMSArticle[]>;
 }
 
-export type CMSProviderType = 'mock' | 'wordpress' | 'strapi' | 'django' | 'sanity' | 'custom';
+export type CMSProviderType = 'mock' | 'strapi' | 'django' | 'sanity' | 'custom';
 
 export interface CMSConfig {
   provider: CMSProviderType;

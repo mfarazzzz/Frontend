@@ -13,11 +13,9 @@ import type {
   EditorialQueryParams,
 } from './types';
 import { mockCMSProvider } from './mockProvider';
-import { createWordPressProvider } from './wordpressProvider';
 
 export * from './types';
 export * from './provider';
-export { createWordPressProvider } from './wordpressProvider';
 
 /**
  * Normalizes a Strapi base URL by trimming whitespace, removing trailing slashes,
@@ -404,7 +402,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       query['sort'] = `${sortField}:${sortOrder}`;
       
       // Handle publication state
-      if (input.status === 'draft' || input.status === 'all') {
+      if (input.status === 'draft') {
         query['publicationState'] = 'preview';
       }
 
@@ -1137,7 +1135,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     async getArticlesByCategory(
       categorySlug: string,
       limit = 10,
-      options?: { orderBy?: string; order?: 'asc' | 'desc' }
+      options?: { orderBy?: ArticleQueryParams['orderBy']; order?: ArticleQueryParams['order'] }
     ): Promise<CMSArticle[]> {
       const result = await getArticles({
         category: categorySlug,
@@ -1278,16 +1276,11 @@ const getEnvStrapiUrl = () => {
         process.env.STRAPI_URL;
     if (url) return normalizeStrapiBaseUrl(url);
     
-    // Fallback for this specific project production if environment variables are missing
     if (process.env.NODE_ENV === 'production') {
-      // If we are on the server during build/SSR and have no URL, 
-      // try to use the known production API URL as a last resort.
       return normalizeStrapiBaseUrl('https://api.rampur.cloud/api');
     }
     
-    if (process.env.NODE_ENV !== 'production') {
-      return normalizeStrapiBaseUrl('http://localhost:1337/api');
-    }
+    return normalizeStrapiBaseUrl('http://localhost:1337/api');
   }
   return '';
 };
@@ -1329,17 +1322,6 @@ const hydrateCMSConfigFromStorage = (): void => {
     void error;
   }
 
-  try {
-    const savedWordPress = window.localStorage.getItem('wordpress_config');
-    if (savedWordPress) {
-      configureCMS({
-        provider: 'wordpress',
-        baseUrl: '/api/cms/wordpress',
-      });
-    }
-  } catch (error) {
-    void error;
-  }
 };
 
 export const getCMSProvider = (): CMSProvider => {
@@ -1354,15 +1336,6 @@ export const getCMSProvider = (): CMSProvider => {
 
 export const configureCMS = (config: CMSConfig): void => {
   currentConfig = config;
-  
-  if (config.provider === 'wordpress' && config.baseUrl) {
-    providerInstances.wordpress = createWordPressProvider({
-      baseUrl: config.baseUrl,
-      apiKey: config.apiKey,
-      username: config.options?.username as string,
-      password: config.options?.password as string,
-    });
-  }
 
   if ((config.provider === 'strapi' || config.provider === 'django' || config.provider === 'custom') && config.baseUrl) {
     providerInstances[config.provider] = createRestCMSProvider(config);

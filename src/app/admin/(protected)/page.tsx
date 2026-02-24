@@ -198,7 +198,7 @@ export default function AdminDashboard() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  WordPress, Strapi, या Sanity से आसानी से कनेक्ट करें
+                  Strapi से आसानी से कनेक्ट करें
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary">•</span>

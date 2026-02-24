@@ -44,6 +44,7 @@ const initializeStorage = () => {
         articles.push({
           ...item,
           content: item.content || `<p>${item.excerpt}</p><p>यह एक विस्तृत समाचार है जो ${item.categoryHindi} श्रेणी से संबंधित है। पूर्ण सामग्री जल्द ही उपलब्ध होगी।</p>`,
+          publishedAt: item.publishedAt || item.publishedDate || new Date().toISOString(),
           status: 'published',
           modifiedDate: item.publishedDate,
         });
@@ -389,7 +390,7 @@ export const mockCMSProvider: CMSProvider = {
   async getArticlesByCategory(
     categorySlug: string, 
     limit = 10,
-    options?: { orderBy?: string; order?: 'asc' | 'desc' }
+    options?: { orderBy?: ArticleQueryParams['orderBy']; order?: ArticleQueryParams['order'] }
   ): Promise<CMSArticle[]> {
     const result = await this.getArticles({ 
       category: categorySlug, 

@@ -85,6 +85,7 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
                   category: "editorials",
                   categoryHindi: "संपादकीय",
                   author: editorial.author,
+                  publishedAt: editorial.publishedAt || editorial.publishedDate,
                   publishedDate: editorial.publishedDate,
                   status: editorial.status,
                   contentType: editorial.editorialType,

@@ -1,4 +1,4 @@
-// CMS-ready mock data structure (WordPress REST API compatible)
+// CMS-ready mock data structure
 export interface NewsArticle {
   id: string;
   title: string;
@@ -10,6 +10,7 @@ export interface NewsArticle {
   categoryHindi: string;
   author: string;
   publishedDate: string;
+  publishedAt?: string;
   readTime?: string;
   isFeatured?: boolean;
   isBreaking?: boolean;

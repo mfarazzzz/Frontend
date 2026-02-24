@@ -913,7 +913,7 @@ export const getExtendedCMSProvider = (): ExtendedCMSProvider => {
     }
     return cachedProvider;
   }
-  if (config.provider !== 'mock' && config.provider !== 'wordpress' && config.baseUrl) {
+  if (config.provider !== 'mock' && config.baseUrl) {
     const key = `${config.provider}:${config.baseUrl}:${config.apiKey || ''}`;
     if (!cachedProvider || cachedProviderKey !== key) {
       cachedProviderKey = key;

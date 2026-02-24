@@ -1,4 +1,4 @@
-// CMS-ready types (WordPress REST API compatible structure)
+// CMS-ready types
 
 // ─── Editorial types ─────────────────────────────────────────────────────────
 
@@ -89,20 +89,24 @@ export interface CMSArticle {
   authorSlug?: string;
   publishedAt: string; // Required in v5
   publishedDate?: string; // Legacy compatibility
+  scheduledAt?: string;
   modifiedDate?: string;
   readTime?: string;
   isFeatured?: boolean;
   isBreaking?: boolean;
   isEditorsPick?: boolean;
   views?: number;
-  status: 'draft' | 'published'; // Simplified
+  status: 'draft' | 'published' | 'scheduled';
+  contentType?: string;
   authorRole?: CMSAuthor['role'];
   tags?: string[];
   seoTitle?: string;
   meta_description?: string; // Requested field name
   seoDescription?: string; // Legacy
+  seoOverride?: boolean;
   canonicalUrl?: string;
   newsKeywords?: string;
+  discoverEligible?: boolean;
   schemaJson?: unknown;
   // Video fields
   videoUrl?: string;

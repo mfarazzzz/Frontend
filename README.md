@@ -76,7 +76,7 @@ This runs a production build and starts the Next.js server.
 - `src/app` – Next.js App Router entrypoints (pages, layouts, admin routes)
 - `src/components` – Reusable UI and feature components (header, footer, sliders, cards, etc.)
 - `src/views` – Page-level React components for different sections (home, education, lifestyle, admin views)
-- `src/services/cms` – CMS abstraction layer and providers (mock, WordPress, Strapi/Django/custom REST)
+- `src/services/cms` – CMS abstraction layer and providers (mock, Strapi/Django/custom REST)
 - `src/data` – Local mock news data used when CMS is not connected
 - `src/contexts` – React contexts (admin auth, theme, etc.)
 - `public` – Static assets (`favicon.ico`, `atom.xml`, images)
@@ -115,7 +115,7 @@ From the admin sidebar you can:
   - Favicon URL
   - Social media links
   - Contact information
-- Configure the **CMS provider** (mock, WordPress, Strapi)
+- Configure the **CMS provider** (mock, Strapi)
 
 ---
 
@@ -137,7 +137,6 @@ The core interface is defined in [`src/services/cms/provider.ts`](./src/services
 Supported provider types:
 
 - `mock` (default)
-- `wordpress`
 - `strapi`
 - `django`
 - `sanity`
@@ -171,19 +170,7 @@ All CMS-related configuration for the UI is handled in the Admin Settings page:
 - Select provider: **Mock**
 - The site will use bundled mock data; no external API is required.
 
-### 2. WordPress provider
-
-When you choose **WordPress**:
-
-- Enter your WordPress site URL (e.g. `https://example.com`)
-- Choose an auth method:
-  - **None** – for public endpoints only
-  - **JWT** – provide an API token
-  - **Application password** – provide WordPress username and application password
-- Use the “Test connection” button to verify `wp-json/wp/v2/posts` can be reached.
-- Save the configuration so it is stored in `localStorage` and applied to the CMS layer.
-
-### 3. Strapi provider
+### 2. Strapi provider
 
 When you choose **Strapi**:
 
@@ -298,6 +285,6 @@ Make sure you configure any runtime environment variables you add in the future 
 
 - The admin authentication and local mock data are intended for demonstration and development purposes.
 - Before going to production, you should:
-  - Connect a real CMS backend (WordPress, Strapi, or another REST API)
+  - Connect a real CMS backend (Strapi or another REST API)
   - Replace demo admin credentials with a secure auth system
   - Review and tighten ESLint/TypeScript rules as needed

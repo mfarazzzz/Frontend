@@ -367,33 +367,65 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
   const buildArticleQuery = (params?: ArticleQueryParams) => {
     const query: Record<string, string | number | boolean | undefined> = {};
     const input = params || {};
-    if (input.category) query.category = input.category;
-    if (input.parent) query.parent = input.parent;
-    if (input.status) query.status = input.status;
-    if (input.featured !== undefined) query.featured = input.featured;
-    if (input.breaking !== undefined) query.breaking = input.breaking;
-    if (input.editorsPick !== undefined) query.editorsPick = input.editorsPick;
-    if (input.contentType) query.contentType = input.contentType;
-    if (input.limit !== undefined) {
-      if (isStrapi) {
-        query.limit = input.limit;
-      } else {
-        query.limit = input.limit;
+
+    if (isStrapi) {
+      // Strapi v5 filtering logic
+      if (input.category) {
+        query['filters[category][slug][$eq]'] = input.category;
       }
-    }
-    if (input.offset !== undefined) {
-      if (isStrapi) {
-        query.offset = input.offset;
-      } else {
-        query.offset = input.offset;
+      if (input.parent) {
+        query['filters[category][parent][slug][$eq]'] = input.parent;
       }
+      if (input.featured !== undefined) {
+        query['filters[isFeatured][$eq]'] = input.featured;
+      }
+      if (input.breaking !== undefined) {
+        query['filters[isBreaking][$eq]'] = input.breaking;
+      }
+      if (input.editorsPick !== undefined) {
+        query['filters[isEditorsPick][$eq]'] = input.editorsPick;
+      }
+      if (input.contentType) {
+        query['filters[contentType][$eq]'] = input.contentType;
+      }
+      if (input.search) {
+        query['_q'] = input.search;
+      }
+      if (input.author) {
+        query['filters[author][slug][$eq]'] = input.author;
+      }
+
+      if (input.limit !== undefined) {
+        query['pagination[limit]'] = input.limit;
+      }
+      if (input.offset !== undefined) {
+        query['pagination[start]'] = input.offset;
+      }
+
+      const sortField = input.orderBy === 'publishedDate' || !input.orderBy ? 'publishedAt' : input.orderBy;
+      const sortOrder = input.order || 'desc';
+      query.sort = `${sortField}:${sortOrder}`;
+      
+      // Always populate
+      query.populate = '*';
+    } else {
+      // Legacy or other provider logic
+      if (input.category) query.category = input.category;
+      if (input.parent) query.parent = input.parent;
+      if (input.status) query.status = input.status;
+      if (input.featured !== undefined) query.featured = input.featured;
+      if (input.breaking !== undefined) query.breaking = input.breaking;
+      if (input.editorsPick !== undefined) query.editorsPick = input.editorsPick;
+      if (input.contentType) query.contentType = input.contentType;
+      query.limit = input.limit;
+      query.offset = input.offset;
+      if (input.search) query.search = input.search;
+      if (input.author) query.author = input.author;
+      if (input.orderBy) query.orderBy = input.orderBy;
+      if (input.order) query.order = input.order;
+      if (!query.orderBy) query.orderBy = 'publishedDate';
+      if (!query.order) query.order = 'desc';
     }
-    if (input.search) query.search = input.search;
-    if (input.author) query.author = input.author;
-    if (input.orderBy) query.orderBy = input.orderBy;
-    if (input.order) query.order = input.order;
-    if (!query.orderBy) query.orderBy = 'publishedDate';
-    if (!query.order) query.order = 'desc';
     return query;
   };
 
@@ -487,12 +519,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
   return {
     async getArticles(params?: ArticleQueryParams): Promise<PaginatedResponse<CMSArticle>> {
-      return getArticles(params);
-    },
-
-    async getArticleById(id: string): Promise<CMSArticle | null> {
-      const shouldTryAdmin = canUseStrapiAdmin;
-      const path = shouldTryAdmin ? `/articles/admin/${id}` : `/articles/${id}`;
+      const query = buildArticleQuery(params);
 
       const tryFetch = async (
         endpointPath: string,
@@ -500,8 +527,71 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         allowNotFound?: boolean,
         useProxy?: boolean,
       ) =>
-        fetchJson<CMSArticle | null>(
-          useProxy ? buildProxyUrl(endpointPath) : buildUrl(endpointPath),
+        fetchJson<PaginatedResponse<CMSArticle>>(
+          useProxy ? buildProxyUrl(endpointPath, query) : buildUrl(endpointPath, query),
+          {
+            method: 'GET',
+            headers: getAuthHeaders(includeApiKey),
+          },
+          { allowNotFound },
+        );
+
+      let result: PaginatedResponse<CMSArticle> | null = null;
+      try {
+        result = await tryFetch('/articles', true, undefined, false);
+      } catch (error) {
+        if (
+          isStrapi &&
+          config.apiKey &&
+          typeof window === 'undefined' &&
+          error instanceof HttpError &&
+          (error.status === 401 || error.status === 403)
+        ) {
+          result = await tryFetch('/articles', true, undefined, false);
+        } else {
+          throw error;
+        }
+      }
+
+      if (!result) {
+        return {
+          data: [],
+          total: 0,
+          page: 1,
+          pageSize: params?.limit || 10,
+          totalPages: 0,
+        };
+      }
+
+      const normalized = normalizeArticleListMedia(result.data);
+      const orderBy = (params?.orderBy as unknown as string | undefined) || undefined;
+      const shouldDateSort = !orderBy || orderBy === 'publishedDate' || orderBy === 'publishedAt';
+      const dateSorted = shouldDateSort
+        ? [...normalized].sort((a, b) => {
+            const aDate = a.publishedDate || a.publishedAt || '';
+            const bDate = b.publishedDate || b.publishedAt || '';
+            const aTime = aDate ? new Date(aDate).getTime() : 0;
+            const bTime = bDate ? new Date(bDate).getTime() : 0;
+            return (params?.order || 'desc') === 'asc' ? aTime - bTime : bTime - aTime;
+          })
+        : normalized;
+      return {
+        ...result,
+        data: dateSorted,
+      };
+    },
+
+    async getArticleById(id: string): Promise<CMSArticle | null> {
+      const query = isStrapi ? { populate: '*' } : {};
+
+      const tryFetch = async (
+        endpointPath: string,
+        includeApiKey: boolean,
+        allowNotFound?: boolean,
+        useProxy?: boolean,
+      ) =>
+        fetchJson<any>(
+          useProxy ? buildProxyUrl(endpointPath, query) : buildUrl(endpointPath, query),
           {
             method: 'GET',
             headers: getAuthHeaders(includeApiKey),
@@ -510,32 +600,10 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         );
 
       try {
-        if (shouldTryAdmin) {
-          return normalizeArticleMedia(await tryFetch(`/articles/admin/${id}`, true, false, false));
-        }
-        const article = normalizeArticleMedia(await tryFetch(path, true, undefined, false));
-        if (!canUseStrapiAdmin && article?.status && article.status !== 'published') return null;
-        return article;
+        const response = await tryFetch(`/articles/${id}`, true, undefined, false);
+        const articleData = response?.data || response;
+        return normalizeArticleMedia(articleData);
       } catch (error) {
-        if (
-          shouldTryAdmin &&
-          ((error instanceof HttpError && (error.status === 401 || error.status === 403 || error.status === 404)) ||
-            error instanceof TypeError)
-        ) {
-          try {
-            return normalizeArticleMedia(await tryFetch(`/articles/${id}`, false, undefined, false));
-          } catch (fallbackError) {
-            if (
-              config.apiKey &&
-              typeof window === 'undefined' &&
-              fallbackError instanceof HttpError &&
-              (fallbackError.status === 401 || fallbackError.status === 403)
-            ) {
-              return normalizeArticleMedia(await tryFetch(`/articles/${id}`, true, undefined, false));
-            }
-            throw fallbackError;
-          }
-        }
         if (
           isStrapi &&
           config.apiKey &&
@@ -543,9 +611,9 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
           error instanceof HttpError &&
           (error.status === 401 || error.status === 403)
         ) {
-          const article = normalizeArticleMedia(await tryFetch(path, true, undefined, false));
-          if (!canUseStrapiAdmin && article?.status && article.status !== 'published') return null;
-          return article;
+          const response = await tryFetch(`/articles/${id}`, true, undefined, false);
+          const articleData = response?.data || response;
+          return normalizeArticleMedia(articleData);
         }
         throw error;
       }
@@ -553,9 +621,11 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
     async getArticleBySlug(slug: string): Promise<CMSArticle | null> {
       const shouldTryAdmin = canUseStrapiAdmin;
-      const path = shouldTryAdmin
-        ? `/articles/admin/slug/${encodeURIComponent(slug)}`
-        : `/articles/slug/${encodeURIComponent(slug)}`;
+      
+      const query = isStrapi ? {
+        'filters[slug][$eq]': slug,
+        'populate': '*'
+      } : {};
 
       const tryFetch = async (
         endpointPath: string,
@@ -563,8 +633,8 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         allowNotFound?: boolean,
         useProxy?: boolean,
       ) =>
-        fetchJson<CMSArticle | null>(
-          useProxy ? buildProxyUrl(endpointPath) : buildUrl(endpointPath),
+        fetchJson<any>(
+          useProxy ? buildProxyUrl(endpointPath, query) : buildUrl(endpointPath, query),
           {
             method: 'GET',
             headers: getAuthHeaders(includeApiKey),
@@ -573,34 +643,16 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         );
 
       try {
-        if (shouldTryAdmin) {
-          return normalizeArticleMedia(
-            await tryFetch(`/articles/admin/slug/${encodeURIComponent(slug)}`, true, false, false),
-          );
+        if (isStrapi) {
+          const response = await tryFetch('/articles', true, undefined, false);
+          const articleData = Array.isArray(response?.data) ? response.data[0] : response;
+          return normalizeArticleMedia(articleData);
         }
-        const article = normalizeArticleMedia(await tryFetch(path, true, undefined, false));
-        if (!canUseStrapiAdmin && article?.status && article.status !== 'published') return null;
+
+        const article = normalizeArticleMedia(await tryFetch(`/articles/slug/${encodeURIComponent(slug)}`, true, undefined, false));
         return article;
       } catch (error) {
-        if (
-          shouldTryAdmin &&
-          ((error instanceof HttpError && (error.status === 401 || error.status === 403 || error.status === 404)) ||
-            error instanceof TypeError)
-        ) {
-          try {
-            return normalizeArticleMedia(await tryFetch(`/articles/slug/${encodeURIComponent(slug)}`, false, undefined, false));
-          } catch (fallbackError) {
-            if (
-              config.apiKey &&
-              typeof window === 'undefined' &&
-              fallbackError instanceof HttpError &&
-              (fallbackError.status === 401 || fallbackError.status === 403)
-            ) {
-              return normalizeArticleMedia(await tryFetch(`/articles/slug/${encodeURIComponent(slug)}`, true, undefined, false));
-            }
-            throw fallbackError;
-          }
-        }
+        // Fallback for non-strapi or other issues
         if (
           isStrapi &&
           config.apiKey &&
@@ -608,9 +660,9 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
           error instanceof HttpError &&
           (error.status === 401 || error.status === 403)
         ) {
-          const article = normalizeArticleMedia(await tryFetch(path, true, undefined, false));
-          if (!canUseStrapiAdmin && article?.status && article.status !== 'published') return null;
-          return article;
+          const response = await tryFetch('/articles', true, undefined, false);
+          const articleData = Array.isArray(response?.data) ? response.data[0] : response;
+          return normalizeArticleMedia(articleData);
         }
         throw error;
       }
@@ -1312,7 +1364,13 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
       const sortField = params?.orderBy === 'views' ? 'views' : params?.orderBy === 'title' ? 'title' : 'publishedAt';
       const sortDir = params?.order === 'asc' ? 'asc' : 'desc';
-      query.sort = `${sortField}:${sortDir}`;
+      
+      if (isStrapi) {
+        query.sort = `${sortField}:${sortDir}`;
+        query.populate = '*';
+      } else {
+        query.sort = `${sortField}:${sortDir}`;
+      }
 
       const isServer = typeof window === 'undefined';
 
@@ -1377,45 +1435,50 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const isServer = typeof window === 'undefined';
       const encodedSlug = encodeURIComponent(slug);
 
-      const tryDirectFetch = () =>
-        fetchJson<{ data: CMSEditorial } | CMSEditorial | null>(
-          buildUrl(`/editorials/slug/${encodedSlug}`),
-          { method: 'GET', headers: getAuthHeaders(false) },
+      const query = isStrapi ? {
+        'filters[slug][$eq]': slug,
+        'populate': '*'
+      } : {};
+
+      const tryFetch = async (
+        endpointPath: string,
+        includeApiKey: boolean,
+        allowNotFound?: boolean,
+        useProxy?: boolean,
+      ) =>
+        fetchJson<any>(
+          useProxy ? buildProxyUrl(endpointPath, query) : buildUrl(endpointPath, query),
+          { method: 'GET', headers: getAuthHeaders(includeApiKey) },
+          { allowNotFound },
         );
 
-      const tryProxyFetch = () =>
-        fetchJson<{ data: CMSEditorial } | CMSEditorial | null>(
-          buildProxyUrl(`/editorials/slug/${encodedSlug}`),
-          { method: 'GET', headers: getAuthHeaders(false) },
-        );
-
-      let raw: { data: CMSEditorial } | CMSEditorial | null = null;
+      let raw: any = null;
       try {
-        if (isServer) {
-          // Server-side: try direct URL first, fall back to proxy
-          try {
-            raw = await tryDirectFetch();
-          } catch (directError) {
-            console.error('[CMS] getEditorialBySlug direct fetch failed, trying proxy:', directError);
-            raw = await tryProxyFetch();
-          }
+        if (isStrapi) {
+          raw = await tryFetch('/editorials', true, undefined, false);
         } else {
-          // Client-side: always use proxy
-          raw = await tryProxyFetch();
+          if (isServer) {
+            try {
+              raw = await tryFetch(`/editorials/slug/${encodedSlug}`, false, undefined, false);
+            } catch (directError) {
+              console.error('[CMS] getEditorialBySlug direct fetch failed, trying proxy:', directError);
+              raw = await fetchJson<any>(buildProxyUrl(`/editorials/slug/${encodedSlug}`), { method: 'GET', headers: getAuthHeaders(false) });
+            }
+          } else {
+            raw = await fetchJson<any>(buildProxyUrl(`/editorials/slug/${encodedSlug}`), { method: 'GET', headers: getAuthHeaders(false) });
+          }
         }
       } catch (error) {
-        // Log the actual error so it is visible in server/browser console for debugging
         console.error('[CMS] getEditorialBySlug failed for slug:', slug, error);
         raw = null;
       }
 
       if (!raw) return null;
 
-      // Unwrap { data: ... } wrapper if present
-      const editorial: CMSEditorial | null =
-        raw && typeof raw === 'object' && 'data' in raw && raw.data
-          ? (raw as { data: CMSEditorial }).data
-          : (raw as CMSEditorial | null);
+      // Unwrap Strapi v5 data array or legacy object
+      const editorial: CMSEditorial | null = isStrapi 
+        ? (Array.isArray(raw?.data) ? raw.data[0] : (raw?.data || raw))
+        : (raw?.data || raw);
 
       if (!editorial) return null;
 

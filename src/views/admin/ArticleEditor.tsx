@@ -264,19 +264,28 @@ const ArticleEditor = () => {
         return;
       }
 
+      const desiredStatus = status || formData.status || 'draft';
+
       const dataToSave = {
         ...formData,
-        status: status || formData.status || 'draft',
         slug: finalSlug,
-        publishedDate: formData.publishedDate || new Date().toISOString(),
       } as Omit<CMSArticle, 'id'>;
 
+      const provider = getCMSProvider();
       if (isNew) {
-        await createArticle.mutateAsync(dataToSave);
-        toast.success('लेख बनाया गया');
+        const created = await createArticle.mutateAsync(dataToSave);
+        if (desiredStatus === 'published') {
+          await provider.publishArticle(created.id);
+        }
+        toast.success(desiredStatus === 'published' ? 'लेख प्रकाशित किया गया' : 'लेख बनाया गया');
       } else {
         await updateArticle.mutateAsync({ id: id!, updates: dataToSave });
-        toast.success('लेख अपडेट किया गया');
+        if (desiredStatus === 'published') {
+          await provider.publishArticle(id!);
+        } else {
+          await provider.unpublishArticle(id!);
+        }
+        toast.success(desiredStatus === 'published' ? 'लेख प्रकाशित किया गया' : 'ड्राफ्ट सहेजा गया');
       }
       router.push('/admin/articles');
     } catch (error) {

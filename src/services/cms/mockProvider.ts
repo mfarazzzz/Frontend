@@ -215,6 +215,14 @@ export const mockCMSProvider: CMSProvider = {
     setStorage(STORAGE_KEYS.ARTICLES, articles);
     return articles[index];
   },
+
+  async publishArticle(id: string): Promise<CMSArticle> {
+    return mockCMSProvider.updateArticle(id, { status: 'published', publishedAt: new Date().toISOString() });
+  },
+
+  async unpublishArticle(id: string): Promise<CMSArticle> {
+    return mockCMSProvider.updateArticle(id, { status: 'draft', publishedAt: undefined });
+  },
   
   async deleteArticle(id: string): Promise<void> {
     const articles = getStorage<CMSArticle>(STORAGE_KEYS.ARTICLES);

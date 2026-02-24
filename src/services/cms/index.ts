@@ -96,7 +96,17 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       });
     }
     const qs = searchParams.toString();
-    return `/api/cms/strapi${path}${qs ? `?${qs}` : ''}`;
+    const relativePath = `/api/cms/strapi${path}${qs ? `?${qs}` : ''}`;
+    
+    // On the server, we must return an absolute URL for fetch to work.
+    if (typeof window === 'undefined') {
+      const siteUrl = (process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/+$/, '');
+      if (siteUrl) {
+        return `${siteUrl}${relativePath}`;
+      }
+    }
+    
+    return relativePath;
   };
 
   const getAuthHeaders = (includeApiKey = true) => {
@@ -676,6 +686,80 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       }
       if (!result) {
         throw new Error('Article update failed');
+      }
+      return result;
+    },
+
+    async publishArticle(id: string): Promise<CMSArticle> {
+      const init: RequestInit = {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      };
+
+      let result: CMSArticle | null = null;
+      if (isStrapi) {
+        try {
+          result = await fetchJson<CMSArticle>(buildProxyUrl(`/articles/${id}/publish`), {
+            ...init,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          if (
+            config.apiKey &&
+            error instanceof HttpError &&
+            (error.status === 401 || error.status === 403 || error.status === 404)
+          ) {
+            result = await fetchJson<CMSArticle>(buildUrl(`/articles/${id}/publish`), init);
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        result = await fetchJson<CMSArticle>(buildUrl(`/articles/${id}/publish`), init);
+      }
+      if (!result) {
+        throw new Error('Article publish failed');
+      }
+      return result;
+    },
+
+    async unpublishArticle(id: string): Promise<CMSArticle> {
+      const init: RequestInit = {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      };
+
+      let result: CMSArticle | null = null;
+      if (isStrapi) {
+        try {
+          result = await fetchJson<CMSArticle>(buildProxyUrl(`/articles/${id}/unpublish`), {
+            ...init,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        } catch (error) {
+          if (
+            config.apiKey &&
+            error instanceof HttpError &&
+            (error.status === 401 || error.status === 403 || error.status === 404)
+          ) {
+            result = await fetchJson<CMSArticle>(buildUrl(`/articles/${id}/unpublish`), init);
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        result = await fetchJson<CMSArticle>(buildUrl(`/articles/${id}/unpublish`), init);
+      }
+      if (!result) {
+        throw new Error('Article unpublish failed');
       }
       return result;
     },
@@ -1356,8 +1440,17 @@ const getEnvStrapiUrl = () => {
       : process.env.STRAPI_API_URL ||
         process.env.NEXT_PUBLIC_STRAPI_API_URL ||
         process.env.NEXT_PUBLIC_STRAPI_BASE_URL ||
-        process.env.NEXT_PUBLIC_STRAPI_URL;
+        process.env.NEXT_PUBLIC_STRAPI_URL ||
+        process.env.STRAPI_URL;
     if (url) return normalizeStrapiBaseUrl(url);
+    
+    // Fallback for this specific project production if environment variables are missing
+    if (process.env.NODE_ENV === 'production') {
+      // If we are on the server during build/SSR and have no URL, 
+      // try to use the known production API URL as a last resort.
+      return normalizeStrapiBaseUrl('https://api.rampur.cloud/api');
+    }
+    
     if (process.env.NODE_ENV !== 'production') {
       return normalizeStrapiBaseUrl('http://localhost:1337/api');
     }

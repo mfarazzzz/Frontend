@@ -376,6 +376,14 @@ export const createWordPressProvider = (config: WordPressConfig): CMSProvider =>
       return transformPost(post);
     },
 
+    async publishArticle(id: string): Promise<CMSArticle> {
+      return this.updateArticle(id, { status: 'published' } as Partial<CMSArticle>);
+    },
+
+    async unpublishArticle(id: string): Promise<CMSArticle> {
+      return this.updateArticle(id, { status: 'draft' } as Partial<CMSArticle>);
+    },
+
     async deleteArticle(id: string): Promise<void> {
       const response = await fetch(apiUrl(`posts/${id}`, { force: true }), {
         method: 'DELETE',

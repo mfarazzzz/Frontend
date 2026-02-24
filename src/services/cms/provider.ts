@@ -19,6 +19,8 @@ export interface CMSProvider {
   getArticleBySlug(slug: string): Promise<CMSArticle | null>;
   createArticle(article: Omit<CMSArticle, 'id'>): Promise<CMSArticle>;
   updateArticle(id: string, article: Partial<CMSArticle>): Promise<CMSArticle>;
+  publishArticle(id: string): Promise<CMSArticle>;
+  unpublishArticle(id: string): Promise<CMSArticle>;
   deleteArticle(id: string): Promise<void>;
 
   // Editorial operations (separate collection from articles)

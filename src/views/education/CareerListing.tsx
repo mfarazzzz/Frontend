@@ -15,6 +15,8 @@ const CareerListing = () => {
     parent: "education-jobs",
     status: "published",
     limit: 30,
+    orderBy: "publishedDate",
+    order: "desc",
   });
   const news = data?.data ?? [];
 

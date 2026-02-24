@@ -10,7 +10,10 @@ import { useArticlesByCategory } from "@/hooks/useCMS";
 
 const ReligionCulturePage = () => {
   const category = getCategoryBySlug("religion-culture")!;
-  const { data: news = [], isLoading } = useArticlesByCategory("religion-culture", 30);
+  const { data: news = [], isLoading } = useArticlesByCategory("religion-culture", 30, {
+    orderBy: "publishedDate",
+    order: "desc",
+  });
 
   return (
     <div className="min-h-screen bg-background">

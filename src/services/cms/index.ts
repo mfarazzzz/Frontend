@@ -403,6 +403,11 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const sortOrder = input.order || 'desc';
       query['sort'] = `${sortField}:${sortOrder}`;
       
+      // Handle publication state
+      if (input.status === 'draft' || input.status === 'all') {
+        query['publicationState'] = 'preview';
+      }
+
       query['populate'] = '*';
     } else {
       // Legacy or other provider logic
@@ -1129,8 +1134,18 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       return result.data;
     },
 
-    async getArticlesByCategory(categorySlug: string, limit = 10): Promise<CMSArticle[]> {
-      const result = await getArticles({ category: categorySlug, status: 'published', limit });
+    async getArticlesByCategory(
+      categorySlug: string,
+      limit = 10,
+      options?: { orderBy?: string; order?: 'asc' | 'desc' }
+    ): Promise<CMSArticle[]> {
+      const result = await getArticles({
+        category: categorySlug,
+        status: 'published',
+        limit,
+        orderBy: options?.orderBy || 'publishedDate',
+        order: options?.order || 'desc',
+      });
       return result.data;
     },
 

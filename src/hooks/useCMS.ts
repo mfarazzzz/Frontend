@@ -103,11 +103,15 @@ export const useTrendingArticles = (limit = 5) => {
   });
 };
 
-export const useArticlesByCategory = (categorySlug: string, limit = 10) => {
+export const useArticlesByCategory = (
+  categorySlug: string, 
+  limit = 10, 
+  options?: { orderBy?: string; order?: 'asc' | 'desc' }
+) => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.byCategory(categorySlug), providerKey],
-    queryFn: () => getCMSProvider().getArticlesByCategory(categorySlug, limit),
+    queryKey: [...cmsKeys.byCategory(categorySlug), providerKey, options],
+    queryFn: () => getCMSProvider().getArticlesByCategory(categorySlug, limit, options),
     enabled: !!categorySlug,
   });
 };

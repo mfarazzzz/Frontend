@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCMSProvider } from "@/services/cms";
 import { generateAtomFeed } from "@/utils/generateFeeds";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function GET() {
   try {
@@ -26,6 +26,7 @@ export async function GET() {
       publishedDate: article.publishedDate,
       image: article.image,
       isBreaking: !!article.isBreaking,
+      canonicalUrl: article.canonicalUrl,
     }));
 
     const atom = generateAtomFeed(feedArticles);

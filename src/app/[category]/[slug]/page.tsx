@@ -12,6 +12,13 @@ import { notFound, redirect } from "next/navigation";
 const SITE_URL = "https://rampurnews.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 const buildOgImageUrl = (title: string) => `${SITE_URL}/api/og?title=${encodeURIComponent(title)}`;
+const toAbsoluteUrl = (value?: string) => {
+  const raw = (value || "").trim();
+  if (!raw) return "";
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  if (raw.startsWith("/")) return `${SITE_URL}${raw}`;
+  return `${SITE_URL}/${raw}`;
+};
 const normalizeHeadline = (value: string) =>
   value
     .replace(/([!?]){2,}/g, "$1")
@@ -51,6 +58,8 @@ const fetchArticleForSeo = async (slug: string): Promise<CMSArticle | null> => {
   }
 };
 
+export const revalidate = 60;
+
 type PageParams = {
   category: string;
   slug: string;
@@ -69,11 +78,11 @@ export async function generateMetadata(props: {
     };
   }
 
-  const effectiveCategory = (article?.category || category || "").trim();
+  const effectiveCategory = (article?.category || category || "").trim().toLowerCase();
   const canonicalPath = effectiveCategory ? `/${effectiveCategory}/${slug}` : `/${slug}`;
 
   // Strict validation for metadata too
-  if (effectiveCategory !== category) {
+  if (effectiveCategory !== (category || "").trim().toLowerCase()) {
      return {
       title: "Article Not Found", // Avoid indexing duplicate content
       robots: { index: false, follow: false }
@@ -86,7 +95,7 @@ export async function generateMetadata(props: {
     return {
       title,
       description,
-      alternates: { canonical: canonicalPath },
+      alternates: { canonical: `${SITE_URL}${canonicalPath}` },
       robots: {
         index: false,
         follow: false,
@@ -95,7 +104,7 @@ export async function generateMetadata(props: {
         type: "website",
         title,
         description,
-        url: canonicalPath,
+        url: `${SITE_URL}${canonicalPath}`,
       },
       twitter: {
         card: "summary",
@@ -106,7 +115,12 @@ export async function generateMetadata(props: {
     };
   }
 
-  const seoTitle = normalizeHeadline(article.seoTitle?.trim() || article.title);
+  const shortHeadline = article.short_headline?.trim() || "";
+  const seoTitle = normalizeHeadline(
+    shortHeadline.length >= 55 && shortHeadline.length <= 65
+      ? shortHeadline
+      : article.seoTitle?.trim() || article.title,
+  );
   const bodyText = stripHtmlToText(article.content || "");
   const seoDescription =
     article.seoDescription?.trim() ||
@@ -114,7 +128,7 @@ export async function generateMetadata(props: {
     truncateText(bodyText, 150) ||
     "ताज़ा खबरें पढ़ें | रामपुर न्यूज़";
 
-  const imageUrl = article.image || buildOgImageUrl(article.title || seoTitle) || DEFAULT_OG_IMAGE;
+  const imageUrl = toAbsoluteUrl(article.image || buildOgImageUrl(article.title || seoTitle) || DEFAULT_OG_IMAGE);
   const authorName = article.author?.trim() || "Rampur News Desk";
   const publishedTime = article.publishedAt || article.publishedDate;
   const modifiedTime = article.modifiedDate || article.publishedAt || article.publishedDate;
@@ -142,7 +156,7 @@ export async function generateMetadata(props: {
     title: seoTitle,
     description: seoDescription,
     alternates: {
-      canonical,
+      canonical: absoluteCanonical,
       types: {
         "application/amp+html": ampUrl,
       },
@@ -164,7 +178,7 @@ export async function generateMetadata(props: {
       type: "article",
       title: seoTitle,
       description: seoDescription,
-      url: canonical,
+      url: absoluteCanonical,
       siteName: "रामपुर न्यूज़ | Rampur News",
       publishedTime,
       modifiedTime,
@@ -217,8 +231,8 @@ export default async function Page(props: { params: Promise<PageParams> }) {
     notFound();
   }
 
-  const effectiveCategory = (article.category || "").trim();
-  const urlCategory = (category || "").trim();
+  const effectiveCategory = (article.category || "").trim().toLowerCase();
+  const urlCategory = (category || "").trim().toLowerCase();
   const canonicalPath = effectiveCategory ? `/${effectiveCategory}/${slug}` : `/${slug}`;
 
   // Strict category validation to prevent duplicate content
@@ -228,18 +242,23 @@ export default async function Page(props: { params: Promise<PageParams> }) {
 
   const canInjectSchema = !!article && (!category || !article?.category || article.category === category);
 
-  const title = normalizeHeadline(article?.seoTitle?.trim() || article?.title || "");
+  const shortHeadline = article?.short_headline?.trim() || "";
+  const title = normalizeHeadline(
+    shortHeadline.length >= 55 && shortHeadline.length <= 65
+      ? shortHeadline
+      : article?.seoTitle?.trim() || article?.title || "",
+  );
   const bodyText = article ? stripHtmlToText(article.content || "") : "";
   const description = article
     ? article.seoDescription?.trim() ||
       article.excerpt?.trim() ||
       truncateText(bodyText, 150)
     : "";
-  const imageUrl = (article?.image || buildOgImageUrl(title || article?.title || "") || DEFAULT_OG_IMAGE).trim();
+  const imageUrl = toAbsoluteUrl(article?.image || buildOgImageUrl(title || article?.title || "") || DEFAULT_OG_IMAGE);
   const authorName = article?.author?.trim() || "Rampur News Desk";
   const publishedDate = article?.publishedDate || "";
   const modifiedDate = article?.modifiedDate || article?.publishedDate || "";
-  const schemaImageUrl = (article?.image || "").trim();
+  const schemaImageUrl = toAbsoluteUrl(article?.image || "") || imageUrl;
   const schemaAuthorName = (article?.author || "").trim();
   const schemaPublishedDate = (article?.publishedDate || article?.publishedAt || "").trim();
 
@@ -304,46 +323,32 @@ export default async function Page(props: { params: Promise<PageParams> }) {
                 "@type": "NewsArticle",
                 mainEntityOfPage: { "@type": "WebPage", "@id": absoluteCanonical },
                 headline: title || article.title,
-                name: title || article.title,
-                description: isNonEmpty(description) ? description : undefined,
-                image: isNonEmpty(schemaImageUrl)
-                  ? {
-                      "@type": "ImageObject",
-                      url: schemaImageUrl,
-                      width: 1200,
-                      height: 630,
-                    }
-                  : undefined,
-                thumbnailUrl: isNonEmpty(schemaImageUrl) ? schemaImageUrl : undefined,
+                image: {
+                  "@type": "ImageObject",
+                  url: schemaImageUrl,
+                  width: 1200,
+                  height: 630,
+                },
                 datePublished: schemaPublishedDate,
-                dateModified: isNonEmpty(modifiedDate) ? modifiedDate : undefined,
-                author: isNonEmpty(schemaAuthorName)
-                  ? [{ "@type": "Person", name: schemaAuthorName }]
-                  : undefined,
+                dateModified: isNonEmpty(modifiedDate) ? modifiedDate : schemaPublishedDate,
+                author: [{ "@type": "Person", name: schemaAuthorName }],
                 publisher: {
                   "@type": "Organization",
                   name: "रामपुर न्यूज़ | Rampur News",
                   logo: {
                     "@type": "ImageObject",
-                    url: `${SITE_URL}/logo.png`,
+                    url: "https://rampurnews.com/logo.png",
                     width: 768,
                     height: 768,
                   },
                 },
+                isAccessibleForFree: true,
+                inLanguage: "hi-IN",
                 articleSection: isNonEmpty(article.categoryHindi)
                   ? article.categoryHindi
                   : isNonEmpty(categoryLabelHindi)
                     ? categoryLabelHindi
                     : undefined,
-                inLanguage: "hi-IN",
-                isAccessibleForFree: true,
-                keywords: keywordList.length > 0 ? keywordList.join(", ") : undefined,
-                about: ai?.primaryEntity
-                  ? { "@type": ai.primaryEntity.type, name: ai.primaryEntity.name }
-                  : undefined,
-                mentions: ai?.mentions?.length
-                  ? ai.mentions.map((m) => ({ "@type": m.type, name: m.name }))
-                  : undefined,
               }
             : null,
       ) as Record<string, unknown>)

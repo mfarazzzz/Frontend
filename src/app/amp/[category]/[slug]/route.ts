@@ -4,6 +4,13 @@ import { stripHtmlToText, truncateText } from "@/lib/utils";
 
 const SITE_URL = "https://rampurnews.com";
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
+const toAbsoluteUrl = (value?: string) => {
+  const raw = (value || "").trim();
+  if (!raw) return "";
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  if (raw.startsWith("/")) return `${SITE_URL}${raw}`;
+  return `${SITE_URL}/${raw}`;
+};
 
 const escapeHtml = (value: string) =>
   String(value || "")
@@ -155,11 +162,19 @@ export async function GET(request: Request, context: { params: Promise<{ categor
     return new NextResponse("Article not found", { status: 404 });
   }
 
-  const requestedCategory = (category || "").trim();
+  const requestedCategory = (category || "").trim().toLowerCase();
+  const articleCategory = (article.category || "").trim().toLowerCase();
+  if (articleCategory && articleCategory !== requestedCategory) {
+    return new NextResponse("Article not found", { status: 404 });
+  }
   const canonicalPath = requestedCategory ? `/${requestedCategory}/${slug}` : `/${slug}`;
   const canonicalUrl = `${SITE_URL}${canonicalPath}`;
   const ampUrl = `${SITE_URL}/amp${canonicalPath}`;
-  const title = article.seoTitle?.trim() || article.title;
+  const shortHeadline = article.short_headline?.trim() || "";
+  const title =
+    shortHeadline.length >= 55 && shortHeadline.length <= 65
+      ? shortHeadline
+      : article.seoTitle?.trim() || article.title;
   const bodyText = stripHtmlToText(article.content || "");
   const description =
     article.seoDescription?.trim() ||
@@ -167,7 +182,7 @@ export async function GET(request: Request, context: { params: Promise<{ categor
     truncateText(bodyText, 150) ||
     "ताज़ा खबरें पढ़ें | रामपुर न्यूज़";
   const rawImageUrl = article.image?.trim() || "";
-  const imageUrl = rawImageUrl || DEFAULT_IMAGE;
+  const imageUrl = toAbsoluteUrl(rawImageUrl || DEFAULT_IMAGE);
   const authorName = article.author?.trim() || "";
   const publishedDate = (article.publishedAt || article.publishedDate || "").trim();
   const modifiedDate = (article.modifiedDate || article.publishedAt || article.publishedDate || "").trim();

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCMSProvider } from "@/services/cms";
 import { generateNewsSitemap } from "@/utils/generateFeeds";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function GET() {
   try {
@@ -19,7 +19,7 @@ export async function GET() {
     const recentArticles = articles.filter((article) => {
       const published = new Date(article.publishedDate || "").getTime();
       return Number.isFinite(published) && published >= cutoff;
-    });
+    }).slice(0, 1000);
 
     const feedArticles = recentArticles.map((article) => ({
       title: article.title,
@@ -31,6 +31,7 @@ export async function GET() {
       publishedDate: article.publishedDate,
       image: article.image,
       isBreaking: !!article.isBreaking,
+      canonicalUrl: article.canonicalUrl,
     }));
 
     const xml = generateNewsSitemap(feedArticles);

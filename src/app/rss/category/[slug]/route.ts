@@ -2,7 +2,7 @@ import RSS from "rss";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const normalizeStrapiApiUrl = (value: string) => {
   const trimmed = value.trim().replace(/\/+$/, "");
@@ -115,7 +115,7 @@ export async function GET(_: Request, context: { params: Promise<{ slug: string 
         status: 200,
         headers: {
           "Content-Type": "application/xml; charset=utf-8",
-          "Cache-Control": "public, s-maxage=600, stale-while-revalidate=600",
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=60",
         },
       });
     }
@@ -123,7 +123,7 @@ export async function GET(_: Request, context: { params: Promise<{ slug: string 
     const strapiApiBaseUrl = getStrapiApiBaseUrl();
     const url = buildCategoryArticlesUrl(categorySlug);
     const res = await fetch(url, {
-      cache: "no-store",
+      next: { revalidate: 60 },
       headers: { Accept: "application/json" },
     });
 

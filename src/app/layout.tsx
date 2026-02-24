@@ -37,6 +37,7 @@ export const metadata: Metadata = {
     "googlebot-news": "index, follow",
     "ai-content-declaration": "human-written",
     "perplexity-indexable": "true",
+    robots: "max-image-preview:large",
   },
   alternates: {
     canonical: "/",

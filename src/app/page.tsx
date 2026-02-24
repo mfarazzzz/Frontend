@@ -197,4 +197,6 @@ export default async function Page() {
   );
 }
 
+export const revalidate = 60;
+
 

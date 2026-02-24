@@ -2,7 +2,7 @@ import RSS from "rss";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-export const revalidate = 600;
+export const revalidate = 60;
 
 const normalizeStrapiApiUrl = (value: string) => {
   const trimmed = value.trim().replace(/\/+$/, "");
@@ -103,7 +103,7 @@ export async function GET() {
   try {
     const strapiApiBaseUrl = getStrapiApiBaseUrl();
     const res = await fetch(buildArticlesUrl(), {
-      next: { revalidate: 600 },
+      next: { revalidate: 60 },
       headers: { Accept: "application/json" },
     });
     if (!res.ok) throw new Error(`Strapi request failed: ${res.status}`);

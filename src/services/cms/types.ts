@@ -100,6 +100,8 @@ export interface CMSArticle {
   contentType?: string;
   authorRole?: CMSAuthor['role'];
   tags?: string[];
+  location?: string;
+  short_headline?: string;
   seoTitle?: string;
   meta_description?: string; // Requested field name
   seoDescription?: string; // Legacy

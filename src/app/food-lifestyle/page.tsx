@@ -6,14 +6,14 @@ export const metadata: Metadata = {
   description:
     "रामपुर के बेहतरीन रेस्तरां, फैशन स्टोर, शॉपिंग मॉल, प्रसिद्ध स्थान और आगामी इवेंट्स की पूरी जानकारी।",
   alternates: {
-    canonical: "/food-lifestyle",
+    canonical: "https://rampurnews.com/food-lifestyle",
   },
   openGraph: {
     type: "website",
     title: "खान-पान और लाइफस्टाइल - रेस्तरां, शॉपिंग, इवेंट्स | रामपुर न्यूज़",
     description:
       "रामपुर के बेहतरीन रेस्तरां, फैशन स्टोर, शॉपिंग मॉल, प्रसिद्ध स्थान और आगामी इवेंट्स की पूरी जानकारी।",
-    url: "/food-lifestyle",
+    url: "https://rampurnews.com/food-lifestyle",
     siteName: "रामपुर न्यूज़ | Rampur News",
   },
   twitter: {
@@ -23,6 +23,8 @@ export const metadata: Metadata = {
       "रामपुर के बेहतरीन रेस्तरां, फैशन स्टोर, शॉपिंग मॉल, प्रसिद्ध स्थान और आगामी इवेंट्स की पूरी जानकारी।",
   },
 };
+
+export const revalidate = 60;
 
 export default function Page() {
   return <LifestyleHub />;

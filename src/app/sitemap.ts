@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getCMSProvider } from "@/services/cms";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
 
@@ -63,18 +63,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Check if res has data (PaginatedResponse)
     const articles = articlesRes.data || [];
 
-    articleEntries = articles.map((post) => {
-      // Ensure we have a valid date
-      const dateStr = post.modifiedDate || post.publishedDate || now.toISOString();
-      const date = new Date(dateStr);
-      
-      return {
-        url: `${BASE_URL}/${post.category}/${post.slug}`,
-        lastModified: isNaN(date.getTime()) ? now : date,
-        changeFrequency: "hourly",
-        priority: 0.9,
-      };
-    });
+    articleEntries = (articles
+      .map((post) => {
+        const dateStr = post.modifiedDate || post.publishedDate || now.toISOString();
+        const date = new Date(dateStr);
+        const canonical = post.canonicalUrl?.trim();
+        const url = canonical
+          ? canonical.startsWith("http://") || canonical.startsWith("https://")
+            ? canonical
+            : `${BASE_URL}${canonical.startsWith("/") ? canonical : `/${canonical}`}`
+          : post.category && post.slug
+            ? `${BASE_URL}/${post.category}/${post.slug}`
+            : "";
+
+        if (!url) return null;
+        return {
+          url,
+          lastModified: isNaN(date.getTime()) ? now : date,
+          changeFrequency: "hourly",
+          priority: 0.9,
+        };
+      })
+      .filter((entry) => entry !== null)
+      .filter(
+        (entry) =>
+          !entry.url.includes("/tags") &&
+          !entry.url.includes("/tag") &&
+          !entry.url.includes("/admin") &&
+          !entry.url.includes("/api"),
+      )) as MetadataRoute.Sitemap;
 
     // Process categories
     categoryEntries = (categories || [])

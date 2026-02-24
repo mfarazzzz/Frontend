@@ -15,12 +15,23 @@ type FeedArticle = Pick<
   | "publishedDate"
   | "image"
   | "isBreaking"
+  | "canonicalUrl"
 >;
 
 export const getAllNewsSorted = (articles: FeedArticle[]): FeedArticle[] => {
   return [...articles].sort(
     (a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime()
   );
+};
+
+const buildCanonicalUrl = (article: FeedArticle) => {
+  const canonical = (article.canonicalUrl || "").trim();
+  if (canonical) {
+    return canonical.startsWith("http://") || canonical.startsWith("https://")
+      ? canonical
+      : `${SITE_URL}${canonical.startsWith("/") ? canonical : `/${canonical}`}`;
+  }
+  return `${SITE_URL}/${article.category}/${article.slug}`;
 };
 
 // Get news from last 48 hours for Google News sitemap
@@ -52,12 +63,12 @@ export const generateRSSFeed = (articles: FeedArticle[]): string => {
   const items = recentArticles.map((article) => `
     <item>
       <title>${escapeXml(article.title)}</title>
-      <link>${SITE_URL}/${article.category}/${article.slug}</link>
+      <link>${buildCanonicalUrl(article)}</link>
       <description>${escapeXml(article.excerpt)}</description>
       <author>${escapeXml(article.author)}</author>
       <category>${escapeXml(article.categoryHindi)}</category>
       <pubDate>${new Date(article.publishedDate).toUTCString()}</pubDate>
-      <guid isPermaLink="true">${SITE_URL}/${article.category}/${article.slug}</guid>
+      <guid isPermaLink="true">${buildCanonicalUrl(article)}</guid>
       ${(() => {
         const raw = String(article.image || '').trim();
         const absolute = raw.startsWith('http://') || raw.startsWith('https://')
@@ -109,9 +120,9 @@ export const generateAtomFeed = (articles: FeedArticle[]): string => {
 
   const entries = recentArticles.map((article) => `
   <entry>
-    <id>${SITE_URL}/${article.category}/${article.slug}</id>
+    <id>${buildCanonicalUrl(article)}</id>
     <title type="text">${escapeXml(article.title)}</title>
-    <link href="${SITE_URL}/${article.category}/${article.slug}" rel="alternate" type="text/html" />
+    <link href="${buildCanonicalUrl(article)}" rel="alternate" type="text/html" />
     <published>${new Date(article.publishedDate).toISOString()}</published>
     <updated>${new Date(article.publishedDate).toISOString()}</updated>
     <author>
@@ -158,7 +169,7 @@ export const generateNewsSitemap = (articles: FeedArticle[], hours: number = 48)
     
     return `
   <url>
-    <loc>${SITE_URL}/${article.category}/${article.slug}</loc>
+    <loc>${buildCanonicalUrl(article)}</loc>
     <lastmod>${publishedIso}</lastmod>
     <news:news>
       <news:publication>

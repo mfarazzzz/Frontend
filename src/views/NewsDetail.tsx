@@ -200,7 +200,14 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
   const shareUrl = `${siteUrl}${articleUrl}`;
   const embedUrl = article.videoType === "youtube" && article.videoUrl ? getYouTubeEmbedUrl(article.videoUrl) : "";
   const buildOgImageUrl = (title: string) => `${siteUrl}/api/og?title=${encodeURIComponent(title)}`;
-  const displayImage = article.image || buildOgImageUrl(article.title);
+  const toAbsoluteUrl = (value: string) => {
+    const raw = (value || "").trim();
+    if (!raw) return "";
+    if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+    if (raw.startsWith("/")) return `${siteUrl}${raw}`;
+    return `${siteUrl}/${raw}`;
+  };
+  const displayImage = toAbsoluteUrl(article.image || buildOgImageUrl(article.title));
 
   const stopWords = new Set([
     "और",
@@ -275,6 +282,23 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
       internalLinks.push({
         href: `/authors/${authorSlug}`,
         title: `${article.author} की प्रोफाइल`,
+      });
+    }
+    if (Array.isArray(article.tags) && article.tags.length > 0) {
+      for (const tag of article.tags.slice(0, 3)) {
+        const label = String(tag).trim();
+        if (!label) continue;
+        internalLinks.push({
+          href: `/search?q=${encodeURIComponent(label)}`,
+          title: `${label} से जुड़ी खबरें`,
+        });
+      }
+    }
+    if (article.location && String(article.location).trim()) {
+      const locationLabel = String(article.location).trim();
+      internalLinks.push({
+        href: `/search?q=${encodeURIComponent(locationLabel)}`,
+        title: `${locationLabel} अपडेट`,
       });
     }
 
@@ -395,7 +419,7 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
                   alt={article.title}
                   width={1200}
                   height={630}
-                  loading="lazy"
+                  priority
                   className="w-full h-auto object-cover"
                   sizes="(min-width: 1024px) 1200px, 100vw"
                 />

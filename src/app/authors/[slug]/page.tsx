@@ -177,6 +177,8 @@ export async function generateMetadata(props: { params: Promise<PageParams> }): 
   };
 }
 
+export const revalidate = 60;
+
 const buildAuthorSchema = (author: CMSAuthor, slug: string) => {
   const isFaraz = slug === "mohammad-faraz-raza-khan";
   const name = author.name || author.nameHindi || "Author";

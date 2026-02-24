@@ -48,6 +48,7 @@ export default async function Page() {
     "religion-culture",
     "sports",
     "education-jobs",
+    "career", // Added Career category
     "international",
   ];
 
@@ -58,14 +59,17 @@ export default async function Page() {
   }
 
   const ordered: (typeof categoriesRaw)[number][] = [];
+  // Ensure we respect preferredOrder exactly, even if fetch order varies
   for (const slug of preferredOrder) {
-    const cat = bySlug[slug];
+    const cat = categoriesRaw.find(c => c.slug === slug);
     if (cat) ordered.push(cat);
   }
+  // Add any remaining categories not in preferred list
   for (const cat of categoriesRaw) {
     if (!preferredOrder.includes(cat.slug)) ordered.push(cat);
   }
-  const categories = ordered.slice(0, 8);
+  // Increase slice to include career if it's further down
+  const categories = ordered.slice(0, 10);
 
   const categoryArticlesEntries = await Promise.all(
     categories.map(async (category) => {

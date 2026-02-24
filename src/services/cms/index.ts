@@ -398,6 +398,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         query['pagination[start]'] = input.offset;
       }
 
+      // Default sort should be publishedAt:desc for latest news
       const sortField = input.orderBy === 'publishedDate' || !input.orderBy ? 'publishedAt' : input.orderBy;
       const sortOrder = input.order || 'desc';
       query['sort'] = `${sortField}:${sortOrder}`;

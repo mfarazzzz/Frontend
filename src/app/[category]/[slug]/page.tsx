@@ -7,7 +7,7 @@ import {
   stripHtmlToText,
   truncateText,
 } from "../../../lib/utils";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 const SITE_URL = "https://rampurnews.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
@@ -61,8 +61,24 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const { category, slug } = await props.params;
   const article = await fetchArticleForSeo(slug);
+  
+  if (!article) {
+    return {
+      title: "Article Not Found",
+      description: "The requested article could not be found.",
+    };
+  }
+
   const effectiveCategory = (article?.category || category || "").trim();
   const canonicalPath = effectiveCategory ? `/${effectiveCategory}/${slug}` : `/${slug}`;
+
+  // Strict validation for metadata too
+  if (effectiveCategory !== category) {
+     return {
+      title: "Article Not Found", // Avoid indexing duplicate content
+      robots: { index: false, follow: false }
+     }
+  }
 
   if (!article) {
     const title = "खबर नहीं मिली | रामपुर न्यूज़";
@@ -196,11 +212,18 @@ export async function generateMetadata(props: {
 export default async function Page(props: { params: Promise<PageParams> }) {
   const { category, slug } = await props.params;
   const article = await fetchArticleForSeo(slug);
-  const effectiveCategory = (article?.category || category || "").trim();
+  
+  if (!article) {
+    notFound();
+  }
+
+  const effectiveCategory = (article.category || "").trim();
+  const urlCategory = (category || "").trim();
   const canonicalPath = effectiveCategory ? `/${effectiveCategory}/${slug}` : `/${slug}`;
 
-  if (article?.category && category && article.category !== category) {
-    redirect(`/${article.category}/${slug}`);
+  // Strict category validation to prevent duplicate content
+  if (effectiveCategory && effectiveCategory !== urlCategory) {
+    notFound();
   }
 
   const canInjectSchema = !!article && (!category || !article?.category || article.category === category);

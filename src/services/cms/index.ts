@@ -324,7 +324,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     const method = String(init?.method || 'GET').toUpperCase();
     const shouldCache = isServer && method === 'GET';
     const defaultInit = shouldCache
-      ? ({ cache: 'force-cache', next: { revalidate: 30 } } as any)
+      ? ({ cache: 'no-store' } as any) // TEMPORARY: Disable cache to debug new posts issue
       : ({ cache: 'no-store' } as any);
     const response = await fetch(input, { ...defaultInit, ...(init as any) } as any);
     if (response.status === 204) {

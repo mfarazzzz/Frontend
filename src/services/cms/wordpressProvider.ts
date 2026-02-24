@@ -655,11 +655,30 @@ export const createWordPressProvider = (config: WordPressConfig): CMSProvider =>
       return posts.map(transformPost);
     },
 
-    async getArticlesByCategory(categorySlug: string, limit = 10): Promise<CMSArticle[]> {
+    async getArticlesByCategory(
+      categorySlug: string, 
+      limit = 10,
+      options?: { orderBy?: string; order?: 'asc' | 'desc' }
+    ): Promise<CMSArticle[]> {
       const catId = await getCategoryId(categorySlug);
       if (!catId) return [];
       
-      const response = await fetch(apiUrl('posts', { _embed: true, categories: catId, per_page: limit }));
+      const queryParams: Record<string, any> = {
+        _embed: true,
+        categories: catId,
+        per_page: limit,
+      };
+
+      if (options?.orderBy === 'views') {
+        queryParams.orderby = 'date';
+      } else if (options?.orderBy) {
+        queryParams.orderby = options.orderBy === 'publishedDate' ? 'date' : options.orderBy;
+      }
+      if (options?.order) {
+        queryParams.order = options.order;
+      }
+      
+      const response = await fetch(apiUrl('posts', queryParams));
       const posts: WPPost[] = await response.json();
       return posts.map(transformPost);
     },

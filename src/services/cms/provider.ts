@@ -59,7 +59,11 @@ export interface CMSProvider {
   getFeaturedArticles(limit?: number): Promise<CMSArticle[]>;
   getBreakingNews(limit?: number): Promise<CMSArticle[]>;
   getTrendingArticles(limit?: number): Promise<CMSArticle[]>;
-  getArticlesByCategory(categorySlug: string, limit?: number): Promise<CMSArticle[]>;
+  getArticlesByCategory(
+    categorySlug: string,
+    limit?: number,
+    options?: { orderBy?: string; order?: 'asc' | 'desc' }
+  ): Promise<CMSArticle[]>;
   searchArticles(query: string, limit?: number): Promise<CMSArticle[]>;
 }
 

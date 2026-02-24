@@ -73,7 +73,11 @@ export default async function Page() {
 
   const categoryArticlesEntries = await Promise.all(
     categories.map(async (category) => {
-      const articles = await provider.getArticlesByCategory(category.slug, 7).catch(() => []);
+      const articles = await provider.getArticlesByCategory(
+        category.slug, 
+        7, 
+        { orderBy: 'publishedDate', order: 'desc' }
+      ).catch(() => []);
       return [category.slug, articles] as const;
     }),
   );

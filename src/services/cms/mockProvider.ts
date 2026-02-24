@@ -386,8 +386,18 @@ export const mockCMSProvider: CMSProvider = {
     return result.data;
   },
   
-  async getArticlesByCategory(categorySlug: string, limit = 10): Promise<CMSArticle[]> {
-    const result = await this.getArticles({ category: categorySlug, status: 'published', limit });
+  async getArticlesByCategory(
+    categorySlug: string, 
+    limit = 10,
+    options?: { orderBy?: string; order?: 'asc' | 'desc' }
+  ): Promise<CMSArticle[]> {
+    const result = await this.getArticles({ 
+      category: categorySlug, 
+      status: 'published', 
+      limit,
+      orderBy: options?.orderBy,
+      order: options?.order 
+    });
     return result.data;
   },
   

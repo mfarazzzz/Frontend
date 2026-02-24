@@ -10,7 +10,10 @@ import { useArticlesByCategory } from "@/hooks/useCMS";
 
 const HealthPage = () => {
   const category = getCategoryBySlug("health")!;
-  const { data: news = [], isLoading } = useArticlesByCategory("health", 30);
+  const { data: news = [], isLoading } = useArticlesByCategory("health", 30, {
+    orderBy: "publishedDate",
+    order: "desc",
+  });
 
   return (
     <div className="min-h-screen bg-background">

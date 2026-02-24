@@ -10,7 +10,10 @@ import { useArticlesByCategory } from "@/hooks/useCMS";
 
 const NearbyPage = () => {
   const category = getCategoryBySlug("nearby")!;
-  const { data: news = [], isLoading } = useArticlesByCategory("nearby", 30);
+  const { data: news = [], isLoading } = useArticlesByCategory("nearby", 30, {
+    orderBy: "publishedDate",
+    order: "desc",
+  });
 
   return (
     <div className="min-h-screen bg-background">

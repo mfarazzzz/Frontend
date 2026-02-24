@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
@@ -23,7 +23,7 @@ const buildCategoryIntro = (category: Category) => {
 const toPageHref = (basePath: string, page: number) =>
   page <= 1 ? basePath : `${basePath}?page=${page}`;
 
-const CategoryListing = ({ categorySlug }: { categorySlug: string }) => {
+const CategoryListingInner = ({ categorySlug }: { categorySlug: string }) => {
   const category = getCategoryBySlug(categorySlug);
   const searchParams = useSearchParams();
   const page = useMemo(() => {
@@ -188,5 +188,11 @@ const CategoryListing = ({ categorySlug }: { categorySlug: string }) => {
     </div>
   );
 };
+
+const CategoryListing = ({ categorySlug }: { categorySlug: string }) => (
+  <Suspense fallback={<div className="min-h-screen bg-background" />}>
+    <CategoryListingInner categorySlug={categorySlug} />
+  </Suspense>
+);
 
 export default CategoryListing;

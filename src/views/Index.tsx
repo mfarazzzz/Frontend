@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategorySection from "@/components/CategorySection";
 import NewsCard from "@/components/NewsCard";
+import FollowButtons from "@/components/FollowButtons";
 import type { CMSArticle, CMSCategory, CMSEditorial } from "@/services/cms";
 type IndexProps = {
   heroArticles: CMSArticle[];
@@ -150,24 +151,7 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
 
                 <div className="bg-card rounded-lg p-4">
                   <h3 className="text-lg font-bold mb-4 border-b border-primary pb-2">हमसे जुड़ें</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <a
-                      href="https://whatsapp.com/channel/0029Vb7TEPsLI8Yg4gbsqe3O"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center rounded-lg bg-[#25D366] text-white py-2 text-sm font-medium"
-                    >
-                      WhatsApp
-                    </a>
-                    <a
-                      href="https://t.me/rampurnewsofficial"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center rounded-lg bg-[#0088cc] text-white py-2 text-sm font-medium"
-                    >
-                      Telegram
-                    </a>
-                  </div>
+                  <FollowButtons showLabels={false} />
                 </div>
               </aside>
             </div>

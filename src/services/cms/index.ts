@@ -412,7 +412,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       if (shouldTryAdmin) {
         result = await tryFetch('/articles/admin', true, false, false);
       } else {
-        result = await tryFetch(path, false, undefined, false);
+        result = await tryFetch(path, true, undefined, false);
       }
     } catch (error) {
       if (
@@ -434,6 +434,14 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
             throw fallbackError;
           }
         }
+      } else if (
+        isStrapi &&
+        config.apiKey &&
+        typeof window === 'undefined' &&
+        error instanceof HttpError &&
+        (error.status === 401 || error.status === 403)
+      ) {
+        result = await tryFetch(path, true, undefined, false);
       } else {
         throw error;
       }
@@ -495,7 +503,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         if (shouldTryAdmin) {
           return normalizeArticleMedia(await tryFetch(`/articles/admin/${id}`, true, false, false));
         }
-        const article = normalizeArticleMedia(await tryFetch(path, false, undefined, false));
+        const article = normalizeArticleMedia(await tryFetch(path, true, undefined, false));
         if (!canUseStrapiAdmin && article?.status && article.status !== 'published') return null;
         return article;
       } catch (error) {
@@ -517,6 +525,17 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
             }
             throw fallbackError;
           }
+        }
+        if (
+          isStrapi &&
+          config.apiKey &&
+          typeof window === 'undefined' &&
+          error instanceof HttpError &&
+          (error.status === 401 || error.status === 403)
+        ) {
+          const article = normalizeArticleMedia(await tryFetch(path, true, undefined, false));
+          if (!canUseStrapiAdmin && article?.status && article.status !== 'published') return null;
+          return article;
         }
         throw error;
       }
@@ -549,7 +568,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
             await tryFetch(`/articles/admin/slug/${encodeURIComponent(slug)}`, true, false, false),
           );
         }
-        const article = normalizeArticleMedia(await tryFetch(path, false, undefined, false));
+        const article = normalizeArticleMedia(await tryFetch(path, true, undefined, false));
         if (!canUseStrapiAdmin && article?.status && article.status !== 'published') return null;
         return article;
       } catch (error) {
@@ -571,6 +590,17 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
             }
             throw fallbackError;
           }
+        }
+        if (
+          isStrapi &&
+          config.apiKey &&
+          typeof window === 'undefined' &&
+          error instanceof HttpError &&
+          (error.status === 401 || error.status === 403)
+        ) {
+          const article = normalizeArticleMedia(await tryFetch(path, true, undefined, false));
+          if (!canUseStrapiAdmin && article?.status && article.status !== 'published') return null;
+          return article;
         }
         throw error;
       }
@@ -1088,7 +1118,10 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
       let combined: CMSArticle[] = [];
       try {
-        const items = await fetchJson<CMSArticle[]>(buildUrl('/articles/featured-hero', { limit: desiredLimit }));
+        const items = await fetchJson<CMSArticle[]>(buildUrl('/articles/featured-hero', { limit: desiredLimit }), {
+          method: 'GET',
+          headers: getAuthHeaders(true),
+        });
         combined = normalizeArticleListMedia(items || []);
       } catch {
         combined = [];
@@ -1141,7 +1174,10 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
     async getBreakingNews(limit = 5): Promise<CMSArticle[]> {
       try {
-        const items = await fetchJson<CMSArticle[]>(buildUrl('/articles/breaking', { limit }));
+        const items = await fetchJson<CMSArticle[]>(buildUrl('/articles/breaking', { limit }), {
+          method: 'GET',
+          headers: getAuthHeaders(true),
+        });
         return normalizeArticleListMedia(items || []);
       } catch {
         const result = await getArticles({ breaking: true, status: 'published', limit });
@@ -1201,7 +1237,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const tryDirectFetch = () =>
         fetchJson<PaginatedResponse<CMSEditorial>>(
           buildUrl('/editorials', query),
-          { method: 'GET', headers: getAuthHeaders(false) },
+          { method: 'GET', headers: getAuthHeaders(true) },
         );
 
       const tryProxyFetch = () =>

@@ -58,7 +58,15 @@ export const generateRSSFeed = (articles: FeedArticle[]): string => {
       <category>${escapeXml(article.categoryHindi)}</category>
       <pubDate>${new Date(article.publishedDate).toUTCString()}</pubDate>
       <guid isPermaLink="true">${SITE_URL}/${article.category}/${article.slug}</guid>
-      <enclosure url="${article.image}" type="image/jpeg" />
+      ${(() => {
+        const raw = String(article.image || '').trim();
+        const absolute = raw.startsWith('http://') || raw.startsWith('https://')
+          ? raw
+          : raw.startsWith('/')
+            ? `${SITE_URL}${raw}`
+            : '';
+        return absolute ? `<enclosure url="${escapeXml(absolute)}" type="image/jpeg" />` : '';
+      })()}
       <source url="${SITE_URL}/feed.xml">${SITE_NAME}</source>
     </item>`
   ).join("");

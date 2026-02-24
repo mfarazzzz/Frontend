@@ -2,7 +2,7 @@ import RSS from "rss";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 600;
 
 const normalizeStrapiApiUrl = (value: string) => {
   const trimmed = value.trim().replace(/\/+$/, "");
@@ -15,27 +15,15 @@ const normalizeStrapiApiUrl = (value: string) => {
 const getStrapiApiBaseUrl = () => {
   const raw = process.env.NEXT_PUBLIC_STRAPI_URL;
   const normalized = raw ? normalizeStrapiApiUrl(raw) : "";
-  if (!normalized) {
-    throw new Error("NEXT_PUBLIC_STRAPI_URL is not configured");
-  }
+  if (!normalized) throw new Error("NEXT_PUBLIC_STRAPI_URL is not configured");
   return normalized;
 };
 
 const getSiteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com").replace(/\/+$/, "");
 const getSiteName = () => process.env.NEXT_PUBLIC_SITE_NAME || "रामपुर न्यूज़ | Rampur News";
 
-type StrapiMedia = {
-  url?: string;
-  mime?: string;
-};
-
-type StrapiCategory = {
-  slug?: string;
-  titleHindi?: string;
-  titleEnglish?: string;
-  name?: string;
-};
-
+type StrapiMedia = { url?: string; mime?: string };
+type StrapiCategory = { slug?: string; titleHindi?: string; name?: string };
 type StrapiArticleAttributes = {
   title?: string;
   slug?: string;
@@ -44,10 +32,7 @@ type StrapiArticleAttributes = {
   category?: { data?: { attributes?: StrapiCategory } } | StrapiCategory;
   coverImage?: { data?: { attributes?: StrapiMedia } } | StrapiMedia;
 };
-
-type StrapiCollectionResponse = {
-  data?: Array<{ id?: string | number; attributes?: StrapiArticleAttributes }>;
-};
+type StrapiCollectionResponse = { data?: Array<{ id?: string | number; attributes?: StrapiArticleAttributes }> };
 
 const pickCategory = (attrs: StrapiArticleAttributes) => {
   const raw = attrs.category;
@@ -70,13 +55,12 @@ const absoluteStrapiMediaUrl = (strapiApiBaseUrl: string, mediaUrl?: string) => 
   return `${origin}${mediaUrl}`;
 };
 
-const buildCategoryArticlesUrl = (categorySlug: string) => {
+const buildArticlesUrl = () => {
   const params = new URLSearchParams();
   params.set("publicationState", "live");
   params.set("filters[publishedAt][$notNull]", "true");
   params.set("sort", "publishedAt:desc");
   params.set("pagination[limit]", "50");
-  params.set("filters[category][slug][$eq]", categorySlug);
   params.append("fields[0]", "title");
   params.append("fields[1]", "slug");
   params.append("fields[2]", "excerpt");
@@ -89,15 +73,13 @@ const buildCategoryArticlesUrl = (categorySlug: string) => {
   return `${getStrapiApiBaseUrl()}/articles?${params.toString()}`;
 };
 
-export async function GET(_: Request, context: { params: Promise<{ slug: string }> }) {
-  const { slug } = await context.params;
-  const categorySlug = String(slug || "").trim();
+export async function GET() {
   const siteUrl = getSiteUrl();
   const siteName = getSiteName();
-  const feedUrl = `${siteUrl}/rss/${encodeURIComponent(categorySlug)}.xml`;
+  const feedUrl = `${siteUrl}/rss-monetization.xml`;
 
   const feed = new RSS({
-    title: `${siteName} - ${categorySlug}`,
+    title: `${siteName} (Automation/Monetization RSS)`,
     description: "Latest Hindi News Updates",
     site_url: siteUrl,
     feed_url: feedUrl,
@@ -106,77 +88,73 @@ export async function GET(_: Request, context: { params: Promise<{ slug: string 
     webMaster: `webmaster@rampurnews.com (${siteName})`,
     copyright: `Copyright ${new Date().getFullYear()} ${siteName}`,
     ttl: 10,
+    custom_namespaces: {
+      media: "http://search.yahoo.com/mrss/",
+      atom: "http://www.w3.org/2005/Atom",
+    },
+    custom_elements: [{ "atom:link": [{ _attr: { href: feedUrl, rel: "self", type: "application/rss+xml" } }] }],
   });
 
   try {
-    if (!categorySlug) {
-      const xml = feed.xml({ indent: true });
-      return new NextResponse(xml, {
-        status: 200,
-        headers: {
-          "Content-Type": "application/xml; charset=utf-8",
-          "Cache-Control": "public, s-maxage=600, stale-while-revalidate=600",
-        },
-      });
-    }
-
     const strapiApiBaseUrl = getStrapiApiBaseUrl();
-    const url = buildCategoryArticlesUrl(categorySlug);
-    const res = await fetch(url, {
-      cache: "no-store",
+    const res = await fetch(buildArticlesUrl(), {
+      next: { revalidate: 600 },
       headers: { Accept: "application/json" },
     });
-
-    if (!res.ok) {
-      throw new Error(`Strapi request failed: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`Strapi request failed: ${res.status}`);
 
     const json = (await res.json()) as StrapiCollectionResponse | unknown;
     const items =
       json && typeof json === "object" && "data" in (json as Record<string, unknown>)
-        ? (((json as StrapiCollectionResponse).data || []) as Array<{ id?: string | number; attributes?: StrapiArticleAttributes }>)
+        ? ((json as StrapiCollectionResponse).data || [])
         : [];
 
     const seen = new Set<string>();
     for (const entity of items) {
       const attrs = entity?.attributes || {};
       const title = (attrs.title || "").trim();
-      const slugValue = (attrs.slug || "").trim();
+      const slug = (attrs.slug || "").trim();
       const publishedAt = (attrs.publishedAt || "").trim();
-      if (!title || !slugValue || !publishedAt) continue;
+      if (!title || !slug || !publishedAt) continue;
 
       const category = pickCategory(attrs);
-      const resolvedCategorySlug = (category?.slug || categorySlug || "news").trim();
-      const articleUrl = `${siteUrl}/${resolvedCategorySlug}/${slugValue}`;
-      if (seen.has(articleUrl)) continue;
-      seen.add(articleUrl);
+      const categorySlug = (category?.slug || "news").trim();
+      const categoryLabel = (category?.titleHindi || category?.name || categorySlug).toString();
+      const url = `${siteUrl}/${categorySlug}/${slug}`;
+      if (seen.has(url)) continue;
+      seen.add(url);
 
       const cover = pickCover(attrs);
-      const enclosureUrl = absoluteStrapiMediaUrl(strapiApiBaseUrl, cover?.url);
-      const enclosureType = cover?.mime || (enclosureUrl ? "image/jpeg" : undefined);
+      const imageUrl = absoluteStrapiMediaUrl(strapiApiBaseUrl, cover?.url);
+      const imageType = cover?.mime || (imageUrl ? "image/jpeg" : undefined);
+
+      const excerpt = (attrs.excerpt || "").trim();
 
       feed.item({
         title,
-        description: (attrs.excerpt || "").trim(),
-        url: articleUrl,
-        guid: articleUrl,
+        description: excerpt,
+        url,
+        guid: url,
         date: new Date(publishedAt),
-        categories: [
-          (category?.titleHindi || category?.name || resolvedCategorySlug).toString(),
-          resolvedCategorySlug,
-        ].filter(Boolean),
-        ...(enclosureUrl
-          ? {
-              enclosure: {
-                url: enclosureUrl,
-                type: enclosureType,
-              },
-            }
-          : {}),
+        categories: [categoryLabel, categorySlug].filter(Boolean),
+        ...(imageUrl ? { enclosure: { url: imageUrl, type: imageType } } : {}),
+        custom_elements: [
+          ...(imageUrl
+            ? [
+                { "media:thumbnail": [{ _attr: { url: imageUrl } }] },
+                { "media:content": [{ _attr: { url: imageUrl, type: imageType, medium: "image" } }] },
+              ]
+            : []),
+          {
+            "media:keywords": [categoryLabel, categorySlug, "Hindi News", "Rampur News"]
+              .filter(Boolean)
+              .join(", "),
+          },
+        ],
       });
     }
   } catch {
-    // Return an empty feed on failure (still valid XML)
+    // keep valid empty feed
   }
 
   const xml = feed.xml({ indent: true });

@@ -47,7 +47,8 @@ export const normalizeStrapiBaseUrl = (value: string): string => {
 const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
   const baseUrl = (config.baseUrl || '').replace(/\/+$/, '');
   const isStrapi = config.provider === 'strapi';
-  const canUseStrapiAdmin = isStrapi && !!config.apiKey && typeof window === 'undefined';
+  const canUseStrapiAdmin =
+    isStrapi && typeof window !== 'undefined' && (window.location?.pathname || '').startsWith('/admin');
 
   const buildUrl = (path: string, params?: Record<string, string | number | boolean | undefined>) => {
     if (isStrapi && typeof window !== 'undefined') {
@@ -447,17 +448,19 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       };
     }
     const normalized = normalizeArticleListMedia(result.data);
+    const publicOnly = !canUseStrapiAdmin && (!params?.status || params.status === 'published');
+    const filtered = publicOnly ? normalized.filter((a) => a?.status === 'published') : normalized;
     const orderBy = (params?.orderBy as unknown as string | undefined) || undefined;
     const shouldDateSort = !orderBy || orderBy === 'publishedDate' || orderBy === 'publishedAt';
     const dateSorted = shouldDateSort
-      ? [...normalized].sort((a, b) => {
+      ? [...filtered].sort((a, b) => {
           const aDate = a.publishedDate || a.publishedAt || '';
           const bDate = b.publishedDate || b.publishedAt || '';
           const aTime = aDate ? new Date(aDate).getTime() : 0;
           const bTime = bDate ? new Date(bDate).getTime() : 0;
           return (params?.order || 'desc') === 'asc' ? aTime - bTime : bTime - aTime;
         })
-      : normalized;
+      : filtered;
     return {
       ...result,
       data: dateSorted,
@@ -492,7 +495,9 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         if (shouldTryAdmin) {
           return normalizeArticleMedia(await tryFetch(`/articles/admin/${id}`, true, false, false));
         }
-        return normalizeArticleMedia(await tryFetch(path, false, undefined, false));
+        const article = normalizeArticleMedia(await tryFetch(path, false, undefined, false));
+        if (!canUseStrapiAdmin && article?.status && article.status !== 'published') return null;
+        return article;
       } catch (error) {
         if (
           shouldTryAdmin &&
@@ -544,7 +549,9 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
             await tryFetch(`/articles/admin/slug/${encodeURIComponent(slug)}`, true, false, false),
           );
         }
-        return normalizeArticleMedia(await tryFetch(path, false, undefined, false));
+        const article = normalizeArticleMedia(await tryFetch(path, false, undefined, false));
+        if (!canUseStrapiAdmin && article?.status && article.status !== 'published') return null;
+        return article;
       } catch (error) {
         if (
           shouldTryAdmin &&

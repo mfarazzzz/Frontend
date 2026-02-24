@@ -73,6 +73,7 @@ const absoluteStrapiMediaUrl = (strapiApiBaseUrl: string, mediaUrl?: string) => 
 
 const buildArticlesUrl = () => {
   const params = new URLSearchParams();
+  params.set("publicationState", "live");
   params.set("filters[publishedAt][$notNull]", "true");
   params.set("sort", "publishedAt:desc");
   params.set("pagination[limit]", "50");

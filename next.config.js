@@ -89,6 +89,12 @@ const nextConfig = {
     formats: ["image/avif", "image/webp"],
     remotePatterns,
   },
+  async rewrites() {
+    return [
+      { source: "/rss/:slug.xml", destination: "/rss/category/:slug" },
+      { source: "/rss/:slug", destination: "/rss/category/:slug" },
+    ];
+  },
   logging: {
     fetches: {
       fullUrl: true,

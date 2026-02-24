@@ -85,30 +85,22 @@ export interface CMSArticle {
   categoryHindi: string;
   categories?: string[];
   author: string;
-   authorId?: string;
-   authorSlug?: string;
-  publishedDate: string;
-  publishedAt?: string;
+  authorId?: string;
+  authorSlug?: string;
+  publishedAt: string; // Required in v5
+  publishedDate?: string; // Legacy compatibility
   modifiedDate?: string;
   readTime?: string;
   isFeatured?: boolean;
   isBreaking?: boolean;
-  views?: number;
-  status: 'draft' | 'published' | 'scheduled';
-  discoverEligible?: boolean;
-  contentType?:
-    | 'news'
-    | 'editorial'
-    | 'review'
-    | 'interview'
-    | 'opinion'
-    | 'special-report';
   isEditorsPick?: boolean;
+  views?: number;
+  status: 'draft' | 'published'; // Simplified
   authorRole?: CMSAuthor['role'];
   tags?: string[];
   seoTitle?: string;
-  seoDescription?: string;
-  seoOverride?: boolean;
+  meta_description?: string; // Requested field name
+  seoDescription?: string; // Legacy
   canonicalUrl?: string;
   newsKeywords?: string;
   schemaJson?: unknown;
@@ -116,8 +108,6 @@ export interface CMSArticle {
   videoUrl?: string;
   videoType?: 'youtube' | 'upload' | 'none';
   videoTitle?: string;
-  // Scheduling field
-  scheduledAt?: string;
 }
 
 export interface CMSCategory {

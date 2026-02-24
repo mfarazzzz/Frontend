@@ -28,11 +28,9 @@ const Header = ({ showBreakingTicker = true }: { showBreakingTicker?: boolean })
 
   const isActive = (path: string) => pathname === path;
 
-  const contactFormUrl =
-    "https://docs.google.com/forms/d/e/1FAIpQLSezmhkifh6B8qditlJR9Ja4g7R_oRG0stgq-Y3_cJfXXkl3Ug/viewform";
   const aboutItems = [
     { label: "हमारे बारे में", path: "/about" },
-    { label: "संपर्क करें", path: contactFormUrl },
+    { label: "संपर्क करें", path: "/contact" },
     { label: "संपादकीय नीति", path: "/editorial-policy" },
     { label: "स्वामित्व प्रकटीकरण", path: "/ownership" },
     { label: "शिकायत निवारण", path: "/grievance" },

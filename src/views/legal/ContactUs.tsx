@@ -1,11 +1,14 @@
 "use client";
+import { useState } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { MapPin, Phone, Mail, Clock, Send, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 const ContactUs = () => {
-  const contactFormUrl =
-    "https://docs.google.com/forms/d/e/1FAIpQLSezmhkifh6B8qditlJR9Ja4g7R_oRG0stgq-Y3_cJfXXkl3Ug/viewform";
+  const [submitState, setSubmitState] = useState<"idle" | "submitted">("idle");
 
   return (
     <div className="min-h-screen bg-background">
@@ -181,24 +184,88 @@ const ContactUs = () => {
                   </div>
                   <h2 className="text-xl font-bold text-foreground">हमें संदेश भेजें</h2>
                 </div>
-                <div className="flex items-center justify-between flex-wrap gap-3 text-sm text-muted-foreground">
-                  <span>कृपया नीचे दिए गए फॉर्म को भरें।</span>
-                  <a
-                    href={contactFormUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    नए टैब में खोलें
-                  </a>
-                </div>
-                <div className="mt-6 overflow-hidden rounded-lg border border-border bg-white">
-                  <iframe
-                    src={contactFormUrl}
-                    title="Rampur News संपर्क फॉर्म"
-                    className="w-full min-h-[900px]"
-                  />
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  अपना संदेश भेजने के लिए नीचे जानकारी भरें। सबमिट करने पर आपका डिफ़ॉल्ट ईमेल ऐप खुल जाएगा।
+                </p>
+                {submitState === "submitted" && (
+                  <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                    आपका संदेश भेजने के लिए ईमेल ऐप खुल गया ✅
+                  </div>
+                )}
+                <form
+                  className="mt-6 grid gap-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formEl = e.currentTarget;
+                    const formData = new FormData(formEl);
+                    const name = String(formData.get("name") || "").trim();
+                    const email = String(formData.get("email") || "").trim();
+                    const subject = String(formData.get("subject") || "").trim();
+                    const message = String(formData.get("message") || "").trim();
+
+                    const mailSubject = subject || "Rampur News संपर्क संदेश";
+                    const bodyLines = [
+                      `नाम: ${name}`,
+                      `ईमेल: ${email}`,
+                      "",
+                      message,
+                    ];
+                    const body = bodyLines.join("\n");
+                    const mailto = `mailto:contact@rampurnews.com?subject=${encodeURIComponent(
+                      mailSubject,
+                    )}&body=${encodeURIComponent(body)}`;
+                    window.location.href = mailto;
+                    formEl.reset();
+                    setSubmitState("submitted");
+                  }}
+                >
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground" htmlFor="contact_name">
+                        नाम
+                      </label>
+                      <Input id="contact_name" name="name" placeholder="आपका नाम" required />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground" htmlFor="contact_email">
+                        ईमेल
+                      </label>
+                      <Input id="contact_email" name="email" type="email" placeholder="आपका ईमेल" required />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground" htmlFor="contact_subject">
+                      विषय
+                    </label>
+                    <Input id="contact_subject" name="subject" placeholder="उदाहरण: समाचार टिप / सहायता / विज्ञापन" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground" htmlFor="contact_message">
+                      संदेश
+                    </label>
+                    <Textarea
+                      id="contact_message"
+                      name="message"
+                      rows={6}
+                      placeholder="अपना संदेश लिखें..."
+                      required
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white">
+                      संदेश भेजें
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setSubmitState("idle");
+                      }}
+                    >
+                      नया संदेश
+                    </Button>
+                  </div>
+                </form>
               </div>
 
               {/* News Tips */}

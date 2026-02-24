@@ -270,9 +270,7 @@ const EditorialPolicy = () => {
             <p className="mt-2">
               इस नीति के बारे में प्रश्नों के लिए, कृपया{" "}
               <a
-                href="https://docs.google.com/forms/d/e/1FAIpQLSezmhkifh6B8qditlJR9Ja4g7R_oRG0stgq-Y3_cJfXXkl3Ug/viewform"
-                target="_blank"
-                rel="noreferrer"
+                href="/contact"
                 className="text-primary hover:underline"
               >
                 संपर्क करें

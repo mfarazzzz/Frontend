@@ -148,8 +148,7 @@ const SEO = ({
     publishingPrinciples: `${siteUrl}/editorial-policy`,
     masthead: `${siteUrl}/about`,
     ownershipFundingInfo: `${siteUrl}/ownership`,
-    actionableFeedbackPolicy:
-      "https://docs.google.com/forms/d/e/1FAIpQLSezmhkifh6B8qditlJR9Ja4g7R_oRG0stgq-Y3_cJfXXkl3Ug/viewform",
+    actionableFeedbackPolicy: `${siteUrl}/contact`,
     correctionsPolicy: `${siteUrl}/corrections-policy`,
     ethicsPolicy: `${siteUrl}/editorial-policy`,
     unnamedSourcesPolicy: `${siteUrl}/editorial-policy`,

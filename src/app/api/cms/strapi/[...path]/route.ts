@@ -180,6 +180,11 @@ const proxy = async (request: NextRequest, path: string[]) => {
 
   // 5. Strapi v5 Content Manager Routing & URL Rewriting
   const targetUrl = buildTargetUrl(request, path);
+  console.log('--- PROXY REQUEST ---');
+  console.log('METHOD:', method);
+  console.log('PATH:', path.join('/'));
+  console.log('TARGET URL:', targetUrl.toString());
+
   const finalMethod = method;
   let finalBody: BodyInit | undefined;
 

@@ -405,6 +405,10 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         const sortOrder = input.order || 'desc';
         query['sort'] = `${sortField}:${sortOrder}`;
       }
+
+      console.log('--- CMS BUILD QUERY ---');
+      console.log('INPUT:', JSON.stringify(input, null, 2));
+      console.log('GENERATED QUERY:', JSON.stringify(query, null, 2));
       
       // Handle publication state
       if (input.status === 'draft') {

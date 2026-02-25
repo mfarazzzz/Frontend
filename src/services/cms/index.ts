@@ -396,10 +396,15 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         query['pagination[start]'] = input.offset;
       }
 
-      // Default sort should be publishedAt:desc for latest news
-      const sortField = input.orderBy === 'publishedDate' || !input.orderBy ? 'publishedAt' : input.orderBy;
-      const sortOrder = input.order || 'desc';
-      query['sort'] = `${sortField}:${sortOrder}`;
+      if (!input.orderBy) {
+        query['sort'] = 'publishedAt:desc';
+      } else {
+        const sortField = input.orderBy === 'publishedDate' || input.orderBy === 'publishedAt'
+          ? 'publishedAt'
+          : input.orderBy;
+        const sortOrder = input.order || 'desc';
+        query['sort'] = `${sortField}:${sortOrder}`;
+      }
       
       // Handle publication state
       if (input.status === 'draft') {
@@ -1141,14 +1146,20 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         category: categorySlug,
         status: 'published',
         limit,
-        orderBy: options?.orderBy || 'publishedDate',
+        orderBy: options?.orderBy || 'publishedAt',
         order: options?.order || 'desc',
       });
       return result.data;
     },
 
     async searchArticles(query: string, limit = 20): Promise<CMSArticle[]> {
-      const result = await getArticles({ search: query, status: 'published', limit });
+      const result = await getArticles({
+        search: query,
+        status: 'published',
+        limit,
+        orderBy: 'publishedAt',
+        order: 'desc',
+      });
       return result.data;
     },
 

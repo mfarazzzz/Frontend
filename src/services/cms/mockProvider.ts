@@ -164,11 +164,11 @@ export const mockCMSProvider: CMSProvider = {
     }
     
     // Sort
-    const orderBy = params?.orderBy || 'publishedDate';
+    const orderBy = params?.orderBy || 'publishedAt';
     const order = params?.order || 'desc';
     articles.sort((a, b) => {
       let comparison = 0;
-      if (orderBy === 'publishedDate') {
+      if (orderBy === 'publishedDate' || orderBy === 'publishedAt') {
         comparison = new Date(a.publishedDate).getTime() - new Date(b.publishedDate).getTime();
       } else if (orderBy === 'views') {
         comparison = (a.views || 0) - (b.views || 0);
@@ -396,14 +396,20 @@ export const mockCMSProvider: CMSProvider = {
       category: categorySlug, 
       status: 'published', 
       limit,
-      orderBy: options?.orderBy,
-      order: options?.order 
+      orderBy: options?.orderBy || 'publishedAt',
+      order: options?.order || 'desc',
     });
     return result.data;
   },
   
   async searchArticles(query: string, limit = 20): Promise<CMSArticle[]> {
-    const result = await this.getArticles({ search: query, status: 'published', limit });
+    const result = await this.getArticles({
+      search: query,
+      status: 'published',
+      limit,
+      orderBy: 'publishedAt',
+      order: 'desc',
+    });
     return result.data;
   },
 

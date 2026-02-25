@@ -67,7 +67,7 @@ export interface EditorialQueryParams {
   limit?: number;
   offset?: number;
   search?: string;
-  orderBy?: 'publishedDate' | 'views' | 'title';
+  orderBy?: 'publishedDate' | 'publishedAt' | 'views' | 'title';
   order?: 'asc' | 'desc';
 }
 
@@ -215,7 +215,7 @@ export interface ArticleQueryParams {
   offset?: number;
   search?: string;
   author?: string;
-  orderBy?: 'publishedDate' | 'views' | 'title';
+  orderBy?: 'publishedDate' | 'publishedAt' | 'views' | 'title';
   order?: 'asc' | 'desc';
 }
 

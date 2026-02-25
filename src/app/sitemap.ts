@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getCMSProvider } from "@/services/cms";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
 

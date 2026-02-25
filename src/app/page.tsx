@@ -30,6 +30,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   const siteUrl = "https://rampurnews.com";
   const siteName = "रामपुर न्यूज़ | Rampur News";

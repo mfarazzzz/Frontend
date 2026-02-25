@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCMSProvider } from "@/services/cms";
 import { generateAtomFeed } from "@/utils/generateFeeds";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {

@@ -389,15 +389,14 @@ export const mockCMSProvider: CMSProvider = {
   
   async getArticlesByCategory(
     categorySlug: string, 
-    limit = 10,
-    options?: { orderBy?: ArticleQueryParams['orderBy']; order?: ArticleQueryParams['order'] }
+    limit = 10
   ): Promise<CMSArticle[]> {
     const result = await this.getArticles({ 
       category: categorySlug, 
       status: 'published', 
       limit,
-      orderBy: options?.orderBy || 'publishedAt',
-      order: options?.order || 'desc',
+      orderBy: 'publishedAt',
+      order: 'desc',
     });
     return result.data;
   },

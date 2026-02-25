@@ -105,17 +105,12 @@ export const useTrendingArticles = (limit = 5) => {
 
 export const useArticlesByCategory = (
   categorySlug: string, 
-  limit = 10, 
-  options?: { orderBy?: ArticleQueryParams['orderBy']; order?: ArticleQueryParams['order'] }
+  limit = 10
 ) => {
   const providerKey = getProviderKey();
-  const effectiveOptions = {
-    orderBy: options?.orderBy ?? 'publishedDate',
-    order: options?.order ?? 'desc',
-  };
   return useQuery({
-    queryKey: [...cmsKeys.byCategory(categorySlug), providerKey, effectiveOptions],
-    queryFn: () => getCMSProvider().getArticlesByCategory(categorySlug, limit, effectiveOptions),
+    queryKey: [...cmsKeys.byCategory(categorySlug), providerKey, limit],
+    queryFn: () => getCMSProvider().getArticlesByCategory(categorySlug, limit),
     enabled: !!categorySlug,
   });
 };

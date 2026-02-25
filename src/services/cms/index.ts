@@ -1090,36 +1090,21 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
     async getHeroArticles(limit = 5): Promise<CMSArticle[]> {
       const desiredLimit = Math.max(1, limit || 5);
-
-      const [featuredResult, breakingResult] = await Promise.all([
-        getArticles({ featured: true, status: 'published', limit: desiredLimit }),
-        getArticles({ breaking: true, status: 'published', limit: desiredLimit }),
-      ]);
-
-      const map = new Map<string, CMSArticle>();
-      
-      const addList = (items?: CMSArticle[]) => {
-        if (!items) return;
-        for (const article of items) {
-          if (article && !map.has(article.id)) {
-            map.set(article.id, article);
-          }
-        }
-      };
-
-      addList(featuredResult?.data);
-      addList(breakingResult?.data);
-
-      const merged = Array.from(map.values());
-      merged.sort((a, b) => {
-        const aDate = a.publishedDate || a.publishedAt || '';
-        const bDate = b.publishedDate || b.publishedAt || '';
-        const aTime = aDate ? new Date(aDate).getTime() : 0;
-        const bTime = bDate ? new Date(bDate).getTime() : 0;
-        return bTime - aTime;
+      const result = await getArticles({
+        status: 'published',
+        limit: desiredLimit * 4,
+        orderBy: 'publishedAt',
+        order: 'desc',
       });
-
-      return merged.slice(0, desiredLimit);
+      const items = result?.data || [];
+      const filtered = items.filter((article) => article.isFeatured || article.isBreaking);
+      const map = new Map<string, CMSArticle>();
+      for (const article of filtered) {
+        if (!map.has(article.id)) {
+          map.set(article.id, article);
+        }
+      }
+      return Array.from(map.values()).slice(0, desiredLimit);
     },
 
     async getFeaturedArticles(limit = 5): Promise<CMSArticle[]> {
@@ -1139,15 +1124,14 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
     async getArticlesByCategory(
       categorySlug: string,
-      limit = 10,
-      options?: { orderBy?: ArticleQueryParams['orderBy']; order?: ArticleQueryParams['order'] }
+      limit = 10
     ): Promise<CMSArticle[]> {
       const result = await getArticles({
         category: categorySlug,
         status: 'published',
         limit,
-        orderBy: options?.orderBy || 'publishedAt',
-        order: options?.order || 'desc',
+        orderBy: 'publishedAt',
+        order: 'desc',
       });
       return result.data;
     },

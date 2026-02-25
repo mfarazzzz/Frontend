@@ -61,8 +61,7 @@ export interface CMSProvider {
   getTrendingArticles(limit?: number): Promise<CMSArticle[]>;
   getArticlesByCategory(
     categorySlug: string,
-    limit?: number,
-    options?: { orderBy?: ArticleQueryParams['orderBy']; order?: ArticleQueryParams['order'] }
+    limit?: number
   ): Promise<CMSArticle[]>;
   searchArticles(query: string, limit?: number): Promise<CMSArticle[]>;
 }

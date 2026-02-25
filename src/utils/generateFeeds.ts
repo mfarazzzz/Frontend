@@ -19,9 +19,7 @@ type FeedArticle = Pick<
 >;
 
 export const getAllNewsSorted = (articles: FeedArticle[]): FeedArticle[] => {
-  return [...articles].sort(
-    (a, b) => new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime()
-  );
+  return [...articles];
 };
 
 const buildCanonicalUrl = (article: FeedArticle) => {

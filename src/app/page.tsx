@@ -77,8 +77,7 @@ export default async function Page() {
     categories.map(async (category) => {
       const articles = await provider.getArticlesByCategory(
         category.slug, 
-        7, 
-        { orderBy: 'publishedDate', order: 'desc' }
+        7
       ).catch(() => []);
       return [category.slug, articles] as const;
     }),

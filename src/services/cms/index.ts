@@ -367,24 +367,11 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     const input = params || {};
 
     if (isStrapi) {
-      let andIndex = 0;
-      const addAndOr = (paths: string[], value: string) => {
-        const safe = String(value || '').trim();
-        if (!safe) return;
-        paths.forEach((path, index) => {
-          query[`filters[$and][${andIndex}][$or][${index}]${path}`] = safe;
-        });
-        andIndex += 1;
-      };
-
       if (input.category) {
-        addAndOr(['[category][slug][$eq]', '[categories][slug][$eq]'], input.category);
+        query['filters[category][slug][$eq]'] = input.category;
       }
       if (input.parent) {
-        addAndOr(
-          ['[category][parent][slug][$eq]', '[categories][parent][slug][$eq]'],
-          input.parent,
-        );
+        query['filters[category][parent][slug][$eq]'] = input.parent;
       }
       if (input.featured !== undefined) {
         query['filters[isFeatured][$eq]'] = input.featured;
@@ -402,9 +389,11 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         const raw = String(input.author || '').trim();
         if (raw) {
           if (raw.includes('@')) {
-            addAndOr(['[author][email][$eq]'], raw);
+            query['filters[author][email][$eq]'] = raw;
           } else {
-            addAndOr(['[author][slug][$eq]', '[author][name][$eq]', '[author][nameHindi][$eq]'], raw);
+            query['filters[$or][0][author][slug][$eq]'] = raw;
+            query['filters[$or][1][author][name][$eq]'] = raw;
+            query['filters[$or][2][author][nameHindi][$eq]'] = raw;
           }
         }
       }
@@ -1159,7 +1148,20 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         orderBy: 'publishedAt',
         order: 'desc',
       });
-      return result.data;
+      const normalizedSlug = String(categorySlug || '').trim().toLowerCase();
+      const filtered = normalizedSlug
+        ? result.data.filter((article) => String(article.category || '').trim().toLowerCase() === normalizedSlug)
+        : result.data;
+      if (process.env.NODE_ENV !== 'production' && filtered.length !== result.data.length) {
+        const mismatchCount = result.data.length - filtered.length;
+        console.warn('Category filter mismatch detected', {
+          categorySlug,
+          returned: result.data.length,
+          filtered: filtered.length,
+          mismatchCount,
+        });
+      }
+      return filtered;
     },
 
     async searchArticles(query: string, limit = 20): Promise<CMSArticle[]> {

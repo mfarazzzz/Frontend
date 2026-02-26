@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { verifyAdminSessionToken } from "@/lib/adminSession";
 
 export const runtime = "nodejs";
@@ -165,6 +166,9 @@ const proxy = async (request: NextRequest, path: string[]) => {
   headers.delete("connection");
   headers.delete("content-length");
   headers.delete("transfer-encoding");
+  const incomingRequestId = request.headers.get("x-request-id");
+  const requestId = incomingRequestId && incomingRequestId.trim() ? incomingRequestId.trim() : randomUUID();
+  headers.set("X-Request-Id", requestId);
 
   const jwt = request.cookies.get("strapi_jwt")?.value;
   if (isWriteOperation) {
@@ -240,6 +244,8 @@ const proxy = async (request: NextRequest, path: string[]) => {
     responseHeaders.delete("content-encoding");
     responseHeaders.delete("content-length");
     responseHeaders.delete("transfer-encoding");
+    responseHeaders.set("X-Request-Id", requestId);
+    responseHeaders.set("X-Upstream", "next-proxy");
 
     const contentType = upstream.headers.get("content-type") || "";
     const isJson = contentType.includes("application/json");

@@ -180,11 +180,6 @@ const proxy = async (request: NextRequest, path: string[]) => {
 
   // 5. Strapi v5 Content Manager Routing & URL Rewriting
   const targetUrl = buildTargetUrl(request, path);
-  console.log('--- PROXY REQUEST ---');
-  console.log('METHOD:', method);
-  console.log('PATH:', path.join('/'));
-  console.log('TARGET URL:', targetUrl.toString());
-
   const finalMethod = method;
   let finalBody: BodyInit | undefined;
 
@@ -261,8 +256,7 @@ const proxy = async (request: NextRequest, path: string[]) => {
         const isPublicContentPath =
           pathString.startsWith("editorials") ||
           pathString.startsWith("articles");
-        if (isPublicContentPath && upstream.ok) {
-          // 5-minute CDN cache, 1-minute stale-while-revalidate
+        if (isPublicContentPath && upstream.ok && !jwt) {
           responseHeaders.set(
             "Cache-Control",
             "public, s-maxage=300, stale-while-revalidate=60"

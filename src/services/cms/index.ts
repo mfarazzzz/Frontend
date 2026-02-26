@@ -367,11 +367,24 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     const input = params || {};
 
     if (isStrapi) {
+      let andIndex = 0;
+      const addAndOr = (paths: string[], value: string) => {
+        const safe = String(value || '').trim();
+        if (!safe) return;
+        paths.forEach((path, index) => {
+          query[`filters[$and][${andIndex}][$or][${index}]${path}`] = safe;
+        });
+        andIndex += 1;
+      };
+
       if (input.category) {
-        query['filters[category][slug][$eq]'] = input.category;
+        addAndOr(['[category][slug][$eq]', '[categories][slug][$eq]'], input.category);
       }
       if (input.parent) {
-        query['filters[category][parent][slug][$eq]'] = input.parent;
+        addAndOr(
+          ['[category][parent][slug][$eq]', '[categories][parent][slug][$eq]'],
+          input.parent,
+        );
       }
       if (input.featured !== undefined) {
         query['filters[isFeatured][$eq]'] = input.featured;
@@ -386,14 +399,23 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         query['filters[title][$containsi]'] = input.search;
       }
       if (input.author) {
-        query['filters[author][slug][$eq]'] = input.author;
+        const raw = String(input.author || '').trim();
+        if (raw) {
+          if (raw.includes('@')) {
+            addAndOr(['[author][email][$eq]'], raw);
+          } else {
+            addAndOr(['[author][slug][$eq]', '[author][name][$eq]', '[author][nameHindi][$eq]'], raw);
+          }
+        }
       }
 
-      if (input.limit !== undefined) {
-        query['pagination[limit]'] = input.limit;
-      }
-      if (input.offset !== undefined) {
-        query['pagination[start]'] = input.offset;
+      const rawLimit = typeof input.limit === 'number' && input.limit > 0 ? input.limit : undefined;
+      const rawOffset = typeof input.offset === 'number' && input.offset >= 0 ? input.offset : 0;
+      if (rawLimit !== undefined || rawOffset > 0) {
+        const pageSize = rawLimit ?? 25;
+        const page = Math.floor(rawOffset / pageSize) + 1;
+        query['pagination[pageSize]'] = pageSize;
+        query['pagination[page]'] = page;
       }
 
       if (!input.orderBy) {
@@ -406,10 +428,6 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         query['sort'] = `${sortField}:${sortOrder}`;
       }
 
-      console.log('--- CMS BUILD QUERY ---');
-      console.log('INPUT:', JSON.stringify(input, null, 2));
-      console.log('GENERATED QUERY:', JSON.stringify(query, null, 2));
-      
       // Handle publication state
       if (input.status === 'draft') {
         query['publicationState'] = 'preview';
@@ -478,10 +496,14 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getArticleById(id: string): Promise<CMSArticle | null> {
-      const query = isStrapi ? { 'filters[documentId][$eq]': id, populate: '*' } : {};
-      // Fallback for ID if it's not a documentId? Or just assume it works.
-      // User said "Only use collection endpoints with filters".
-      
+      const query = isStrapi
+        ? {
+            'filters[$or][0][id][$eq]': id,
+            'filters[$or][1][documentId][$eq]': id,
+            populate: '*',
+          }
+        : {};
+
       const response = await fetchJson<any>(
         buildUrl('/articles', query),
         { method: 'GET', headers: getAuthHeaders(true) },

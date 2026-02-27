@@ -67,7 +67,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
     return (
       <article className="news-card group relative overflow-hidden rounded-lg">
         <Link to={articleUrl}>
-          <div className="relative aspect-[16/9] overflow-hidden">
+          <div className="relative aspect-[4/3] md:aspect-[16/9] overflow-hidden bg-black">
             {showImage ? (
               <Image
                 src={article.image}
@@ -76,7 +76,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
                 priority={imagePriority}
                 unoptimized={unoptimizedImage}
                 sizes="(min-width: 1024px) 66vw, 100vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                className="object-contain transition-transform duration-500 group-hover:scale-105"
               />
             ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -121,7 +121,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
     return (
       <article className="news-card group relative overflow-hidden rounded-md">
         <Link to={articleUrl}>
-          <div className="relative aspect-[2/1] md:aspect-[21/9] overflow-hidden">
+          <div className="relative aspect-[4/3] md:aspect-[16/9] overflow-hidden bg-black">
             {showImage ? (
               <Image
                 src={article.image}
@@ -130,7 +130,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
                 priority={imagePriority}
                 unoptimized={unoptimizedImage}
                 sizes="(min-width: 1024px) 66vw, 100vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                className="object-contain transition-transform duration-500 group-hover:scale-105"
               />
             ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />

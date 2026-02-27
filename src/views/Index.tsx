@@ -50,7 +50,7 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="container max-w-6xl px-4 py-6">
+      <main className="container max-w-6xl px-4 py-6 article-links">
         {heroPrimary && (
           <section className="mb-8 grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
             <div>

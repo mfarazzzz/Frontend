@@ -139,6 +139,13 @@
   .eyebrow-badge { @apply text-[10px] px-2 py-0.5 rounded-sm bg-muted text-foreground; }
   .meta-text { @apply text-xs text-muted-foreground; }
   .thin-divider { @apply border-t border-border my-3; }
+  .article-links a:hover h1,
+  .article-links a:hover h2,
+  .article-links a:hover h3 {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: hsl(var(--news-red));
+  }
 
   /* News Card Styles */
   .news-card {

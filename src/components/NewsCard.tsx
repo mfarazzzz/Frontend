@@ -1,3 +1,5 @@
+ "use client";
+import { useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { Clock } from "lucide-react";
 import type { CMSArticle } from "@/services/cms";
@@ -59,6 +61,7 @@ const hasRealImage = (src?: string | null) => {
 
 const NewsCard = ({ article, variant = "default", imagePriority = false, asHero = false }: NewsCardProps) => {
   const articleUrl = `/${article.category}/${article.slug}`;
+  const [isPortrait, setIsPortrait] = useState(false);
   const unoptimizedImage = article.image ? isLocalUpstreamImage(article.image) : false;
   const showImage = hasRealImage(article.image);
   const editorialLabel = getEditorialLabel(article);
@@ -67,7 +70,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
     return (
       <article className="news-card group relative overflow-hidden rounded-lg">
         <Link to={articleUrl}>
-          <div className="relative aspect-[4/3] md:aspect-[16/9] overflow-hidden bg-black">
+          <div className={`relative ${isPortrait ? "aspect-[3/4]" : "aspect-[4/3]"} md:aspect-[16/9] overflow-hidden bg-black`}>
             {showImage ? (
               <Image
                 src={article.image}
@@ -76,7 +79,14 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
                 priority={imagePriority}
                 unoptimized={unoptimizedImage}
                 sizes="(min-width: 1024px) 66vw, 100vw"
-                className="object-contain transition-transform duration-500 group-hover:scale-105"
+                className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                onLoadingComplete={(img) => {
+                  try {
+                    setIsPortrait(img.naturalHeight > img.naturalWidth);
+                  } catch {
+                    // ignore
+                  }
+                }}
               />
             ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -121,7 +131,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
     return (
       <article className="news-card group relative overflow-hidden rounded-md">
         <Link to={articleUrl}>
-          <div className="relative aspect-[4/3] md:aspect-[16/9] overflow-hidden bg-black">
+          <div className={`relative ${isPortrait ? "aspect-[3/4]" : "aspect-[4/3]"} md:aspect-[16/9] overflow-hidden bg-black`}>
             {showImage ? (
               <Image
                 src={article.image}
@@ -130,7 +140,14 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
                 priority={imagePriority}
                 unoptimized={unoptimizedImage}
                 sizes="(min-width: 1024px) 66vw, 100vw"
-                className="object-contain transition-transform duration-500 group-hover:scale-105"
+                className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                onLoadingComplete={(img) => {
+                  try {
+                    setIsPortrait(img.naturalHeight > img.naturalWidth);
+                  } catch {
+                    // ignore
+                  }
+                }}
               />
             ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />

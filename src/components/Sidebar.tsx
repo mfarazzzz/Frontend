@@ -91,6 +91,32 @@ const Sidebar = () => {
       {/* YouTube Widget */}
       <YouTubeWidget />
 
+      {/* सबसे ज्यादा पढ़ी गयी खबरे (above follow) */}
+      <div className="sidebar-card">
+        <h3 className="sidebar-title border-l-4 border-red-700 pl-3 mb-4">
+          सबसे ज्यादा पढ़ी गयी खबरे
+        </h3>
+        {mostRead.slice(0, 5).map((item, index) => (
+          <Link
+            key={item.id}
+            to={`/${item.category}/${item.slug}`}
+            className="flex gap-3 mb-4 group"
+          >
+            <span className="text-3xl font-bold text-gray-300 leading-none">
+              {index + 1}
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-semibold text-sm leading-snug group-hover:text-red-700 line-clamp-2">
+                {item.title}
+              </h4>
+              <p className="meta-text">
+                {formatRelativeTimeHindi(item.publishedDate)}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
       {/* Social Media Follow */}
       <div className="sidebar-card">
         <h3 className="text-base font-semibold mb-3">

@@ -5,8 +5,7 @@ export type YouTubeChannel = {
 
 // Configure your YouTube channels here (no API key needed for embeds)
 export const YOUTUBE_CHANNELS: YouTubeChannel[] = [
-  // Example:
-  // { id: "UCxxxxxxxxxxxxxxxx", title: "Rampur News" },
+  { id: "UCHf9FM3joGAyGdjVOFNDpyw", title: "Rampur News" },
 ];
 
 export const uploadsPlaylistId = (channelId: string) => {
@@ -14,4 +13,3 @@ export const uploadsPlaylistId = (channelId: string) => {
   if (!channelId.startsWith("UC") || channelId.length < 3) return null;
   return `UU${channelId.substring(2)}`;
 };
-

@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import CategorySection from "@/components/CategorySection";
 import NewsCard from "@/components/NewsCard";
 import FollowButtons from "@/components/FollowButtons";
+import YouTubeWidget from "@/components/YouTubeWidget";
 import type { CMSArticle, CMSCategory, CMSEditorial } from "@/services/cms";
 type IndexProps = {
   heroArticles: CMSArticle[];
@@ -138,6 +139,8 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
                     ))}
                   </div>
                 </div>
+
+                <YouTubeWidget />
 
                 <div className="bg-card rounded-lg p-4 border border-border">
                   <h3 className="text-base font-semibold mb-4 border-b border-border pb-2">हमसे जुड़ें</h3>

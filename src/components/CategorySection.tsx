@@ -22,7 +22,7 @@ const CategorySection = ({
   const featuredSecondary = articles.slice(1, 5);
 
   return (
-    <section className="py-8 space-y-4">
+    <section className="py-6 space-y-4">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl md:text-3xl font-bold tracking-tight border-l-4 border-red-700 pl-3">
           {title}

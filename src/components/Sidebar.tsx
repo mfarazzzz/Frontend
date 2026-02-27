@@ -128,25 +128,30 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Most Viewed (compact) */}
-      <div className="">
-        <div className="flex items-center gap-2 mb-3">
-          <Eye className="text-primary" size={18} />
-          <h3 className="text-base font-semibold">सबसे ज्यादा पढ़ी गई</h3>
-        </div>
-        <div className="space-y-2">
-          {trendingNews.slice(0, 4).map((article) => (
-            <Link
-              key={article.id}
-              to={`/${article.category}/${article.slug}`}
-              className="block group"
-            >
-              <h4 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-red-700 transition-colors">
-                {article.title}
+      {/* ज़्यादा पढ़ी गई खबर - Editorial Sidebar Block */}
+      <div className="bg-white dark:bg-card rounded-md shadow-sm p-5">
+        <h3 className="text-lg font-bold border-l-4 border-red-700 pl-3 mb-4">
+          ज़्यादा पढ़ी गई खबर
+        </h3>
+        {trendingNews.slice(0, 5).map((item, index) => (
+          <Link
+            key={item.id}
+            to={`/${item.category}/${item.slug}`}
+            className="flex gap-3 mb-4 group"
+          >
+            <span className="text-3xl font-bold text-gray-300 leading-none">
+              {index + 1}
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-semibold text-sm leading-snug group-hover:text-red-700 line-clamp-2">
+                {item.title}
               </h4>
-            </Link>
-          ))}
-        </div>
+              <p className="text-xs text-gray-500">
+                {formatRelativeTimeHindi(item.publishedDate)}
+              </p>
+            </div>
+          </Link>
+        ))}
       </div>
     </aside>
   );

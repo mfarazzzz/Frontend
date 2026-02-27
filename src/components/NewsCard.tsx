@@ -7,6 +7,7 @@ interface NewsCardProps {
   article: CMSArticle;
   variant?: "default" | "featured" | "horizontal" | "compact" | "hero" | "stacked" | "mini";
   imagePriority?: boolean;
+  asHero?: boolean;
 }
 
 const formatRelativeTimeHindi = (dateString: string) => {
@@ -56,7 +57,7 @@ const hasRealImage = (src?: string | null) => {
   return true;
 };
 
-const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsCardProps) => {
+const NewsCard = ({ article, variant = "default", imagePriority = false, asHero = false }: NewsCardProps) => {
   const articleUrl = `/${article.category}/${article.slug}`;
   const unoptimizedImage = article.image ? isLocalUpstreamImage(article.image) : false;
   const showImage = hasRealImage(article.image);
@@ -96,7 +97,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 line-clamp-2">
+              <h1 className="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight text-white mb-2 line-clamp-2">
                 {article.title}
               </h1>
               <p className="text-sm text-gray-200 line-clamp-2 hidden md:block">
@@ -118,7 +119,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
 
   if (variant === "featured") {
     return (
-      <article className="news-card group relative overflow-hidden rounded-lg">
+      <article className="news-card group relative overflow-hidden rounded-md">
         <Link to={articleUrl}>
           <div className="relative aspect-[16/9] overflow-hidden">
             {showImage ? (
@@ -132,7 +133,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
             ) : null}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
               <div className="flex items-center gap-2 mb-3">
                 {article.isBreaking && (
@@ -143,18 +144,24 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
                     संपादक की पसंद
                   </span>
                 )}
-                {editorialLabel && <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground">
+                {editorialLabel && <span className="text-[10px] px-2 py-1 rounded-sm bg-muted text-foreground">
                   {editorialLabel}
                 </span>}
                 {!editorialLabel && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground">
+                  <span className="text-[10px] px-2 py-1 rounded-sm bg-red-700 text-white font-semibold">
                     {article.categoryHindi}
                   </span>
                 )}
               </div>
-              <h3 className="text-lg md:text-xl font-bold text-white mb-2 line-clamp-2">
-                {article.title}
-              </h3>
+              {asHero ? (
+                <h1 className="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight text-white mb-2 line-clamp-2">
+                  {article.title}
+                </h1>
+              ) : (
+                <h3 className="text-2xl font-bold text-white mb-2 line-clamp-2">
+                  {article.title}
+                </h3>
+              )}
               <p className="text-sm text-gray-200 line-clamp-2 hidden md:block">
                 {article.excerpt}
               </p>
@@ -210,9 +217,9 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
 
   if (variant === "horizontal") {
     return (
-      <article className="news-card group flex gap-4 p-3 bg-card rounded-lg border border-border">
+      <article className="group flex gap-4 p-3 rounded-md hover:shadow-md transition-all duration-300">
         <Link to={articleUrl} className="flex-shrink-0">
-          <div className="w-24 h-20 md:w-28 md:h-20 rounded-lg overflow-hidden">
+          <div className="w-24 h-20 md:w-28 md:h-20 rounded-md overflow-hidden">
             {showImage ? (
               <Image
                 src={article.image}
@@ -239,11 +246,11 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
                   संपादक की पसंद
                 </span>
               )}
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground">
+              <span className="text-[10px] px-2 py-1 rounded-sm bg-muted text-foreground">
                 {editorialLabel || article.categoryHindi}
               </span>
             </div>
-            <h3 className="text-sm md:text-base font-semibold text-foreground line-clamp-2 mt-1 group-hover:text-primary transition-colors">
+            <h3 className="text-lg font-semibold leading-snug text-foreground line-clamp-2 mt-1 group-hover:text-primary transition-colors">
               {article.title}
             </h3>
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
@@ -291,23 +298,23 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
 
   if (variant === "compact") {
     return (
-      <article className="group">
+      <article className="group hover:shadow-md transition-all duration-300 rounded-md p-1">
         <Link to={articleUrl} className="flex items-start gap-3">
-          <div className="w-20 h-16 flex-shrink-0 rounded overflow-hidden">
+          <div className="w-16 h-14 md:w-20 md:h-16 flex-shrink-0 rounded-md overflow-hidden">
             {showImage ? (
               <Image
                 src={article.image}
                 alt={article.title}
-                width={80}
-                height={64}
+                width={96}
+                height={72}
                 unoptimized={unoptimizedImage}
-                sizes="80px"
+                sizes="96px"
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             ) : null}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+            <h3 className="text-base font-semibold leading-snug text-foreground line-clamp-2 group-hover:text-primary transition-colors">
               {article.title}
             </h3>
             <span className="text-xs text-muted-foreground mt-1 block">
@@ -321,7 +328,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
 
   // Default variant
   return (
-    <article className="news-card group bg-card rounded-lg overflow-hidden border border-border">
+    <article className="news-card group bg-card rounded-md overflow-hidden shadow-sm">
       <Link to={articleUrl}>
         <div className="relative aspect-video overflow-hidden">
           {showImage ? (
@@ -350,13 +357,13 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
             </span>
           )}
           <Link to={`/${article.category}`}>
-            <span className="text-[11px] font-semibold text-muted-foreground hover:underline">
+            <span className="text-[11px] font-semibold text-muted-foreground hover:text-red-700">
               {editorialLabel || article.categoryHindi}
             </span>
           </Link>
         </div>
         <Link to={articleUrl}>
-          <h3 className="text-base font-semibold text-foreground line-clamp-2 mt-2 group-hover:text-primary transition-colors">
+          <h3 className="text-lg font-semibold leading-snug text-foreground line-clamp-2 mt-2 group-hover:text-primary transition-colors">
             {article.title}
           </h3>
           <p className="text-sm text-muted-foreground line-clamp-2 mt-2">

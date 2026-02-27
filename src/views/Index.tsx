@@ -51,7 +51,7 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
         {heroPrimary && (
           <section className="mb-8 grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
             <div>
-              <NewsCard article={heroPrimary} variant="featured" imagePriority />
+              <NewsCard article={heroPrimary} variant="featured" imagePriority asHero />
             </div>
             <div className="space-y-4">
               {heroSecondary.map((article) => (

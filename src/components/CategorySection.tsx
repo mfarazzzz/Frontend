@@ -22,12 +22,13 @@ const CategorySection = ({
   const featuredSecondary = articles.slice(1, 5);
 
   return (
-    <section className="py-6">
-      <div className="section-header">
-        <h2 className="section-title">{title}</h2>
-        <Link className="flex items-center gap-1 text-sm font-medium text-primary hover:underline" href={viewAllLink}>
-          और देखें
-          <ChevronRight size={16} />
+    <section className="py-10 space-y-4">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl md:text-3xl font-bold tracking-tight border-l-4 border-red-700 pl-3">
+          {title}
+        </h2>
+        <Link className="text-sm font-semibold text-gray-600 hover:text-red-700 flex items-center gap-1" href={viewAllLink}>
+          और देखें <ChevronRight size={16} />
         </Link>
       </div>
 
@@ -38,9 +39,13 @@ const CategorySection = ({
           ))}
         </div>
       ) : variant === "featured" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4">
-          <div>{featuredPrimary && <NewsCard article={featuredPrimary} variant="featured" />}</div>
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6">
+          <div>
+            {featuredPrimary && (
+              <NewsCard article={featuredPrimary} variant="featured" />
+            )}
+          </div>
+          <div className="space-y-3">
             {featuredSecondary.map((article) => (
               <NewsCard key={article.id} article={article} variant="horizontal" />
             ))}

@@ -29,22 +29,22 @@ const Sidebar = () => {
 
   return (
     <aside className="space-y-6">
-      {/* Trending News */}
-      <div className="bg-card rounded-lg border border-border p-4">
-        <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-primary">
-          <TrendingUp className="text-primary" size={20} />
-          <h3 className="font-bold text-lg">ट्रेंडिंग न्यूज़</h3>
+      {/* Trending Editorial List */}
+      <div className="">
+        <div className="flex items-center gap-2 mb-3">
+          <TrendingUp className="text-primary" size={18} />
+          <h3 className="text-base font-semibold">ट्रेंडिंग</h3>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {trendingNews.map((article, index) => (
             <Link
               key={article.id}
               to={`/${article.category}/${article.slug}`}
               className="flex items-start gap-3 group"
             >
-              <span className="trending-number flex-shrink-0">{index + 1}</span>
+              <div className="text-3xl font-bold text-gray-300 leading-none">{index + 1}</div>
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-red-700 transition-colors">
                   {article.title}
                 </h4>
                 <span className="text-xs text-muted-foreground mt-1 block">
@@ -128,28 +128,20 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Most Viewed */}
-      <div className="bg-card rounded-lg border border-border p-4">
-        <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-primary">
-          <Eye className="text-primary" size={20} />
-          <h3 className="font-bold text-lg">सबसे ज्यादा पढ़ी गई</h3>
+      {/* Most Viewed (compact) */}
+      <div className="">
+        <div className="flex items-center gap-2 mb-3">
+          <Eye className="text-primary" size={18} />
+          <h3 className="text-base font-semibold">सबसे ज्यादा पढ़ी गई</h3>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {trendingNews.slice(0, 4).map((article) => (
             <Link
               key={article.id}
               to={`/${article.category}/${article.slug}`}
-              className="flex items-start gap-3 group"
+              className="block group"
             >
-              <div className="w-16 h-12 flex-shrink-0 rounded overflow-hidden">
-                <img
-                  src={article.image}
-                  alt={article.title}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <h4 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors flex-1">
+              <h4 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-red-700 transition-colors">
                 {article.title}
               </h4>
             </Link>

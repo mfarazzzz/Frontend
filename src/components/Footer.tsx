@@ -136,6 +136,11 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-4 border-b border-primary pb-2">त्वरित लिंक</h3>
             <ul className="space-y-2">
               <li>
+                <Link to="/videos" className="text-sm text-gray-300 hover:text-primary transition-colors">
+                  वीडियो
+                </Link>
+              </li>
+              <li>
                 <Link to="/about" className="text-sm text-gray-300 hover:text-primary transition-colors">
                   हमारे बारे में
                 </Link>

@@ -1,11 +1,14 @@
- "use client";
+"use client";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { YOUTUBE_CHANNELS } from "@/config/youtube";
 
 type VideoItem = { id: string; title: string; published?: string; thumbnail?: string };
 
 const YouTubeWidget = () => {
   const first = YOUTUBE_CHANNELS[0];
+  const pathname = usePathname();
+  const isHomepage = pathname === "/";
   const [items, setItems] = useState<VideoItem[]>([]);
   useEffect(() => {
     const load = async () => {
@@ -35,8 +38,23 @@ const YouTubeWidget = () => {
         </a>
       </div>
       {items.length > 0 ? (
-        <div className="space-y-2">
-          {items.slice(0, 8).map((v) => (
+        <>
+          {isHomepage ? (
+            <div className="aspect-[3/2] w-full rounded overflow-hidden mb-3">
+              <iframe
+                title={first?.title || "YouTube"}
+                src={`https://www.youtube-nocookie.com/embed/${items[0].id}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+                className="w-full h-full"
+              />
+            </div>
+          ) : null}
+          <div className="space-y-2">
+            {(isHomepage ? items.slice(1, 8) : items.slice(0, 8)).map((v) => (
             <a
               key={v.id}
               href={`https://www.youtube.com/watch?v=${v.id}`}
@@ -58,8 +76,9 @@ const YouTubeWidget = () => {
                 </p>
               </div>
             </a>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       ) : first ? (
         <a
           href={`https://www.youtube.com/channel/${first.id}`}

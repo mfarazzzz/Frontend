@@ -129,9 +129,6 @@ const CategoryListingInner = ({ categorySlug }: { categorySlug: string }) => {
 
       <main className="container py-6">
         <CategoryHeader category={category} />
-        <div className="prose prose-sm md:prose-base max-w-none text-muted-foreground mb-6">
-          <p>{introText}</p>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8">

@@ -463,9 +463,31 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         };
       }
 
+      const normalized = normalizeArticleListMedia(response.data);
+      if (params?.category) {
+        const slug = String(params.category || '').trim().toLowerCase();
+        if (slug) {
+          const filtered = normalized.filter(
+            (article) => String(article.category || '').trim().toLowerCase() === slug,
+          );
+          if (process.env.NODE_ENV !== 'production' && filtered.length !== normalized.length) {
+            const mismatchCount = normalized.length - filtered.length;
+            console.warn('Category filter mismatch detected', {
+              categorySlug: params.category,
+              returned: normalized.length,
+              filtered: filtered.length,
+              mismatchCount,
+            });
+          }
+          return {
+            ...response,
+            data: filtered,
+          };
+        }
+      }
       return {
         ...response,
-        data: normalizeArticleListMedia(response.data),
+        data: normalized,
       };
     } catch (error) {
       console.error('getArticles failed:', error);
@@ -1148,20 +1170,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         orderBy: 'publishedAt',
         order: 'desc',
       });
-      const normalizedSlug = String(categorySlug || '').trim().toLowerCase();
-      const filtered = normalizedSlug
-        ? result.data.filter((article) => String(article.category || '').trim().toLowerCase() === normalizedSlug)
-        : result.data;
-      if (process.env.NODE_ENV !== 'production' && filtered.length !== result.data.length) {
-        const mismatchCount = result.data.length - filtered.length;
-        console.warn('Category filter mismatch detected', {
-          categorySlug,
-          returned: result.data.length,
-          filtered: filtered.length,
-          mismatchCount,
-        });
-      }
-      return filtered;
+      return result.data;
     },
 
     async searchArticles(query: string, limit = 20): Promise<CMSArticle[]> {

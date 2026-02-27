@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const parseFeed = (xml: string, limit = 6) => {
   const entries: Array<{ id: string; title: string; published: string; thumbnail?: string }> = [];
@@ -26,11 +28,11 @@ const parseFeed = (xml: string, limit = 6) => {
   return entries;
 };
 
-export async function GET(request: Request, context: { params: { channelId: string } }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ channelId: string }> }) {
   try {
-    const { channelId } = context.params;
+    const { channelId } = await context.params;
     const url = new URL(request.url);
-    const limit = Math.max(1, Math.min(10, Number(url.searchParams.get("limit") || "6")));
+    const limit = Math.max(1, Math.min(30, Number(url.searchParams.get("limit") || "6")));
     const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`;
     const res = await fetch(feedUrl, { cache: "no-store" });
     if (!res.ok) {
@@ -43,4 +45,3 @@ export async function GET(request: Request, context: { params: { channelId: stri
     return NextResponse.json({ items: [] }, { status: 200 });
   }
 }
-

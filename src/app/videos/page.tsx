@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { YOUTUBE_CHANNELS, uploadsPlaylistId } from "@/config/youtube";
+import VideosGrid from "@/components/VideosGrid";
 
 export const metadata = {
   title: "वीडियो | Rampur News",
@@ -71,43 +72,7 @@ export default async function VideosPage({ searchParams }: { searchParams: { pag
         )}
         {/* Grid below playlist */}
         <section className="mt-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paged.map((v) => (
-              <a
-                key={v.id}
-                href={`https://www.youtube.com/watch?v=${v.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group bg-card rounded-md overflow-hidden border border-border hover:shadow-md transition-shadow"
-              >
-                <div className="aspect-video bg-muted">
-                  <img
-                    src={v.thumbnail}
-                    alt={v.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-3">
-                  <h3 className="text-base font-semibold leading-snug line-clamp-2 group-hover:text-red-700">
-                    {v.title}
-                  </h3>
-                </div>
-              </a>
-            ))}
-          </div>
-          <div className="flex items-center justify-between mt-6">
-            {hasPrev ? (
-              <a href={`/videos?page=${page - 1}`} className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted">
-                पिछला
-              </a>
-            ) : <span />}
-            {hasNext ? (
-              <a href={`/videos?page=${page + 1}`} className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted">
-                अगला
-              </a>
-            ) : <span />}
-          </div>
+          {first ? <VideosGrid channelId={first.id} pageSize={24} /> : null}
         </section>
       </main>
       <Footer />

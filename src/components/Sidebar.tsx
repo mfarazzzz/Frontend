@@ -35,8 +35,8 @@ const Sidebar = () => {
     <aside className="space-y-6">
       {/* आज की बड़ी खबरें */}
       {todaysTop.length > 0 && (
-        <div className="bg-white dark:bg-card rounded-md shadow-sm p-5">
-          <h3 className="text-lg font-bold border-l-4 border-red-700 pl-3 mb-4">
+        <div className="sidebar-card">
+          <h3 className="sidebar-title border-l-4 border-red-700 pl-3 mb-4">
             आज की बड़ी खबरें
           </h3>
           <div className="space-y-3">
@@ -51,7 +51,7 @@ const Sidebar = () => {
                   <h4 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-red-700">
                     {item.title}
                   </h4>
-                  <p className="text-xs text-gray-500">
+                  <p className="meta-text">
                     {formatRelativeTimeHindi(item.publishedDate)}
                   </p>
                 </div>
@@ -62,8 +62,8 @@ const Sidebar = () => {
       )}
 
       {/* Trending Editorial List */}
-      <div className="">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="sidebar-card">
+        <div className="sidebar-title">
           <TrendingUp className="text-primary" size={18} />
           <h3 className="text-base font-semibold">ट्रेंडिंग</h3>
         </div>
@@ -79,7 +79,7 @@ const Sidebar = () => {
                 <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-red-700 transition-colors">
                   {article.title}
                 </h4>
-                <span className="text-xs text-muted-foreground mt-1 block">
+                <span className="meta-text mt-1 block">
                   {formatRelativeTimeHindi(article.publishedDate)}
                 </span>
               </div>
@@ -92,8 +92,8 @@ const Sidebar = () => {
       <YouTubeWidget />
 
       {/* Social Media Follow */}
-      <div className="bg-card rounded-lg border border-border p-4">
-        <h3 className="font-bold text-lg mb-4 pb-2 border-b-2 border-primary">
+      <div className="sidebar-card">
+        <h3 className="text-base font-semibold mb-3">
           हमसे जुड़ें
         </h3>
         <div className="grid grid-cols-2 gap-2">
@@ -161,8 +161,8 @@ const Sidebar = () => {
       </div>
 
       {/* ज़्यादा पढ़ी गई खबर - Editorial Sidebar Block */}
-      <div className="bg-white dark:bg-card rounded-md shadow-sm p-5">
-        <h3 className="text-lg font-bold border-l-4 border-red-700 pl-3 mb-4">
+      <div className="sidebar-card">
+        <h3 className="sidebar-title border-l-4 border-red-700 pl-3 mb-4">
           ज़्यादा पढ़ी गई खबर
         </h3>
         {mostRead.slice(0, 5).map((item, index) => (
@@ -178,7 +178,7 @@ const Sidebar = () => {
               <h4 className="font-semibold text-sm leading-snug group-hover:text-red-700 line-clamp-2">
                 {item.title}
               </h4>
-              <p className="text-xs text-gray-500">
+              <p className="meta-text">
                 {formatRelativeTimeHindi(item.publishedDate)}
               </p>
             </div>

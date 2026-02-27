@@ -219,16 +219,15 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
     return (
       <article className="group flex gap-4 p-3 rounded-md hover:shadow-md transition-all duration-300">
         <Link to={articleUrl} className="flex-shrink-0">
-          <div className="w-24 h-20 md:w-28 md:h-20 rounded-md overflow-hidden">
+          <div className="relative w-32 md:w-36 aspect-[16/9] rounded-md overflow-hidden bg-muted">
             {showImage ? (
               <Image
                 src={article.image}
                 alt={article.title}
-                width={112}
-                height={80}
+                fill
                 unoptimized={unoptimizedImage}
-                sizes="(min-width: 768px) 112px, 96px"
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                sizes="(min-width: 768px) 144px, 128px"
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
               />
             ) : null}
           </div>
@@ -250,7 +249,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
                 {editorialLabel || article.categoryHindi}
               </span>
             </div>
-            <h3 className="text-lg font-semibold leading-snug text-foreground line-clamp-2 mt-1 group-hover:text-primary transition-colors">
+            <h3 className="text-[15px] md:text-base font-semibold leading-snug text-foreground line-clamp-2 mt-1 group-hover:text-primary transition-colors">
               {article.title}
             </h3>
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">

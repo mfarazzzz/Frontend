@@ -208,7 +208,7 @@
   .breaking-ticker-content {
     @apply flex;
     width: max-content;
-    animation: ticker 108s linear infinite;
+    animation: ticker 48s linear infinite;
     will-change: transform;
   }
 

@@ -91,6 +91,10 @@ export default async function Page() {
   const editorials = editorialPage?.data ?? [];
 
   const trendingArticles = await provider.getTrendingArticles(8).catch(() => []);
+  const todaysTopPage = await provider.getArticles({ todaysTop: true, status: "published", limit: 5 }).catch(() => ({ data: [], total: 0, page: 1, pageSize: 5, totalPages: 1 }));
+  const todaysTop = todaysTopPage?.data ?? [];
+  const mostRead24hPage = await provider.getArticles({ status: "published", sinceHours: 24, orderBy: "views", order: "desc", limit: 5 }).catch(() => ({ data: [], total: 0, page: 1, pageSize: 5, totalPages: 1 }));
+  const mostRead24h = mostRead24hPage?.data ?? [];
   
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -235,6 +239,8 @@ export default async function Page() {
         categoryArticles={categoryArticles}
         editorials={editorials}
         trendingArticles={trendingArticles}
+        todaysTop={todaysTop}
+        mostRead24h={mostRead24h}
       />
     </>
   );

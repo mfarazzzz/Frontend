@@ -5,7 +5,7 @@ import Image from "next/image";
 
 interface NewsCardProps {
   article: CMSArticle;
-  variant?: "default" | "featured" | "horizontal" | "compact";
+  variant?: "default" | "featured" | "horizontal" | "compact" | "hero" | "stacked" | "mini";
   imagePriority?: boolean;
 }
 
@@ -48,17 +48,26 @@ const isLocalUpstreamImage = (src: string) => {
   }
 };
 
+const hasRealImage = (src?: string | null) => {
+  if (!src) return false;
+  const lowered = src.toLowerCase();
+  if (lowered.includes("placeholder")) return false;
+  if (lowered.includes("news-placeholder")) return false;
+  return true;
+};
+
 const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsCardProps) => {
   const articleUrl = `/${article.category}/${article.slug}`;
   const unoptimizedImage = article.image ? isLocalUpstreamImage(article.image) : false;
+  const showImage = hasRealImage(article.image);
   const editorialLabel = getEditorialLabel(article);
 
-  if (variant === "featured") {
+  if (variant === "hero") {
     return (
       <article className="news-card group relative overflow-hidden rounded-lg">
         <Link to={articleUrl}>
-          <div className="relative aspect-[16/10] overflow-hidden">
-            {article.image ? (
+          <div className="relative aspect-[16/9] overflow-hidden">
+            {showImage ? (
               <Image
                 src={article.image}
                 alt={article.title}
@@ -72,22 +81,24 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6">
               <div className="flex items-center gap-2 mb-3">
-                {article.isBreaking && (
-                  <span className="live-badge">ब्रेकिंग</span>
-                )}
+                {article.isBreaking && <span className="live-badge">ब्रेकिंग</span>}
                 {article.isEditorsPick && (
-                  <span className="category-badge bg-amber-500 text-black">संपादक की पसंद</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500 text-black">
+                    संपादक की पसंद
+                  </span>
                 )}
-                {editorialLabel && (
-                  <span className="category-badge bg-primary/90">{editorialLabel}</span>
-                )}
+                {editorialLabel && <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground">
+                  {editorialLabel}
+                </span>}
                 {!editorialLabel && (
-                  <span className="category-badge">{article.categoryHindi}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground">
+                    {article.categoryHindi}
+                  </span>
                 )}
               </div>
-              <h2 className="text-lg md:text-2xl font-bold text-white mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 line-clamp-2">
                 {article.title}
-              </h2>
+              </h1>
               <p className="text-sm text-gray-200 line-clamp-2 hidden md:block">
                 {article.excerpt}
               </p>
@@ -105,12 +116,104 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
     );
   }
 
+  if (variant === "featured") {
+    return (
+      <article className="news-card group relative overflow-hidden rounded-lg">
+        <Link to={articleUrl}>
+          <div className="relative aspect-[16/9] overflow-hidden">
+            {showImage ? (
+              <Image
+                src={article.image}
+                alt={article.title}
+                fill
+                priority={imagePriority}
+                unoptimized={unoptimizedImage}
+                sizes="(min-width: 1024px) 66vw, 100vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : null}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+              <div className="flex items-center gap-2 mb-3">
+                {article.isBreaking && (
+                  <span className="live-badge">ब्रेकिंग</span>
+                )}
+                {article.isEditorsPick && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500 text-black">
+                    संपादक की पसंद
+                  </span>
+                )}
+                {editorialLabel && <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground">
+                  {editorialLabel}
+                </span>}
+                {!editorialLabel && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground">
+                    {article.categoryHindi}
+                  </span>
+                )}
+              </div>
+              <h3 className="text-lg md:text-xl font-bold text-white mb-2 line-clamp-2">
+                {article.title}
+              </h3>
+              <p className="text-sm text-gray-200 line-clamp-2 hidden md:block">
+                {article.excerpt}
+              </p>
+              <div className="flex items-center gap-3 mt-3 text-xs text-gray-300">
+                <span>{article.author}</span>
+                <span className="flex items-center gap-1">
+                  <Clock size={12} />
+                  {formatRelativeTimeHindi(article.publishedDate)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </Link>
+      </article>
+    );
+  }
+
+  if (variant === "stacked") {
+    return (
+      <article className="news-card group rounded-lg overflow-hidden border border-border">
+        <Link to={articleUrl}>
+          <div className="relative aspect-[4/3] overflow-hidden">
+            {showImage ? (
+              <Image
+                src={article.image}
+                alt={article.title}
+                fill
+                unoptimized={unoptimizedImage}
+                sizes="(min-width: 1024px) 26vw, 100vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : null}
+            {article.isBreaking && <span className="live-badge absolute top-2 left-2">ब्रेकिंग</span>}
+          </div>
+        </Link>
+        <div className="p-3">
+          <Link to={articleUrl}>
+            <h3 className="text-base font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+              {article.title}
+            </h3>
+          </Link>
+          <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+            <span className="line-clamp-1">{article.author}</span>
+            <span className="flex items-center gap-1">
+              <Clock size={12} />
+              {formatRelativeTimeHindi(article.publishedDate)}
+            </span>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
   if (variant === "horizontal") {
     return (
       <article className="news-card group flex gap-4 p-3 bg-card rounded-lg border border-border">
         <Link to={articleUrl} className="flex-shrink-0">
           <div className="w-24 h-20 md:w-28 md:h-20 rounded-lg overflow-hidden">
-            {article.image ? (
+            {showImage ? (
               <Image
                 src={article.image}
                 alt={article.title}
@@ -136,7 +239,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
                   संपादक की पसंद
                 </span>
               )}
-              <span className="text-[10px] px-2 py-0.5 rounded-full border border-red-200 bg-red-50 text-red-700 font-semibold">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground">
                 {editorialLabel || article.categoryHindi}
               </span>
             </div>
@@ -153,12 +256,45 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
     );
   }
 
+  if (variant === "mini") {
+    return (
+      <article className="news-card group flex gap-3 p-3 bg-card rounded-lg border border-border">
+        <Link to={articleUrl} className="flex-shrink-0">
+          <div className="w-20 h-14 rounded-md overflow-hidden">
+            {showImage ? (
+              <Image
+                src={article.image}
+                alt={article.title}
+                width={80}
+                height={56}
+                unoptimized={unoptimizedImage}
+                sizes="80px"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : null}
+          </div>
+        </Link>
+        <div className="flex-1 min-w-0">
+          <Link to={articleUrl}>
+            <h3 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+              {article.title}
+            </h3>
+          </Link>
+          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+            <Clock size={12} />
+            <span>{formatRelativeTimeHindi(article.publishedDate)}</span>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
   if (variant === "compact") {
     return (
       <article className="group">
         <Link to={articleUrl} className="flex items-start gap-3">
           <div className="w-20 h-16 flex-shrink-0 rounded overflow-hidden">
-            {article.image ? (
+            {showImage ? (
               <Image
                 src={article.image}
                 alt={article.title}
@@ -171,9 +307,9 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
             ) : null}
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+            <h3 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">
               {article.title}
-            </h4>
+            </h3>
             <span className="text-xs text-muted-foreground mt-1 block">
               {formatRelativeTimeHindi(article.publishedDate)}
             </span>
@@ -188,7 +324,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
     <article className="news-card group bg-card rounded-lg overflow-hidden border border-border">
       <Link to={articleUrl}>
         <div className="relative aspect-video overflow-hidden">
-          {article.image ? (
+          {showImage ? (
             <Image
               src={article.image}
               alt={article.title}
@@ -214,7 +350,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false }: NewsC
             </span>
           )}
           <Link to={`/${article.category}`}>
-            <span className="text-[11px] font-semibold text-primary hover:underline">
+            <span className="text-[11px] font-semibold text-muted-foreground hover:underline">
               {editorialLabel || article.categoryHindi}
             </span>
           </Link>

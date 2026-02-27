@@ -41,6 +41,7 @@ export default async function Page() {
   if (!heroArticles || heroArticles.length === 0) {
     heroArticles = await provider.getFeaturedArticles(3).catch(() => []);
   }
+  const heroPrimary = heroArticles[0];
 
   const preferredOrder = [
     "rampur",
@@ -173,6 +174,41 @@ export default async function Page() {
     ],
   };
 
+  const heroArticleSchema =
+    heroPrimary && heroPrimary.slug
+      ? {
+          "@context": "https://schema.org",
+          "@type": "NewsArticle",
+          "@id": `${siteUrl}/${heroPrimary.category}/${heroPrimary.slug}#article`,
+          mainEntityOfPage: {
+            "@type": "WebPage",
+            "@id": `${siteUrl}/${heroPrimary.category}/${heroPrimary.slug}`,
+          },
+          headline: heroPrimary.title,
+          name: heroPrimary.title,
+          description: heroPrimary.excerpt,
+          datePublished: heroPrimary.publishedAt || heroPrimary.publishedDate,
+          dateModified: heroPrimary.publishedAt || heroPrimary.publishedDate,
+          author: heroPrimary.author
+            ? { "@type": "Person", name: heroPrimary.author }
+            : undefined,
+          publisher: {
+            "@type": "NewsMediaOrganization",
+            "@id": `${siteUrl}/#organization`,
+            name: siteName,
+            logo: {
+              "@type": "ImageObject",
+              url: `${siteUrl}/logo.png`,
+              width: 768,
+              height: 768,
+            },
+          },
+          image: heroPrimary.image || `${siteUrl}/og-image.jpg`,
+          inLanguage: "hi-IN",
+          articleSection: heroPrimary.categoryHindi,
+        }
+      : null;
+
   return (
     <>
       <script
@@ -187,6 +223,12 @@ export default async function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
+      {heroArticleSchema ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(heroArticleSchema) }}
+        />
+      ) : null}
       <Index
         heroArticles={heroArticles}
         categories={categories}

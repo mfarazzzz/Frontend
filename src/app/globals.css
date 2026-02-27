@@ -148,15 +148,12 @@
 
   /* Category Badge */
   .category-badge {
-    @apply inline-block px-3 py-1 text-xs font-semibold rounded;
-    background-color: hsl(var(--news-red));
-    color: hsl(var(--primary-foreground));
+    @apply inline-block px-3 py-1 text-xs font-semibold rounded bg-muted text-foreground;
   }
 
   /* Section Header */
   .section-header {
-    @apply flex items-center justify-between border-b-2 pb-2 mb-4;
-    border-color: hsl(var(--news-red));
+    @apply flex items-center justify-between border-b pb-2 mb-4;
   }
 
   .section-title {
@@ -165,8 +162,7 @@
 
   .section-title::before {
     content: '';
-    @apply w-1 h-6 rounded-full;
-    background-color: hsl(var(--news-red));
+    @apply w-1 h-6 rounded-full bg-muted-foreground;
   }
 
   /* Live Badge */
@@ -196,8 +192,7 @@
   /* Trending Number */
   .trending-number {
     @apply w-6 h-6 flex items-center justify-center text-xs font-bold rounded;
-    background-color: hsl(var(--news-red));
-    color: white;
+    @apply bg-muted text-foreground;
   }
 
   /* Breaking News Ticker */

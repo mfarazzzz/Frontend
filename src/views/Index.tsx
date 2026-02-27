@@ -29,9 +29,19 @@ const formatRelativeTimeHindi = (dateString?: string) => {
   return `${days} दिन पहले`;
 };
 
+const hasRealImage = (src?: string | null) => {
+  if (!src) return false;
+  const lowered = src.toLowerCase();
+  if (lowered.includes("placeholder")) return false;
+  if (lowered.includes("news-placeholder")) return false;
+  return true;
+};
+
 const Index = ({ heroArticles, categories, categoryArticles, editorials, trendingArticles }: IndexProps) => {
-  const heroPrimary = heroArticles[0];
-  const heroSecondary = heroArticles.slice(1, 5);
+  const heroCandidates = heroArticles.filter((article) => hasRealImage(article.image));
+  const heroPrimary = heroCandidates[0];
+  const heroSecondary = heroCandidates.slice(1, 3);
+  const heroCompact = heroCandidates.slice(3, 7);
   const sidebarTrending = trendingArticles.slice(0, 6);
 
   return (
@@ -40,13 +50,20 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
 
       <main className="container py-6">
         {heroPrimary && (
-          <section className="mb-8 grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
-            <div>
-              <NewsCard article={heroPrimary} variant="featured" imagePriority />
+          <section className="mb-8 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[2.2fr_1fr] gap-4">
+              <div>
+                <NewsCard article={heroPrimary} variant="hero" imagePriority />
+              </div>
+              <div className="space-y-4">
+                {heroSecondary.map((article) => (
+                  <NewsCard key={article.id} article={article} variant="stacked" />
+                ))}
+              </div>
             </div>
-            <div className="space-y-4">
-              {heroSecondary.map((article) => (
-                <NewsCard key={article.id} article={article} variant="horizontal" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {heroCompact.map((article) => (
+                <NewsCard key={article.id} article={article} variant="mini" />
               ))}
             </div>
           </section>
@@ -55,7 +72,7 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
         {/* Main Content with Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-8 space-y-8">
+          <div className="lg:col-span-8 space-y-6">
             {categories.map((category) => {
               const articles = categoryArticles[category.slug] ?? [];
               if (!articles.length) return null;
@@ -65,7 +82,6 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
                   title={category.titleHindi}
                   articles={articles}
                   viewAllLink={category.path || `/${category.slug}`}
-                  variant="featured"
                 />
               );
             })}
@@ -74,7 +90,6 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
               <CategorySection
                 title="संपादकीय"
                 viewAllLink="/editorials"
-                variant="featured"
                 articles={editorials.map((editorial) => ({
                   id: editorial.id,
                   title: editorial.titleHindi || editorial.title,
@@ -100,8 +115,8 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-24">
               <aside className="space-y-6">
-                <div className="bg-card rounded-lg p-4">
-                  <h3 className="text-lg font-bold mb-4 border-b border-primary pb-2">ट्रेंडिंग</h3>
+                <div className="bg-card rounded-lg p-4 border border-border">
+                  <h3 className="text-base font-semibold mb-4 border-b border-border pb-2">ट्रेंडिंग</h3>
                   <div className="space-y-4">
                     {sidebarTrending.map((article) => (
                       <Link
@@ -109,15 +124,17 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
                         href={`/news/${article.slug}`}
                         className="flex gap-3 items-start hover:text-primary transition-colors"
                       >
-                        <div className="relative w-20 h-16 rounded-md overflow-hidden bg-muted">
-                          <Image
-                            src={article.image || "/news-placeholder.jpg"}
-                            alt={article.title}
-                            fill
-                            sizes="80px"
-                            className="object-cover"
-                          />
-                        </div>
+                        {hasRealImage(article.image) ? (
+                          <div className="relative w-20 h-16 rounded-md overflow-hidden bg-muted">
+                            <Image
+                              src={article.image}
+                              alt={article.title}
+                              fill
+                              sizes="80px"
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : null}
                         <div className="flex-1">
                           <h4 className="text-sm font-medium line-clamp-2">{article.title}</h4>
                           <p className="text-xs text-muted-foreground mt-1">
@@ -129,29 +146,8 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
                   </div>
                 </div>
 
-                <div className="bg-card rounded-lg p-4">
-                  <h3 className="text-lg font-bold mb-4 border-b border-primary pb-2">लोकप्रिय खबरें</h3>
-                  <div className="space-y-3">
-                    {sidebarTrending.slice(0, 5).map((article, index) => (
-                      <Link
-                        key={article.id}
-                        href={`/news/${article.slug}`}
-                        className="flex gap-3 items-start hover:text-primary transition-colors"
-                      >
-                        <span className="text-lg font-bold text-primary">{index + 1}</span>
-                        <div>
-                          <h4 className="text-sm font-medium line-clamp-2">{article.title}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {formatRelativeTimeHindi(article.publishedDate || article.publishedAt)}
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-card rounded-lg p-4">
-                  <h3 className="text-lg font-bold mb-4 border-b border-primary pb-2">हमसे जुड़ें</h3>
+                <div className="bg-card rounded-lg p-4 border border-border">
+                  <h3 className="text-base font-semibold mb-4 border-b border-border pb-2">हमसे जुड़ें</h3>
                   <FollowButtons showLabels={false} />
                 </div>
               </aside>

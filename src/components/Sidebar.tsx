@@ -1,11 +1,15 @@
 "use client";
 import { Link } from "@/lib/router-compat";
 import { TrendingUp, Eye } from "lucide-react";
-import { useTrendingArticles } from "@/hooks/useCMS";
+import { useTrendingArticles, useArticles } from "@/hooks/useCMS";
 import YouTubeWidget from "./YouTubeWidget";
 
 const Sidebar = () => {
   const { data: trendingNews = [] } = useTrendingArticles(6);
+  const { data: todaysTopRes } = useArticles({ todaysTop: true, status: "published", limit: 5, orderBy: "publishedAt", order: "desc" });
+  const todaysTop = todaysTopRes?.data ?? [];
+  const { data: mostReadRes } = useArticles({ status: "published", sinceHours: 24, orderBy: "views", order: "desc", limit: 5 });
+  const mostRead = mostReadRes?.data ?? [];
 
   const formatRelativeTimeHindi = (dateString: string) => {
     const timestamp = new Date(dateString).getTime();
@@ -29,6 +33,34 @@ const Sidebar = () => {
 
   return (
     <aside className="space-y-6">
+      {/* आज की बड़ी खबरें */}
+      {todaysTop.length > 0 && (
+        <div className="bg-white dark:bg-card rounded-md shadow-sm p-5">
+          <h3 className="text-lg font-bold border-l-4 border-red-700 pl-3 mb-4">
+            आज की बड़ी खबरें
+          </h3>
+          <div className="space-y-3">
+            {todaysTop.map((item) => (
+              <Link key={item.id} to={`/${item.category}/${item.slug}`} className="flex items-start gap-3 group">
+                <div className="w-14 h-14 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                  {item.image ? (
+                    <img src={item.image} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
+                  ) : null}
+                </div>
+                <div className="min-w-0">
+                  <h4 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-red-700">
+                    {item.title}
+                  </h4>
+                  <p className="text-xs text-gray-500">
+                    {formatRelativeTimeHindi(item.publishedDate)}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Trending Editorial List */}
       <div className="">
         <div className="flex items-center gap-2 mb-3">
@@ -133,7 +165,7 @@ const Sidebar = () => {
         <h3 className="text-lg font-bold border-l-4 border-red-700 pl-3 mb-4">
           ज़्यादा पढ़ी गई खबर
         </h3>
-        {trendingNews.slice(0, 5).map((item, index) => (
+        {mostRead.slice(0, 5).map((item, index) => (
           <Link
             key={item.id}
             to={`/${item.category}/${item.slug}`}

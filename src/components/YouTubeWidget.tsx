@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { YOUTUBE_CHANNELS } from "@/config/youtube";
+import { Link } from "@/lib/router-compat";
+import { YOUTUBE_CHANNELS, uploadsPlaylistId } from "@/config/youtube";
 
 type VideoItem = { id: string; title: string; published?: string; thumbnail?: string };
 
@@ -10,11 +11,12 @@ const YouTubeWidget = () => {
   const pathname = usePathname();
   const isHomepage = pathname === "/";
   const [items, setItems] = useState<VideoItem[]>([]);
+  const [unmuted, setUnmuted] = useState(false);
   useEffect(() => {
     const load = async () => {
       if (!first) return;
       try {
-        const res = await fetch(`/api/youtube/${first.id}/latest?limit=6`, { cache: "no-store" });
+        const res = await fetch(`/api/youtube/${first.id}/latest?limit=12`, { cache: "no-store" });
         const json = await res.json();
         setItems(Array.isArray(json.items) ? json.items : []);
       } catch {
@@ -28,33 +30,45 @@ const YouTubeWidget = () => {
     <div className="bg-card rounded-lg border border-border p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-base font-semibold">हमारा YouTube</h3>
-        <a
-          href={first ? `https://www.youtube.com/channel/${first.id}` : "https://www.youtube.com"}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          to="/videos"
           className="text-xs font-semibold text-gray-600 hover:text-red-700"
         >
           और वीडियो →
-        </a>
+        </Link>
       </div>
       {items.length > 0 ? (
         <>
-          {isHomepage ? (
-            <div className="aspect-[3/2] w-full rounded overflow-hidden mb-3">
-              <iframe
-                title={first?.title || "YouTube"}
-                src={`https://www.youtube-nocookie.com/embed/${items[0].id}`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-                sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
-                className="w-full h-full"
-              />
-            </div>
-          ) : null}
+          <div className={`relative w-full rounded overflow-hidden mb-3 ${isHomepage ? "aspect-[3/2]" : "aspect-video"}`}>
+            <iframe
+              title={first?.title || "YouTube"}
+              src={
+                first
+                  ? `https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(
+                      uploadsPlaylistId(first.id) || ""
+                    )}&rel=0&autoplay=1&mute=${unmuted ? 0 : 1}`
+                  : ""
+              }
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
+              sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+              className="w-full h-full"
+            />
+            {!unmuted && (
+              <button
+                type="button"
+                onClick={() => setUnmuted(true)}
+                className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded"
+                aria-label="Unmute video"
+              >
+                Tap to unmute
+              </button>
+            )}
+          </div>
           <div className="space-y-2">
-            {(isHomepage ? items.slice(1, 8) : items.slice(0, 8)).map((v) => (
+            {(isHomepage ? items.slice(1, 6) : items.slice(1, 6)).map((v) => (
             <a
               key={v.id}
               href={`https://www.youtube.com/watch?v=${v.id}`}
@@ -80,14 +94,12 @@ const YouTubeWidget = () => {
           </div>
         </>
       ) : first ? (
-        <a
-          href={`https://www.youtube.com/channel/${first.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          to="/videos"
           className="block text-sm font-semibold text-red-700 hover:underline"
         >
-          हमारे YouTube चैनल पर जाएं →
-        </a>
+          हमारे वीडियो पेज पर जाएं →
+        </Link>
       ) : null}
     </div>
   );

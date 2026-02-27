@@ -6,6 +6,7 @@ import CategorySection from "@/components/CategorySection";
 import NewsCard from "@/components/NewsCard";
 import FollowButtons from "@/components/FollowButtons";
 import YouTubeWidget from "@/components/YouTubeWidget";
+import YouTubeRail from "@/components/YouTubeRail";
 import type { CMSArticle, CMSCategory, CMSEditorial } from "@/services/cms";
 type IndexProps = {
   heroArticles: CMSArticle[];
@@ -60,6 +61,8 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
             </div>
           </section>
         )}
+        {/* Mini videos rail below hero */}
+        <YouTubeRail />
 
         {/* Main Content with Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

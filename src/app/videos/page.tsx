@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { YOUTUBE_CHANNELS } from "@/config/youtube";
+import { YOUTUBE_CHANNELS, uploadsPlaylistId } from "@/config/youtube";
 
 export const metadata = {
   title: "वीडियो | Rampur News",
@@ -10,59 +10,69 @@ export const metadata = {
 
 export const revalidate = 600;
 
-type VideoItem = { id: string; title: string; published?: string; thumbnail?: string };
-
-async function getVideos(): Promise<VideoItem[]> {
-  const videos: VideoItem[] = [];
-  for (const ch of YOUTUBE_CHANNELS) {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/api/youtube/${ch.id}/latest?limit=24`, {
-      cache: "no-store",
-    });
+export default async function VideosPage({ searchParams }: { searchParams: { page?: string } }) {
+  const first = YOUTUBE_CHANNELS[0];
+  const playlistId = first ? uploadsPlaylistId(first.id) : null;
+  const pageSize = 24;
+  const page = Math.max(1, Number(searchParams?.page || 1));
+  // Fetch items for grid below
+  let items: Array<{ id: string; title: string; thumbnail?: string }> = [];
+  if (first) {
+    const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+    const res = await fetch(`${base}/api/youtube/${first.id}/latest?limit=${page * pageSize}`, { cache: "no-store" });
     if (res.ok) {
       const json = await res.json();
-      const items: VideoItem[] = Array.isArray(json.items) ? json.items : [];
-      videos.push(...items);
+      items = (json.items || []).map((v: any) => ({
+        id: v.id,
+        title: v.title,
+        thumbnail: v.thumbnail || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
+      }));
     }
   }
-  // sort newest first
-  videos.sort((a, b) => {
-    const ta = a.published ? Date.parse(a.published) : 0;
-    const tb = b.published ? Date.parse(b.published) : 0;
-    return tb - ta;
-  });
-  // de-duplicate by id
-  const seen = new Set<string>();
-  return videos.filter((v) => {
-    if (seen.has(v.id)) return false;
-    seen.add(v.id);
-    return true;
-  });
-}
-
-export default async function VideosPage() {
-  const items = await getVideos();
+  const paged = items.slice((page - 1) * pageSize, page * pageSize);
+  const hasNext = items.length > page * pageSize;
+  const hasPrev = page > 1;
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container py-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold tracking-tight">वीडियो</h1>
-          {YOUTUBE_CHANNELS[0] ? (
+          {first ? (
             <a
-              href={`https://www.youtube.com/channel/${YOUTUBE_CHANNELS[0].id}`}
+              href={`https://www.youtube.com/channel/${first.id}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm font-semibold text-gray-600 hover:text-red-700"
             >
-              YouTube पर देखें →
+              और वीडियो YouTube पर →
             </a>
           ) : null}
         </div>
-        {items.length === 0 ? (
-          <div className="text-muted-foreground">अभी कोई वीडियो उपलब्ध नहीं है</div>
+        {playlistId ? (
+          <div className="max-w-5xl mx-auto">
+            <div className="aspect-video w-full rounded overflow-hidden">
+              <iframe
+                title="Rampur News Playlist"
+                src={`https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(
+                  playlistId
+                )}&rel=0&autoplay=1&mute=1`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+                className="w-full h-full"
+              />
+            </div>
+          </div>
         ) : (
+          <div className="text-muted-foreground">अभी कोई वीडियो उपलब्ध नहीं है</div>
+        )}
+        {/* Grid below playlist */}
+        <section className="mt-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {items.map((v) => (
+            {paged.map((v) => (
               <a
                 key={v.id}
                 href={`https://www.youtube.com/watch?v=${v.id}`}
@@ -72,7 +82,7 @@ export default async function VideosPage() {
               >
                 <div className="aspect-video bg-muted">
                   <img
-                    src={v.thumbnail || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`}
+                    src={v.thumbnail}
                     alt={v.title}
                     loading="lazy"
                     className="w-full h-full object-cover"
@@ -86,10 +96,21 @@ export default async function VideosPage() {
               </a>
             ))}
           </div>
-        )}
+          <div className="flex items-center justify-between mt-6">
+            {hasPrev ? (
+              <a href={`/videos?page=${page - 1}`} className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted">
+                पिछला
+              </a>
+            ) : <span />}
+            {hasNext ? (
+              <a href={`/videos?page=${page + 1}`} className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted">
+                अगला
+              </a>
+            ) : <span />}
+          </div>
+        </section>
       </main>
       <Footer />
     </div>
   );
 }
-

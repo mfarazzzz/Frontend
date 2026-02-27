@@ -121,7 +121,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
     return (
       <article className="news-card group relative overflow-hidden rounded-md">
         <Link to={articleUrl}>
-          <div className="relative aspect-[16/9] overflow-hidden">
+          <div className="relative aspect-[2/1] md:aspect-[21/9] overflow-hidden">
             {showImage ? (
               <Image
                 src={article.image}

@@ -14,6 +14,8 @@ type IndexProps = {
   categoryArticles: Record<string, CMSArticle[]>;
   editorials: CMSEditorial[];
   trendingArticles: CMSArticle[];
+  todaysTop?: CMSArticle[];
+  mostRead24h?: CMSArticle[];
 };
 
 const hasRealImage = (src?: string | null) => {
@@ -39,7 +41,7 @@ const formatRelativeTimeHindi = (dateString?: string) => {
   return `${days} दिन पहले`;
 };
 
-const Index = ({ heroArticles, categories, categoryArticles, editorials, trendingArticles }: IndexProps) => {
+const Index = ({ heroArticles, categories, categoryArticles, editorials, trendingArticles, todaysTop = [], mostRead24h = [] }: IndexProps) => {
   const heroPrimary = heroArticles[0];
   const heroSecondary = heroArticles.slice(1, 5);
   const sidebarTrending = trendingArticles.slice(0, 6);
@@ -63,6 +65,38 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
         )}
         {/* Mini videos rail below hero */}
         <YouTubeRail />
+
+        {/* Smart Sections */}
+        {todaysTop.length > 0 && (
+          <section className="py-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold tracking-tight">आज की बड़ी खबरें</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {todaysTop.slice(0, 5).map((article) => (
+                <NewsCard key={article.id} article={article} variant="horizontal" />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {mostRead24h.length > 0 && (
+          <section className="py-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold tracking-tight">सबसे ज्यादा पढ़ी गई (24 घंटे)</h2>
+            </div>
+            <div className="space-y-3">
+              {mostRead24h.slice(0, 5).map((article, idx) => (
+                <div key={article.id} className="flex items-start gap-3">
+                  <div className="text-2xl font-bold text-gray-300 w-8">{idx + 1}</div>
+                  <div className="flex-1">
+                    <NewsCard article={article} variant="horizontal" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Main Content with Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

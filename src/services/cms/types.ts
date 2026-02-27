@@ -204,6 +204,8 @@ export interface ArticleQueryParams {
   featured?: boolean;
   breaking?: boolean;
    editorsPick?: boolean;
+  todaysTop?: boolean;
+  sinceHours?: number;
    contentType?:
     | 'news'
     | 'editorial'

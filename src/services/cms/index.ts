@@ -382,6 +382,14 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       if (input.editorsPick !== undefined) {
         query['filters[isEditorsPick][$eq]'] = input.editorsPick;
       }
+      if ((input as any).todaysTop !== undefined) {
+        query['filters[isTodaysTopStory][$eq]'] = Boolean((input as any).todaysTop);
+      }
+      if ((input as any).sinceHours && Number((input as any).sinceHours) > 0) {
+        const hrs = Number((input as any).sinceHours);
+        const since = new Date(Date.now() - hrs * 3600_000).toISOString();
+        query['filters[publishedAt][$gte]'] = since;
+      }
       if (input.search) {
         query['filters[title][$containsi]'] = input.search;
       }

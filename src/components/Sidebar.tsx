@@ -2,6 +2,7 @@
 import { Link } from "@/lib/router-compat";
 import { TrendingUp, Eye } from "lucide-react";
 import { useTrendingArticles } from "@/hooks/useCMS";
+import YouTubeWidget from "./YouTubeWidget";
 
 const Sidebar = () => {
   const { data: trendingNews = [] } = useTrendingArticles(6);
@@ -55,10 +56,8 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Ad Placeholder */}
-      <div className="ad-placeholder aspect-[4/5] rounded-lg">
-        <span className="text-muted-foreground text-sm">विज्ञापन</span>
-      </div>
+      {/* YouTube Widget */}
+      <YouTubeWidget />
 
       {/* Social Media Follow */}
       <div className="bg-card rounded-lg border border-border p-4">

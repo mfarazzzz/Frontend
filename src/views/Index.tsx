@@ -14,6 +14,14 @@ type IndexProps = {
   trendingArticles: CMSArticle[];
 };
 
+const hasRealImage = (src?: string | null) => {
+  if (!src) return false;
+  const lowered = src.toLowerCase();
+  if (lowered.includes("placeholder")) return false;
+  if (lowered.includes("news-placeholder")) return false;
+  return true;
+};
+
 const formatRelativeTimeHindi = (dateString?: string) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -29,19 +37,9 @@ const formatRelativeTimeHindi = (dateString?: string) => {
   return `${days} दिन पहले`;
 };
 
-const hasRealImage = (src?: string | null) => {
-  if (!src) return false;
-  const lowered = src.toLowerCase();
-  if (lowered.includes("placeholder")) return false;
-  if (lowered.includes("news-placeholder")) return false;
-  return true;
-};
-
 const Index = ({ heroArticles, categories, categoryArticles, editorials, trendingArticles }: IndexProps) => {
-  const heroCandidates = heroArticles.filter((article) => hasRealImage(article.image));
-  const heroPrimary = heroCandidates[0];
-  const heroSecondary = heroCandidates.slice(1, 3);
-  const heroCompact = heroCandidates.slice(3, 7);
+  const heroPrimary = heroArticles[0];
+  const heroSecondary = heroArticles.slice(1, 5);
   const sidebarTrending = trendingArticles.slice(0, 6);
 
   return (
@@ -50,20 +48,13 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
 
       <main className="container py-6">
         {heroPrimary && (
-          <section className="mb-8 space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-[2.2fr_1fr] gap-4">
-              <div>
-                <NewsCard article={heroPrimary} variant="hero" imagePriority />
-              </div>
-              <div className="space-y-4">
-                {heroSecondary.map((article) => (
-                  <NewsCard key={article.id} article={article} variant="stacked" />
-                ))}
-              </div>
+          <section className="mb-8 grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
+            <div>
+              <NewsCard article={heroPrimary} variant="featured" imagePriority />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {heroCompact.map((article) => (
-                <NewsCard key={article.id} article={article} variant="mini" />
+            <div className="space-y-4">
+              {heroSecondary.map((article) => (
+                <NewsCard key={article.id} article={article} variant="horizontal" />
               ))}
             </div>
           </section>
@@ -72,7 +63,7 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
         {/* Main Content with Sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 space-y-8">
             {categories.map((category) => {
               const articles = categoryArticles[category.slug] ?? [];
               if (!articles.length) return null;
@@ -82,6 +73,7 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
                   title={category.titleHindi}
                   articles={articles}
                   viewAllLink={category.path || `/${category.slug}`}
+                  variant="featured"
                 />
               );
             })}
@@ -90,6 +82,7 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
               <CategorySection
                 title="संपादकीय"
                 viewAllLink="/editorials"
+                variant="featured"
                 articles={editorials.map((editorial) => ({
                   id: editorial.id,
                   title: editorial.titleHindi || editorial.title,

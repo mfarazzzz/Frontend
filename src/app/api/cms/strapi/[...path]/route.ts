@@ -257,17 +257,8 @@ const proxy = async (request: NextRequest, path: string[]) => {
         const data = await upstream.json();
         const rewritten = rewriteMediaDeep(origin, data);
 
-        // Add cache-control headers for public GET editorial/article responses
-        // so CDN and browsers can cache them appropriately.
-        const isPublicContentPath =
-          pathString.startsWith("editorials") ||
-          pathString.startsWith("articles");
-        if (isPublicContentPath && upstream.ok && !jwt) {
-          responseHeaders.set(
-            "Cache-Control",
-            "public, s-maxage=300, stale-while-revalidate=60"
-          );
-        }
+        // Enforce no-store for API responses to avoid stale content
+        responseHeaders.set("Cache-Control", "no-store");
 
         return NextResponse.json(rewritten, {
           status: upstream.status,
@@ -281,6 +272,10 @@ const proxy = async (request: NextRequest, path: string[]) => {
       }
     }
 
+    // Enforce no-store for all API GET responses to avoid stale content
+    if (finalMethod === "GET") {
+      responseHeaders.set("Cache-Control", "no-store");
+    }
     return new NextResponse(upstream.body, { status: upstream.status, headers: responseHeaders });
   } catch (error) {
     console.error("Proxy Error:", error);

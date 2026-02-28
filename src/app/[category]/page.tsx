@@ -8,7 +8,7 @@ type PageParams = {
   category: string;
 };
 
-export const revalidate = 60;
+export const revalidate = 30;
 
 export async function generateMetadata(props: { params: Promise<PageParams> }): Promise<Metadata> {
   const { category } = await props.params;

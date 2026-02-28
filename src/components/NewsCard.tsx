@@ -171,10 +171,10 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
                 )}
               </div>
               {asHero ? (
-                <h1 className="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight text-white mb-2 line-clamp-2">
-                  {article.title}
-                </h1>
-              ) : (
+  <h1 className="font-extrabold leading-tight tracking-tight text-white mb-2 text-[clamp(22px,3.2vw,40px)] line-clamp-2">
+    {article.title}
+  </h1>
+) : (
                 <h3 className="text-2xl font-bold text-white mb-2 line-clamp-2">
                   {article.title}
                 </h3>

@@ -4,9 +4,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategorySection from "@/components/CategorySection";
 import NewsCard from "@/components/NewsCard";
-import FollowButtons from "@/components/FollowButtons";
-import YouTubeWidget from "@/components/YouTubeWidget";
 import YouTubeRail from "@/components/YouTubeRail";
+import Sidebar from "@/components/Sidebar";
 import type { CMSArticle, CMSCategory, CMSEditorial } from "@/services/cms";
 type IndexProps = {
   heroArticles: CMSArticle[];
@@ -115,45 +114,11 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
           {/* Sidebar */}
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-24">
-              <aside className="space-y-6">
-                <div className="bg-card rounded-lg p-4 border border-border">
-                  <h3 className="text-base font-semibold mb-4 border-b border-border pb-2">ट्रेंडिंग</h3>
-                  <div className="space-y-4">
-                    {sidebarTrending.map((article) => (
-                      <Link
-                        key={article.id}
-                        href={`/news/${article.slug}`}
-                        className="flex gap-3 items-start hover:text-primary transition-colors"
-                      >
-                        {hasRealImage(article.image) ? (
-                          <div className="relative w-20 h-16 rounded-md overflow-hidden bg-muted">
-                            <Image
-                              src={article.image}
-                              alt={article.title}
-                              fill
-                              sizes="80px"
-                              className="object-cover"
-                            />
-                          </div>
-                        ) : null}
-                        <div className="flex-1">
-                          <h4 className="text-sm font-medium line-clamp-2">{article.title}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {formatRelativeTimeHindi(article.publishedDate || article.publishedAt)}
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-
-                <YouTubeWidget />
-
-                <div className="bg-card rounded-lg p-4 border border-border">
-                  <h3 className="text-base font-semibold mb-4 border-b border-border pb-2">हमसे जुड़ें</h3>
-                  <FollowButtons showLabels={false} />
-                </div>
-              </aside>
+              <Sidebar 
+                trendingArticles={sidebarTrending} 
+                todaysTop={todaysTop} 
+                mostRead={mostRead24h} 
+              />
             </div>
           </div>
         </div>

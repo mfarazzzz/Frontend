@@ -37,7 +37,25 @@ export default async function Page() {
   const siteName = "रामपुर न्यूज़ | Rampur News";
 
   const provider = getCMSProvider();
-  let heroArticles = await provider.getHeroArticles(8).catch(() => []);
+
+  // Parallelize data fetching for better performance
+  const [
+    heroArticlesRes,
+    categoriesRaw,
+    editorialPage,
+    trendingArticles,
+    todaysTopPage,
+    mostRead24hPage
+  ] = await Promise.all([
+    provider.getHeroArticles(8).catch(() => []),
+    provider.getCategories().catch(() => []),
+    provider.getEditorials({ limit: 5, orderBy: "publishedDate", order: "desc" }).catch(() => ({ data: [] })),
+    provider.getTrendingArticles(8).catch(() => []),
+    provider.getArticles({ todaysTop: true, status: "published", limit: 5 }).catch(() => ({ data: [], total: 0, page: 1, pageSize: 5, totalPages: 1 })),
+    provider.getArticles({ status: "published", sinceHours: 24, orderBy: "views", order: "desc", limit: 5 }).catch(() => ({ data: [], total: 0, page: 1, pageSize: 5, totalPages: 1 }))
+  ]);
+
+  let heroArticles = heroArticlesRes;
   if (!heroArticles || heroArticles.length === 0) {
     heroArticles = await provider.getFeaturedArticles(3).catch(() => []);
   }
@@ -55,7 +73,6 @@ export default async function Page() {
     "international",
   ];
 
-  const categoriesRaw = await provider.getCategories().catch(() => []);
   const bySlug: Record<string, (typeof categoriesRaw)[number]> = {};
   for (const cat of categoriesRaw) {
     bySlug[cat.slug] = cat;
@@ -85,15 +102,8 @@ export default async function Page() {
   );
   const categoryArticles = Object.fromEntries(categoryArticlesEntries);
 
-  const editorialPage = await provider
-    .getEditorials({ limit: 5, orderBy: "publishedDate", order: "desc" })
-    .catch(() => ({ data: [] }));
   const editorials = editorialPage?.data ?? [];
-
-  const trendingArticles = await provider.getTrendingArticles(8).catch(() => []);
-  const todaysTopPage = await provider.getArticles({ todaysTop: true, status: "published", limit: 5 }).catch(() => ({ data: [], total: 0, page: 1, pageSize: 5, totalPages: 1 }));
   const todaysTop = todaysTopPage?.data ?? [];
-  const mostRead24hPage = await provider.getArticles({ status: "published", sinceHours: 24, orderBy: "views", order: "desc", limit: 5 }).catch(() => ({ data: [], total: 0, page: 1, pageSize: 5, totalPages: 1 }));
   const mostRead24h = mostRead24hPage?.data ?? [];
   
   const websiteSchema = {

@@ -1,13 +1,8 @@
 import Link from "next/link";
 import { TrendingUp } from "lucide-react";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import type { CMSArticle } from "@/services/cms";
-
-const YouTubeWidget = dynamic(() => import("./YouTubeWidget"), {
-  loading: () => <div className="h-48 bg-muted animate-pulse rounded-lg" />,
-  ssr: false,
-});
+import LazyYouTubeWidget from "./LazyYouTubeWidget";
 
 interface SidebarProps {
   trendingArticles: CMSArticle[];

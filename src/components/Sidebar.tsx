@@ -100,7 +100,7 @@ const Sidebar = ({ trendingArticles = [], todaysTop = [], mostRead = [] }: Sideb
       </div>
 
       {/* YouTube Widget */}
-      <YouTubeWidget />
+      <LazyYouTubeWidget />
 
       {/* सबसे ज्यादा पढ़ी गयी खबरे (above follow) */}
       <div className="sidebar-card">

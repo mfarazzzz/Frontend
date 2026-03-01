@@ -85,10 +85,11 @@ export async function GET() {
 
     // Categories
     (categories || []).forEach((cat) => {
-      if (!staticPaths.includes(`/${cat.slug}`)) {
+      const slug = cat.slug || "";
+      if (slug && !staticPaths.includes(`/${slug}`)) {
         urls.push(`
   <url>
-    <loc>${escapeXml(`${BASE_URL}/${cat.slug}`)}</loc>
+    <loc>${escapeXml(`${BASE_URL}/${slug}`)}</loc>
     <lastmod>${formatDate(now)}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -98,13 +99,16 @@ export async function GET() {
 
     // Authors
     (authors || []).forEach((author) => {
-      urls.push(`
+      const slug = author.slug || "";
+      if (slug) {
+        urls.push(`
   <url>
-    <loc>${escapeXml(`${BASE_URL}/authors/${author.slug}`)}</loc>
+    <loc>${escapeXml(`${BASE_URL}/authors/${slug}`)}</loc>
     <lastmod>${formatDate(now)}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>`);
+      }
     });
 
     // Articles

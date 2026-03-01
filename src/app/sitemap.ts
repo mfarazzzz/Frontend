@@ -77,11 +77,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             : "";
 
         if (!url) return null;
+
+        const diffHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+        let changeFrequency: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never" = "monthly";
+        let priority = 0.5;
+
+        if (diffHours < 24) {
+          changeFrequency = "hourly";
+          priority = 1.0;
+        } else if (diffHours < 24 * 7) {
+          changeFrequency = "daily";
+          priority = 0.9;
+        } else if (diffHours < 24 * 30) {
+          changeFrequency = "weekly";
+          priority = 0.7;
+        }
+
         return {
           url,
           lastModified: isNaN(date.getTime()) ? now : date,
-          changeFrequency: "hourly",
-          priority: 0.9,
+          changeFrequency,
+          priority,
         };
       })
       .filter((entry) => entry !== null)

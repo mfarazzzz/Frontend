@@ -9,7 +9,7 @@ export async function GET() {
     const provider = getCMSProvider();
     const res = await provider.getArticles({
       status: "published",
-      limit: 500,
+      limit: 50,
       orderBy: "publishedDate",
       order: "desc",
     });
@@ -20,6 +20,7 @@ export async function GET() {
       title: article.title,
       slug: article.slug,
       excerpt: article.excerpt,
+      content: article.content,
       author: article.author,
       category: article.category,
       categoryHindi: article.categoryHindi,
@@ -35,6 +36,7 @@ export async function GET() {
       status: 200,
       headers: {
         "Content-Type": "application/atom+xml; charset=utf-8",
+        "Cache-Control": "s-maxage=3600, stale-while-revalidate",
       },
     });
   } catch (error) {

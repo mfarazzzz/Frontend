@@ -41,6 +41,10 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "/",
+    types: {
+      "application/rss+xml": [{ url: "/rss.xml", title: "Rampur News RSS" }],
+      "application/atom+xml": [{ url: "/atom.xml", title: "Rampur News Atom" }],
+    },
   },
   openGraph: {
     type: "website",

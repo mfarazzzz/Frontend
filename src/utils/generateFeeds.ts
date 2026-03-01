@@ -9,6 +9,7 @@ type FeedArticle = Pick<
   | "title"
   | "slug"
   | "excerpt"
+  | "content"
   | "author"
   | "category"
   | "categoryHindi"
@@ -50,6 +51,14 @@ const escapeXml = (str: string): string => {
     .replace(/'/g, "&apos;");
 };
 
+// Clean content for RSS (remove scripts, styles, etc. if needed - basic for now)
+const cleanContent = (html: string): string => {
+  if (!html) return "";
+  // Basic cleanup - in a real app, use a sanitizer library
+  return html.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gm, "")
+             .replace(/<iframe\b[^>]*>([\s\S]*?)<\/iframe>/gm, "");
+};
+
 // Generate RSS 2.0 feed
 export const generateRSSFeed = (articles: FeedArticle[]): string => {
   const recentArticles = getAllNewsSorted(articles).slice(0, 50);
@@ -58,54 +67,51 @@ export const generateRSSFeed = (articles: FeedArticle[]): string => {
     ? new Date(recentArticles[0].publishedDate).toUTCString() 
     : lastBuildDate;
 
-  const items = recentArticles.map((article) => `
+  const items = recentArticles.map((article) => {
+    const link = buildCanonicalUrl(article);
+    const imageUrl = article.image 
+      ? (article.image.startsWith('http') ? article.image : `${SITE_URL}${article.image}`)
+      : null;
+
+    return `
     <item>
-      <title>${escapeXml(article.title)}</title>
-      <link>${buildCanonicalUrl(article)}</link>
-      <description>${escapeXml(article.excerpt)}</description>
-      <author>${escapeXml(article.author)}</author>
-      <category>${escapeXml(article.categoryHindi)}</category>
+      <title><![CDATA[${article.title}]]></title>
+      <link>${link}</link>
+      <guid isPermaLink="true">${link}</guid>
       <pubDate>${new Date(article.publishedDate).toUTCString()}</pubDate>
-      <guid isPermaLink="true">${buildCanonicalUrl(article)}</guid>
-      ${(() => {
-        const raw = String(article.image || '').trim();
-        const absolute = raw.startsWith('http://') || raw.startsWith('https://')
-          ? raw
-          : raw.startsWith('/')
-            ? `${SITE_URL}${raw}`
-            : '';
-        return absolute ? `<enclosure url="${escapeXml(absolute)}" type="image/jpeg" />` : '';
-      })()}
-      <source url="${SITE_URL}/feed.xml">${SITE_NAME}</source>
-    </item>`
-  ).join("");
+      <description><![CDATA[${article.excerpt || ""}]]></description>
+      <content:encoded><![CDATA[
+        ${imageUrl ? `<img src="${imageUrl}" alt="${escapeXml(article.title)}" style="max-width: 100%; height: auto;" /><br/>` : ""}
+        ${cleanContent(article.content || article.excerpt || "")}
+      ]]></content:encoded>
+      <dc:creator><![CDATA[${article.author || SITE_NAME}]]></dc:creator>
+      <category><![CDATA[${article.categoryHindi || "News"}]]></category>
+      ${imageUrl ? `<media:content url="${escapeXml(imageUrl)}" medium="image" type="image/jpeg" />` : ""}
+      ${imageUrl ? `<enclosure url="${escapeXml(imageUrl)}" type="image/jpeg" length="0" />` : ""}
+    </item>`;
+  }).join("");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" 
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
   xmlns:atom="http://www.w3.org/2005/Atom"
-  xmlns:media="http://search.yahoo.com/mrss/"
-  xmlns:dc="http://purl.org/dc/elements/1.1/">
+  xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
     <title>${SITE_NAME}</title>
     <link>${SITE_URL}</link>
     <description>${escapeXml(SITE_DESCRIPTION)}</description>
-    <language>hi-IN</language>
-    <copyright>Copyright ${new Date().getFullYear()} ${SITE_NAME}</copyright>
+    <language>hi</language>
     <lastBuildDate>${lastBuildDate}</lastBuildDate>
     <pubDate>${pubDate}</pubDate>
-    <managingEditor>editor@rampurnews.com (${SITE_NAME})</managingEditor>
-    <webMaster>webmaster@rampurnews.com (${SITE_NAME})</webMaster>
+    <copyright>Copyright ${new Date().getFullYear()} ${SITE_NAME}</copyright>
     <generator>Rampur News CMS</generator>
-    <docs>https://www.rssboard.org/rss-specification</docs>
-    <ttl>60</ttl>
+    <atom:link href="${SITE_URL}/rss.xml" rel="self" type="application/rss+xml" />
     <image>
       <url>${SITE_URL}/logo.png</url>
       <title>${SITE_NAME}</title>
       <link>${SITE_URL}</link>
-      <width>768</width>
-      <height>768</height>
     </image>
-    <atom:link href="${SITE_URL}/feed.xml" rel="self" type="application/rss+xml" />
     ${items}
   </channel>
 </rss>`;
@@ -116,22 +122,31 @@ export const generateAtomFeed = (articles: FeedArticle[]): string => {
   const recentArticles = getAllNewsSorted(articles).slice(0, 50);
   const updatedTime = new Date().toISOString();
 
-  const entries = recentArticles.map((article) => `
+  const entries = recentArticles.map((article) => {
+    const link = buildCanonicalUrl(article);
+    const imageUrl = article.image 
+      ? (article.image.startsWith('http') ? article.image : `${SITE_URL}${article.image}`)
+      : null;
+
+    return `
   <entry>
-    <id>${buildCanonicalUrl(article)}</id>
+    <id>${link}</id>
     <title type="text">${escapeXml(article.title)}</title>
-    <link href="${buildCanonicalUrl(article)}" rel="alternate" type="text/html" />
+    <link href="${link}" rel="alternate" type="text/html" />
     <published>${new Date(article.publishedDate).toISOString()}</published>
     <updated>${new Date(article.publishedDate).toISOString()}</updated>
     <author>
-      <name>${escapeXml(article.author)}</name>
+      <name>${escapeXml(article.author || SITE_NAME)}</name>
     </author>
     <category term="${escapeXml(article.category)}" label="${escapeXml(article.categoryHindi)}" />
-    <summary type="text">${escapeXml(article.excerpt)}</summary>
-    <content type="html">${escapeXml(`<img src="${article.image}" alt="${article.title}" /><p>${article.excerpt}</p>`)}</content>
-    <link href="${article.image}" rel="enclosure" type="image/jpeg" />
-  </entry>`
-  ).join("");
+    <summary type="text">${escapeXml(article.excerpt || "")}</summary>
+    <content type="html"><![CDATA[
+      ${imageUrl ? `<img src="${imageUrl}" alt="${escapeXml(article.title)}" /><br/>` : ""}
+      ${cleanContent(article.content || "")}
+    ]]></content>
+    ${imageUrl ? `<link href="${escapeXml(imageUrl)}" rel="enclosure" type="image/jpeg" />` : ""}
+  </entry>`;
+  }).join("");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="hi">
@@ -144,7 +159,6 @@ export const generateAtomFeed = (articles: FeedArticle[]): string => {
   <author>
     <name>${SITE_NAME}</name>
     <uri>${SITE_URL}</uri>
-    <email>editor@rampurnews.com</email>
   </author>
   <generator uri="${SITE_URL}" version="1.0">Rampur News CMS</generator>
   <icon>${SITE_URL}/favicon.ico</icon>

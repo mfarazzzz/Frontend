@@ -3,7 +3,7 @@ import { getCMSProvider } from "@/services/cms";
 
 export const dynamic = "force-dynamic";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
+const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com").replace(/\/+$/, "");
 
 function escapeXml(unsafe: string): string {
   return unsafe.replace(/[<>&'"]/g, (c) => {
@@ -23,7 +23,35 @@ function formatDate(date: Date | string): string {
   return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
 }
 
-export async function GET() {
+async function absoluteSiteOrigin(request: Request): Promise<string> {
+  try {
+    const hdrProto = request.headers.get("x-forwarded-proto");
+    const hdrHost = request.headers.get("x-forwarded-host") || request.headers.get("host");
+    if (hdrProto && hdrHost) return `${hdrProto}://${hdrHost}`;
+    const u = new URL(BASE_URL);
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return "https://rampurnews.com";
+  }
+}
+
+async function fetchViaProxy(request: Request, pathAndQuery: string) {
+  const origin = await absoluteSiteOrigin(request);
+  const url = `${origin}/api/cms/strapi${pathAndQuery.startsWith("/") ? pathAndQuery : `/${pathAndQuery}`}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: { "accept": "application/json" },
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(request: Request) {
   try {
     const now = new Date();
     const staticPaths = [
@@ -57,7 +85,6 @@ export async function GET() {
 
     let urls: string[] = [];
 
-    // Static Pages
     staticPaths.forEach((path) => {
       urls.push(`
   <url>
@@ -68,24 +95,38 @@ export async function GET() {
   </url>`);
     });
 
-    // Dynamic Content
     const provider = getCMSProvider();
-    
-    // Fetch data in parallel
     const [articlesRes, categories, authors] = await Promise.all([
-      provider.getArticles({ 
-        status: 'published',
-        limit: 5000,
-        orderBy: 'publishedDate',
-        order: 'desc'
+      provider.getArticles({
+        status: "published",
+        limit: 500,
+        orderBy: "publishedDate",
+        order: "desc",
       }),
       provider.getCategories(),
       provider.getAuthors(),
     ]);
 
-    // Categories
-    (categories || []).forEach((cat) => {
-      const slug = cat.slug || "";
+    let cats = categories || [];
+    let auths = authors || [];
+    let arts = articlesRes?.data || [];
+
+    if (cats.length === 0 || auths.length === 0 || arts.length === 0) {
+      const qBase = "?publicationState=live&filters[publishedAt][$notNull]=true";
+      const [pCats, pAuths, pArts] = await Promise.all([
+        cats.length ? Promise.resolve(null) : fetchViaProxy(request, `/categories?pagination[limit]=1000`),
+        auths.length ? Promise.resolve(null) : fetchViaProxy(request, `/authors?pagination[limit]=1000`),
+        arts.length
+          ? Promise.resolve(null)
+          : fetchViaProxy(request, `/articles${qBase}&sort=publishedAt:desc&pagination[pageSize]=500&populate=*`),
+      ]);
+      if (pCats?.length) cats = pCats;
+      if (pAuths?.length) auths = pAuths;
+      if (pArts?.data?.length) arts = pArts.data;
+    }
+
+    (cats || []).forEach((cat: any) => {
+      const slug = cat?.slug || "";
       if (slug && !staticPaths.includes(`/${slug}`)) {
         urls.push(`
   <url>
@@ -97,9 +138,8 @@ export async function GET() {
       }
     });
 
-    // Authors
-    (authors || []).forEach((author) => {
-      const slug = author.slug || "";
+    (auths || []).forEach((author: any) => {
+      const slug = author?.slug || "";
       if (slug) {
         urls.push(`
   <url>
@@ -111,26 +151,21 @@ export async function GET() {
       }
     });
 
-    // Articles
-    const articles = articlesRes.data || [];
-    articles.forEach((post) => {
-      const dateStr = post.modifiedDate || post.publishedDate || now.toISOString();
+    const articles = arts || [];
+    articles.forEach((post: any) => {
+      const dateStr = post?.modifiedDate || post?.publishedDate || post?.publishedAt || now.toISOString();
       const date = new Date(dateStr);
-      
-      const canonical = post.canonicalUrl?.trim();
-      const url = canonical
-        ? canonical.startsWith("http") 
-          ? canonical
-          : `${BASE_URL}${canonical.startsWith("/") ? canonical : `/${canonical}`}`
-        : post.category && post.slug
-          ? `${BASE_URL}/${post.category}/${post.slug}`
-          : "";
-
+      const canonicalRaw = (post?.canonicalUrl || "").trim();
+      let url = "";
+      if (canonicalRaw) {
+        url = canonicalRaw.startsWith("http") ? canonicalRaw : `${BASE_URL}${canonicalRaw.startsWith("/") ? canonicalRaw : `/${canonicalRaw}`}`;
+      } else if (post?.category && post?.slug) {
+        url = `${BASE_URL}/${post.category}/${post.slug}`;
+      }
       if (url && !url.includes("/tags") && !url.includes("/admin") && !url.includes("/api")) {
         const diffHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
         let changefreq = "monthly";
         let priority = "0.5";
-
         if (diffHours < 24) {
           changefreq = "hourly";
           priority = "1.0";
@@ -141,7 +176,6 @@ export async function GET() {
           changefreq = "weekly";
           priority = "0.7";
         }
-
         urls.push(`
   <url>
     <loc>${escapeXml(url)}</loc>
@@ -153,21 +187,20 @@ export async function GET() {
     });
 
     const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${urls.join("")}
 </urlset>`;
 
-    return new NextResponse(sitemapXml, {
-      status: 200,
-      headers: {
-        "Content-Type": "application/xml; charset=utf-8",
-        // Force no-cache to ensure Google sees fresh content immediately
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
-        "Pragma": "no-cache",
-        "Expires": "0",
-        "X-Robots-Tag": "noindex, follow", // Prevent indexing the sitemap itself, but follow links
-      },
-    });
+    const headers: Record<string, string> = {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+      "Pragma": "no-cache",
+      "Expires": "0",
+      "X-Robots-Tag": "noindex, follow",
+      "X-Sitemap-Counts": `articles=${articles.length}; categories=${cats.length}; authors=${auths.length}`,
+    };
+
+    return new NextResponse(sitemapXml, { status: 200, headers });
 
   } catch (error) {
     console.error("Error generating sitemap:", error);

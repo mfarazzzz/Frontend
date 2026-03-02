@@ -3,207 +3,166 @@ import { getCMSProvider } from "@/services/cms";
 
 export const dynamic = "force-dynamic";
 
-const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com").replace(/\/+$/, "");
+const ENV_BASE = (process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com").replace(/\/+$/, "");
 
-function escapeXml(unsafe: string): string {
-  return unsafe.replace(/[<>&'"]/g, (c) => {
-    switch (c) {
-      case '<': return '&lt;';
-      case '>': return '&gt;';
-      case '&': return '&amp;';
-      case '\'': return '&apos;';
-      case '"': return '&quot;';
-      default: return c;
-    }
-  });
-}
+const esc = (s: string) =>
+  s.replace(/[<>&'"]/g, (c) =>
+    c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === "&" ? "&amp;" : c === "'" ? "&apos;" : "&quot;",
+  );
 
-function formatDate(date: Date | string): string {
-  const d = new Date(date);
+const iso = (v: string | Date) => {
+  const d = new Date(v);
   return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
-}
+};
 
-async function absoluteSiteOrigin(request: Request): Promise<string> {
+const originFrom = (req: Request) => {
+  const proto = req.headers.get("x-forwarded-proto");
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+  if (proto && host) return `${proto}://${host}`;
   try {
-    const hdrProto = request.headers.get("x-forwarded-proto");
-    const hdrHost = request.headers.get("x-forwarded-host") || request.headers.get("host");
-    if (hdrProto && hdrHost) return `${hdrProto}://${hdrHost}`;
-    const u = new URL(BASE_URL);
+    const u = new URL(ENV_BASE);
     return `${u.protocol}//${u.host}`;
   } catch {
     return "https://rampurnews.com";
   }
-}
+};
 
-async function fetchViaProxy(request: Request, pathAndQuery: string) {
-  const origin = await absoluteSiteOrigin(request);
-  const url = `${origin}/api/cms/strapi${pathAndQuery.startsWith("/") ? pathAndQuery : `/${pathAndQuery}`}`;
-  const res = await fetch(url, {
-    method: "GET",
-    headers: { "accept": "application/json" },
-    cache: "no-store",
-  });
+const fetchProxy = async (req: Request, path: string) => {
+  const base = originFrom(req);
+  const url = `${base}/api/cms/strapi${path.startsWith("/") ? path : `/${path}`}`;
+  const res = await fetch(url, { cache: "no-store", headers: { accept: "application/json" } });
   if (!res.ok) return null;
   try {
     return await res.json();
   } catch {
     return null;
   }
-}
+};
 
 export async function GET(request: Request) {
-  try {
-    const now = new Date();
-    const staticPaths = [
-      "",
-      "/rampur",
-      "/up",
-      "/national",
-      "/politics",
-      "/crime",
-      "/education-jobs",
-      "/business",
-      "/entertainment",
-      "/sports",
-      "/health",
-      "/religion-culture",
-      "/food-lifestyle",
-      "/nearby",
-      "/about",
-      "/contact",
-      "/privacy",
-      "/terms",
-      "/disclaimer",
-      "/ownership",
-      "/ownership-disclosure",
-      "/editorial-policy",
-      "/press-release",
-      "/corrections-policy",
-      "/about-us",
-      "/grievance",
-    ];
+  const site = ENV_BASE;
+  const now = new Date();
+  const staticPaths = [
+    "",
+    "/rampur",
+    "/up",
+    "/national",
+    "/politics",
+    "/crime",
+    "/education-jobs",
+    "/business",
+    "/entertainment",
+    "/sports",
+    "/health",
+    "/religion-culture",
+    "/food-lifestyle",
+    "/nearby",
+    "/about",
+    "/contact",
+    "/privacy",
+    "/terms",
+    "/disclaimer",
+    "/ownership",
+    "/ownership-disclosure",
+    "/editorial-policy",
+    "/press-release",
+    "/corrections-policy",
+    "/about-us",
+    "/grievance",
+  ];
 
-    let urls: string[] = [];
+  const entries: string[] = [];
+  for (const p of staticPaths) {
+    entries.push(
+      `\n  <url>\n    <loc>${esc(`${site}${p}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>${p === "" ? "always" : "daily"}</changefreq>\n    <priority>${p === "" ? "1.0" : "0.8"}</priority>\n  </url>`,
+    );
+  }
 
-    staticPaths.forEach((path) => {
-      urls.push(`
-  <url>
-    <loc>${escapeXml(`${BASE_URL}${path}`)}</loc>
-    <lastmod>${formatDate(now)}</lastmod>
-    <changefreq>${path === "" ? "always" : "daily"}</changefreq>
-    <priority>${path === "" ? "1.0" : "0.8"}</priority>
-  </url>`);
-    });
+  const provider = getCMSProvider();
+  let [articlesRes, categories, authors] = await Promise.all([
+    provider.getArticles({ status: "published", limit: 500, orderBy: "publishedDate", order: "desc" }),
+    provider.getCategories(),
+    provider.getAuthors(),
+  ]);
 
-    const provider = getCMSProvider();
-    const [articlesRes, categories, authors] = await Promise.all([
-      provider.getArticles({
-        status: "published",
-        limit: 500,
-        orderBy: "publishedDate",
-        order: "desc",
-      }),
-      provider.getCategories(),
-      provider.getAuthors(),
-    ]);
+  let cats: any[] = categories || [];
+  let auths: any[] = authors || [];
+  let arts: any[] = articlesRes?.data || [];
 
-    let cats = categories || [];
-    let auths = authors || [];
-    let arts = articlesRes?.data || [];
+  if (cats.length === 0) {
+    const r = await fetchProxy(request, "/categories?pagination[limit]=1000");
+    if (Array.isArray(r)) cats = r;
+  }
+  if (auths.length === 0) {
+    const r = await fetchProxy(request, "/authors?pagination[limit]=1000");
+    if (Array.isArray(r)) auths = r;
+  }
+  if (arts.length === 0) {
+    const r = await fetchProxy(
+      request,
+      "/articles?publicationState=live&filters[publishedAt][$notNull]=true&sort=publishedAt:desc&pagination[pageSize]=500&populate=*",
+    );
+    if (r?.data?.length) arts = r.data;
+  }
 
-    if (cats.length === 0 || auths.length === 0 || arts.length === 0) {
-      const qBase = "?publicationState=live&filters[publishedAt][$notNull]=true";
-      const [pCats, pAuths, pArts] = await Promise.all([
-        cats.length ? Promise.resolve(null) : fetchViaProxy(request, `/categories?pagination[limit]=1000`),
-        auths.length ? Promise.resolve(null) : fetchViaProxy(request, `/authors?pagination[limit]=1000`),
-        arts.length
-          ? Promise.resolve(null)
-          : fetchViaProxy(request, `/articles${qBase}&sort=publishedAt:desc&pagination[pageSize]=500&populate=*`),
-      ]);
-      if (pCats?.length) cats = pCats;
-      if (pAuths?.length) auths = pAuths;
-      if (pArts?.data?.length) arts = pArts.data;
+  for (const c of cats) {
+    const slug = c?.slug || "";
+    if (slug && !staticPaths.includes(`/${slug}`)) {
+      entries.push(
+        `\n  <url>\n    <loc>${esc(`${site}/${slug}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`,
+      );
     }
+  }
 
-    (cats || []).forEach((cat: any) => {
-      const slug = cat?.slug || "";
-      if (slug && !staticPaths.includes(`/${slug}`)) {
-        urls.push(`
-  <url>
-    <loc>${escapeXml(`${BASE_URL}/${slug}`)}</loc>
-    <lastmod>${formatDate(now)}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>`);
-      }
-    });
+  for (const a of auths) {
+    const slug = a?.slug || "";
+    if (slug) {
+      entries.push(
+        `\n  <url>\n    <loc>${esc(`${site}/authors/${slug}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>`,
+      );
+    }
+  }
 
-    (auths || []).forEach((author: any) => {
-      const slug = author?.slug || "";
-      if (slug) {
-        urls.push(`
-  <url>
-    <loc>${escapeXml(`${BASE_URL}/authors/${slug}`)}</loc>
-    <lastmod>${formatDate(now)}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>`);
-      }
-    });
+  for (const p of arts) {
+    const dateStr = p?.modifiedDate || p?.publishedDate || p?.publishedAt || now.toISOString();
+    const canonical = (p?.canonicalUrl || "").trim();
+    let url = "";
+    if (canonical) {
+      url = canonical.startsWith("http") ? canonical : `${site}${canonical.startsWith("/") ? canonical : `/${canonical}`}`;
+    } else if (p?.category && p?.slug) {
+      url = `${site}/${p.category}/${p.slug}`;
+    }
+    if (!url) continue;
+    if (url.includes("/tags") || url.includes("/admin") || url.includes("/api")) continue;
+    const diff = (now.getTime() - new Date(dateStr).getTime()) / 36e5;
+    let cf = "monthly";
+    let pr = "0.5";
+    if (diff < 24) {
+      cf = "hourly";
+      pr = "1.0";
+    } else if (diff < 168) {
+      cf = "daily";
+      pr = "0.9";
+    } else if (diff < 720) {
+      cf = "weekly";
+      pr = "0.7";
+    }
+    entries.push(
+      `\n  <url>\n    <loc>${esc(url)}</loc>\n    <lastmod>${iso(dateStr)}</lastmod>\n    <changefreq>${cf}</changefreq>\n    <priority>${pr}</priority>\n  </url>`,
+    );
+  }
 
-    const articles = arts || [];
-    articles.forEach((post: any) => {
-      const dateStr = post?.modifiedDate || post?.publishedDate || post?.publishedAt || now.toISOString();
-      const date = new Date(dateStr);
-      const canonicalRaw = (post?.canonicalUrl || "").trim();
-      let url = "";
-      if (canonicalRaw) {
-        url = canonicalRaw.startsWith("http") ? canonicalRaw : `${BASE_URL}${canonicalRaw.startsWith("/") ? canonicalRaw : `/${canonicalRaw}`}`;
-      } else if (post?.category && post?.slug) {
-        url = `${BASE_URL}/${post.category}/${post.slug}`;
-      }
-      if (url && !url.includes("/tags") && !url.includes("/admin") && !url.includes("/api")) {
-        const diffHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-        let changefreq = "monthly";
-        let priority = "0.5";
-        if (diffHours < 24) {
-          changefreq = "hourly";
-          priority = "1.0";
-        } else if (diffHours < 24 * 7) {
-          changefreq = "daily";
-          priority = "0.9";
-        } else if (diffHours < 24 * 30) {
-          changefreq = "weekly";
-          priority = "0.7";
-        }
-        urls.push(`
-  <url>
-    <loc>${escapeXml(url)}</loc>
-    <lastmod>${formatDate(date)}</lastmod>
-    <changefreq>${changefreq}</changefreq>
-    <priority>${priority}</priority>
-  </url>`);
-      }
-    });
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">${entries.join(
+    "",
+  )}\n</urlset>`;
 
-    const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-${urls.join("")}
-</urlset>`;
-
-    const headers: Record<string, string> = {
+  return new NextResponse(xml, {
+    status: 200,
+    headers: {
       "Content-Type": "application/xml; charset=utf-8",
       "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
-      "Pragma": "no-cache",
-      "Expires": "0",
-      "X-Robots-Tag": "noindex, follow",
-      "X-Sitemap-Counts": `articles=${articles.length}; categories=${cats.length}; authors=${auths.length}`,
-    };
-
-    return new NextResponse(sitemapXml, { status: 200, headers });
-
-  } catch (error) {
-    console.error("Error generating sitemap:", error);
-    return new NextResponse("Error generating sitemap", { status: 500 });
-  }
+      Pragma: "no-cache",
+      Expires: "0",
+    },
+  });
 }

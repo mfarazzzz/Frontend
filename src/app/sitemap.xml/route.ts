@@ -73,12 +73,14 @@ export async function GET(request: Request) {
 
   const entries: string[] = [];
 
+  // Static Paths
   for (const p of staticPaths) {
     entries.push(
       `\n  <url>\n    <loc>${esc(`${site}${p}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>${p === "" ? "always" : "daily"}</changefreq>\n    <priority>${p === "" ? "1.0" : "0.8"}</priority>\n  </url>`,
     );
   }
 
+  // Dynamic Content Fetching
   const provider = getCMSProvider();
   let [articlesRes, cats, auths] = await Promise.all([
     provider.getArticles({ status: "published", limit: 5000, orderBy: "publishedDate", order: "desc" }),
@@ -90,6 +92,7 @@ export async function GET(request: Request) {
   cats = cats || [];
   auths = auths || [];
 
+  // Fallback to Proxy if dynamic fetching fails
   if (!arts.length || !cats.length || !auths.length) {
     const [pArts, pCats, pAuths] = await Promise.all([
       arts.length ? Promise.resolve(null) : fetchProxy(request, "/articles?publicationState=live&filters[publishedAt][$notNull]=true&sort=publishedAt:desc&pagination[pageSize]=5000&populate=*"),
@@ -101,6 +104,7 @@ export async function GET(request: Request) {
     if (pAuths?.length) auths = pAuths;
   }
 
+  // Add Categories to sitemap
   for (const c of cats) {
     const slug = c?.slug || "";
     if (slug && !staticPaths.includes(`/${slug}`)) {
@@ -110,6 +114,7 @@ export async function GET(request: Request) {
     }
   }
 
+  // Add Authors to sitemap
   for (const a of auths) {
     const slug = a?.slug || "";
     if (slug) {
@@ -119,6 +124,7 @@ export async function GET(request: Request) {
     }
   }
 
+  // Add Articles to sitemap with Image support
   for (const p of arts) {
     const dateStr = p?.modifiedDate || p?.publishedDate || p?.publishedAt || now.toISOString();
     const canonical = (p?.canonicalUrl || "").trim();
@@ -130,6 +136,7 @@ export async function GET(request: Request) {
     }
     if (!url) continue;
     if (url.includes("/tags") || url.includes("/admin") || url.includes("/api")) continue;
+    
     const diff = (now.getTime() - new Date(dateStr).getTime()) / 36e5;
     let cf = "monthly";
     let pr = "0.5";
@@ -143,8 +150,11 @@ export async function GET(request: Request) {
       cf = "weekly";
       pr = "0.7";
     }
+
+    const imagePart = p.image ? `\n    <image:image>\n      <image:loc>${esc(p.image)}</image:loc>\n      <image:title>${esc(p.title)}</image:title>\n    </image:image>` : "";
+
     entries.push(
-      `\n  <url>\n    <loc>${esc(url)}</loc>\n    <lastmod>${iso(dateStr)}</lastmod>\n    <changefreq>${cf}</changefreq>\n    <priority>${pr}</priority>\n  </url>`,
+      `\n  <url>\n    <loc>${esc(url)}</loc>\n    <lastmod>${iso(dateStr)}</lastmod>\n    <changefreq>${cf}</changefreq>\n    <priority>${pr}</priority>${imagePart}\n  </url>`,
     );
   }
 

@@ -74,6 +74,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/logo.png",
+    apple: "/logo.png",
+  },
+  verification: {
+    google: "google-site-verification-id", // Replace with actual ID
   },
 };
 

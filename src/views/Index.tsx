@@ -50,6 +50,7 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
       <Header />
 
       <main className="container max-w-6xl px-4 py-6 article-links">
+        <h1 className="sr-only">रामपुर न्यूज़ | Rampur News - ताज़ा खबरें, स्थानीय समाचार</h1>
         {heroPrimary && (
           <section className="mb-8 grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
             <div>

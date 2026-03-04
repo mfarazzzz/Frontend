@@ -5,9 +5,9 @@ import type { CMSArticle } from "@/services/cms";
 import LazyYouTubeWidget from "./LazyYouTubeWidget";
 
 interface SidebarProps {
-  trendingArticles: CMSArticle[];
-  todaysTop: CMSArticle[];
-  mostRead: CMSArticle[];
+  trendingArticles?: CMSArticle[];
+  todaysTop?: CMSArticle[];
+  mostRead?: CMSArticle[];
 }
 
 const Sidebar = ({ trendingArticles = [], todaysTop = [], mostRead = [] }: SidebarProps) => {

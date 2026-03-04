@@ -82,15 +82,15 @@ export async function GET(request: Request) {
 
   // Dynamic Content Fetching
   const provider = getCMSProvider();
-  let [articlesRes, cats, auths] = await Promise.all([
+  const [articlesRes, catsRes, authsRes] = await Promise.all([
     provider.getArticles({ status: "published", limit: 5000, orderBy: "publishedDate", order: "desc" }),
     provider.getCategories(),
     provider.getAuthors(),
   ]);
 
   let arts = articlesRes?.data || [];
-  cats = cats || [];
-  auths = auths || [];
+  let cats = catsRes || [];
+  let auths = authsRes || [];
 
   // Fallback to Proxy if dynamic fetching fails
   if (!arts.length || !cats.length || !auths.length) {

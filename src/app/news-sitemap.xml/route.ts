@@ -25,6 +25,7 @@ export async function GET() {
       title: article.title,
       slug: article.slug,
       excerpt: article.excerpt,
+      content: article.content || article.excerpt,
       author: article.author,
       category: article.category,
       categoryHindi: article.categoryHindi,

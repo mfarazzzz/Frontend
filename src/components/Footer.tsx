@@ -249,10 +249,13 @@ const Footer = () => {
               <Link to="/grievance" className="hover:text-primary transition-colors">
                 शिकायत निवारण
               </Link>
-              <Link to="/admin" className="flex items-center gap-1 hover:text-primary transition-colors">
+              <a
+                href="https://cms.rampurnews.com/admin"
+                className="flex items-center gap-1 hover:text-primary transition-colors"
+              >
                 <Settings size={14} />
                 Admin
-              </Link>
+              </a>
             </div>
           </div>
         </div>

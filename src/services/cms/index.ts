@@ -49,7 +49,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     isStrapi && typeof window !== 'undefined' && (window.location?.pathname || '').startsWith('/admin');
 
   const buildUrl = (path: string, params?: Record<string, string | number | boolean | undefined>) => {
-    if (isStrapi && typeof window !== 'undefined') {
+    if (isStrapi && typeof window !== 'undefined' && canUseStrapiAdmin) {
       const searchParams = new URLSearchParams();
       if (params) {
         Object.entries(params).forEach(([key, value]) => {
@@ -142,6 +142,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
   const getStrapiMediaOriginFromEnv = () => {
     const candidates = [
+      process.env.NEXT_PUBLIC_API_URL,
       process.env.NEXT_PUBLIC_STRAPI_URL,
       process.env.NEXT_PUBLIC_STRAPI_API_URL,
       process.env.NEXT_PUBLIC_STRAPI_BASE_URL,
@@ -1306,10 +1307,12 @@ const getEnvStrapiUrl = () => {
   if (typeof process !== 'undefined' && process.env) {
     const isBrowser = typeof window !== 'undefined';
     const url = isBrowser
-      ? process.env.NEXT_PUBLIC_STRAPI_URL ||
+      ? process.env.NEXT_PUBLIC_API_URL ||
+        process.env.NEXT_PUBLIC_STRAPI_URL ||
         process.env.NEXT_PUBLIC_STRAPI_API_URL ||
         process.env.NEXT_PUBLIC_STRAPI_BASE_URL
       : process.env.STRAPI_API_URL ||
+        process.env.NEXT_PUBLIC_API_URL ||
         process.env.NEXT_PUBLIC_STRAPI_API_URL ||
         process.env.NEXT_PUBLIC_STRAPI_BASE_URL ||
         process.env.NEXT_PUBLIC_STRAPI_URL ||

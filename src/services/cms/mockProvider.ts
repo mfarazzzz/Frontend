@@ -152,6 +152,14 @@ export const mockCMSProvider: CMSProvider = {
     if (params?.breaking !== undefined) {
       articles = articles.filter(a => a.isBreaking === params.breaking);
     }
+    if (params?.sinceHours && Number(params.sinceHours) > 0) {
+      const cutoff = Date.now() - Number(params.sinceHours) * 3600_000;
+      articles = articles.filter((a) => {
+        const dateValue = a.publishedDate || a.publishedAt || '';
+        const ts = new Date(dateValue).getTime();
+        return Number.isFinite(ts) && ts >= cutoff;
+      });
+    }
     if (params?.author) {
       articles = articles.filter(a => a.author === params.author);
     }

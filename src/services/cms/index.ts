@@ -1159,7 +1159,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getBreakingNews(limit = 5): Promise<CMSArticle[]> {
-      const result = await getArticles({ breaking: true, status: 'published', limit });
+      const result = await getArticles({ breaking: true, status: 'published', limit, sinceHours: 96 });
       return result.data;
     },
 

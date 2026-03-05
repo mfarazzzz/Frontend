@@ -167,10 +167,10 @@ const encodeStrapiQuery = (params: Array<[string, string | number | boolean | un
 const contentTypeConfig = {
   exams: { path: "/exams", dateField: "examDate", searchFields: ["titleHindi", "title", "organizationHindi", "organization"] },
   results: { path: "/results", dateField: "resultDate", searchFields: ["titleHindi", "title", "organizationHindi", "organization"] },
-  institutions: { path: "/institutions", searchFields: ["nameHindi", "name", "city", "district", "state"] },
+  institutions: { path: "/institutions", searchFields: ["nameHindi", "name", "address][street", "address][streetHindi", "address][city", "address][district", "address][state"] },
   educationNews: { path: "/education-news", dateField: "publishedAt", searchFields: ["titleHindi", "title", "excerptHindi", "excerpt", "contentHindi", "content"] },
   holidays: { path: "/holidays", dateField: "date", searchFields: ["nameHindi", "name", "descriptionHindi", "description"] },
-  restaurants: { path: "/restaurants", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
+  restaurants: { path: "/restaurants", searchFields: ["nameHindi", "name", "address][street", "address][streetHindi", "address][city", "address][district", "descriptionHindi", "description"] },
   fashionStores: { path: "/fashion-stores", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
   shoppingCentres: { path: "/shopping-centres", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
   places: { path: "/places", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
@@ -203,8 +203,20 @@ type ContentTypeKey = keyof typeof contentTypeConfig;
   if (params?.category) query.push(["filters[category][$eq]", params.category]);
   if (params?.subcategory) query.push(["filters[subcategory][$eq]", params.subcategory]);
   if (params?.type) query.push(["filters[type][$eq]", params.type]);
-  if (params?.city) query.push(["filters[city][$eq]", params.city]);
-  if (params?.district) query.push(["filters[district][$eq]", params.district]);
+  if (params?.city) {
+    if (contentType === "institutions" || contentType === "restaurants") {
+      query.push(["filters[address][city][$eq]", params.city]);
+    } else {
+      query.push(["filters[city][$eq]", params.city]);
+    }
+  }
+  if (params?.district) {
+    if (contentType === "institutions" || contentType === "restaurants") {
+      query.push(["filters[address][district][$eq]", params.district]);
+    } else {
+      query.push(["filters[district][$eq]", params.district]);
+    }
+  }
   if (params?.status) query.push(["filters[status][$eq]", params.status]);
   if (params?.applicationStatus) query.push(["filters[applicationStatus][$eq]", params.applicationStatus]);
   if (params?.resultStatus) query.push(["filters[resultStatus][$eq]", params.resultStatus]);
@@ -381,6 +393,45 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
       }
       if (!next.status && typeof next.date === "string") {
         next.status = deriveStatus(next.date, todayIso);
+      }
+      return next as T;
+    }
+
+    if (contentType === "institutions") {
+      const address = next.address && typeof next.address === "object" ? (next.address as any) : null;
+      if (address) {
+        if (!next.address) next.address = address.street || address.streetHindi || "";
+        if (!next.addressHindi) next.addressHindi = address.streetHindi || address.street || "";
+        if (!next.city) next.city = address.city;
+        if (!next.district) next.district = address.district;
+        if (!next.state) next.state = address.state;
+        if (!next.pincode) next.pincode = address.pincode;
+      }
+      if (next.reviewCount !== undefined && next.reviews === undefined) {
+        next.reviews = next.reviewCount;
+      }
+      return next as T;
+    }
+
+    if (contentType === "restaurants") {
+      const address = next.address && typeof next.address === "object" ? (next.address as any) : null;
+      if (address) {
+        if (!next.address) next.address = address.street || address.streetHindi || "";
+        if (!next.addressHindi) next.addressHindi = address.streetHindi || address.street || "";
+        if (!next.city) next.city = address.city;
+        if (!next.district) next.district = address.district;
+        if (!next.state) next.state = address.state;
+        if (!next.pincode) next.pincode = address.pincode;
+      }
+      const contact = next.contact && typeof next.contact === "object" ? (next.contact as any) : null;
+      if (contact) {
+        if (!next.phone) next.phone = contact.phone || contact.alternatePhone;
+        if (!next.email) next.email = contact.email;
+        if (!next.website) next.website = contact.website;
+        if (!next.whatsapp) next.whatsapp = contact.whatsapp;
+      }
+      if (next.reviewCount !== undefined && next.reviews === undefined) {
+        next.reviews = next.reviewCount;
       }
       return next as T;
     }

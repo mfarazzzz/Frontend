@@ -117,12 +117,22 @@ interface NextParams {
   slug: string;
 }
 
-const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
+interface NewsDetailProps {
+  nextParams?: NextParams;
+  initialArticle?: any; // CMSArticle
+}
+
+const NewsDetail = ({ nextParams, initialArticle }: NewsDetailProps) => {
   const category = nextParams?.category ?? "";
   const slug = nextParams?.slug ?? "";
   const normalizedCategory = category.trim();
 
-  const { data: article, isLoading: isArticleLoading } = useArticleBySlug(slug);
+  const { data: articleData, isLoading: isArticleLoading } = useArticleBySlug(slug);
+  
+  // Use initial data if available, otherwise use client-fetched data
+  const article = initialArticle || articleData;
+  const isLoading = !initialArticle && isArticleLoading;
+
   const effectiveCategory = (article?.category || normalizedCategory).trim();
   const { data: categoryNews = [] } = useArticlesByCategory(effectiveCategory, 20);
 
@@ -147,7 +157,7 @@ const NewsDetail = ({ nextParams }: { nextParams?: NextParams }) => {
     );
   }
 
-  if (isArticleLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />

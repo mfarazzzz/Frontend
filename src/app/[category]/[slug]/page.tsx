@@ -391,7 +391,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
         />
       ) : null}
-      <NewsDetail nextParams={{ category, slug }} />
+      <NewsDetail nextParams={{ category, slug }} initialArticle={article} />
     </>
   );
 }

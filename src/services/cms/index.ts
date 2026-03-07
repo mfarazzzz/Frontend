@@ -470,6 +470,11 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     
     const flat = { id, ...attributes };
 
+    // Map featured_image to image (for News Articles)
+    if (flat.featured_image && !flat.image) {
+        flat.image = flat.featured_image;
+    }
+
     // Handle image relation flattening
     if (flat.image && typeof flat.image === 'object') {
       const imgData = flat.image.data;
@@ -573,28 +578,22 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getArticleBySlug(slug: string): Promise<CMSArticle | null> {
-      const query = {
-        'filters[slug][$eq]': slug,
-        'populate': '*',
-      };
-   
-      // 1. Try News Articles (endpoint: /articles)
+      const encodedSlug = encodeURIComponent(slug);
+
       let response = await fetchJson<any>(
-        buildUrl('/articles', query),
+        buildUrl(`/articles/slug/${encodedSlug}`),
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );
-      
-      let raw = Array.isArray(response?.data) ? response.data[0] : response?.data;
+      let raw = response?.data ?? response;
 
-      // 2. Fallback to Editorials if not found (endpoint: /editorials)
       if (!raw) {
         response = await fetchJson<any>(
-          buildUrl('/editorials', query),
+          buildUrl(`/editorials/slug/${encodedSlug}`),
           { method: 'GET', headers: getAuthHeaders(true) },
           { allowNotFound: true }
         );
-        raw = Array.isArray(response?.data) ? response.data[0] : response?.data;
+        raw = response?.data ?? response;
       }
    
       if (!raw) return null;
@@ -1344,20 +1343,15 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getEditorialBySlug(slug: string): Promise<CMSEditorial | null> {
-      const query = {
-        'filters[slug][$eq]': slug,
-        'populate': '*'
-      };
+      const encodedSlug = encodeURIComponent(slug);
    
       const response = await fetchJson<any>(
-        buildUrl('/editorials', query),
+        buildUrl(`/editorials/slug/${encodedSlug}`),
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );
    
-      const raw = Array.isArray(response?.data)
-        ? response.data[0]
-        : response?.data;
+      const raw = response?.data ?? response;
       
       if (!raw) return null;
       

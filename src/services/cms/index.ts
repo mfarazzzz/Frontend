@@ -497,9 +497,9 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     const query = buildArticleQuery(params);
 
     try {
-      // Use news-articles endpoint as requested
+      // Use standard 'articles' endpoint (v5 plural ID)
       const response = await fetchJson<any>(
-        buildUrl('/news-articles', query),
+        buildUrl('/articles', query),
         { method: 'GET', headers: getAuthHeaders(true) }
       );
 
@@ -561,7 +561,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         : {};
 
       const response = await fetchJson<any>(
-        buildUrl('/news-articles', query),
+        buildUrl('/articles', query),
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );
@@ -578,19 +578,19 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         'populate': '*',
       };
    
-      // 1. Try News Articles
+      // 1. Try News Articles (endpoint: /articles)
       let response = await fetchJson<any>(
-        buildUrl('/news-articles', query),
+        buildUrl('/articles', query),
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );
       
       let raw = Array.isArray(response?.data) ? response.data[0] : response?.data;
 
-      // 2. Fallback to Editorial Articles if not found
+      // 2. Fallback to Editorials if not found (endpoint: /editorials)
       if (!raw) {
         response = await fetchJson<any>(
-          buildUrl('/editorial-articles', query),
+          buildUrl('/editorials', query),
           { method: 'GET', headers: getAuthHeaders(true) },
           { allowNotFound: true }
         );
@@ -1301,7 +1301,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
       try {
         const response = await fetchJson<any>(
-          buildUrl('/editorial-articles', query),
+          buildUrl('/editorials', query),
           { method: 'GET', headers: getAuthHeaders(true) }
         );
 
@@ -1350,7 +1350,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       };
    
       const response = await fetchJson<any>(
-        buildUrl('/editorial-articles', query),
+        buildUrl('/editorials', query),
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );

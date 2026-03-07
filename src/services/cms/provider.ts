@@ -58,6 +58,7 @@ export interface CMSProvider {
   getHeroArticles(limit?: number): Promise<CMSArticle[]>;
   getFeaturedArticles(limit?: number): Promise<CMSArticle[]>;
   getBreakingNews(limit?: number): Promise<CMSArticle[]>;
+  getTodaysTopNews(limit?: number): Promise<CMSArticle[]>;
   getTrendingArticles(limit?: number): Promise<CMSArticle[]>;
   getArticlesByCategory(
     categorySlug: string,

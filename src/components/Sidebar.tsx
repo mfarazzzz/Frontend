@@ -11,6 +11,16 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ trendingArticles = [], todaysTop = [], mostRead = [] }: SidebarProps) => {
+  const now = Date.now();
+  const fortyEightHoursMs = 48 * 60 * 60 * 1000;
+  const todaysTopRecent = todaysTop.filter((item) => {
+    const sourceDate = item.publishedAt || item.publishedDate;
+    if (!sourceDate) return false;
+    const timestamp = new Date(sourceDate).getTime();
+    if (Number.isNaN(timestamp)) return false;
+    return now - timestamp <= fortyEightHoursMs;
+  });
+
   const formatRelativeTimeHindi = (dateString: string) => {
     const timestamp = new Date(dateString).getTime();
     if (Number.isNaN(timestamp)) return "";
@@ -34,13 +44,13 @@ const Sidebar = ({ trendingArticles = [], todaysTop = [], mostRead = [] }: Sideb
   return (
     <aside className="space-y-6">
       {/* आज की बड़ी खबरें */}
-      {todaysTop.length > 0 && (
+      {todaysTopRecent.length > 0 && (
         <div className="sidebar-card">
           <h3 className="sidebar-title border-l-4 border-red-700 pl-3 mb-4">
             आज की बड़ी खबरें
           </h3>
           <div className="space-y-3">
-            {todaysTop.map((item) => (
+            {todaysTopRecent.map((item) => (
               <Link key={item.id} href={`/${item.category}/${item.slug}`} className="flex items-start gap-3 group">
                 <div className="relative w-14 h-14 rounded-md overflow-hidden bg-muted flex-shrink-0">
                   {item.image ? (

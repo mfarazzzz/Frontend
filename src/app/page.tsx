@@ -44,14 +44,14 @@ export default async function Page() {
     categoriesRaw,
     editorialPage,
     trendingArticles,
-    todaysTopPage,
+    todaysTop,
     mostRead24hPage
   ] = await Promise.all([
     provider.getHeroArticles(8).catch(() => []),
     provider.getCategories().catch(() => []),
     provider.getEditorials({ limit: 5, orderBy: "publishedDate", order: "desc" }).catch(() => ({ data: [] })),
     provider.getTrendingArticles(8).catch(() => []),
-    provider.getArticles({ todaysTop: true, status: "published", limit: 5, sinceHours: 48 }).catch(() => ({ data: [], total: 0, page: 1, pageSize: 5, totalPages: 1 })),
+    provider.getTodaysTopNews(5).catch(() => []),
     provider.getArticles({ status: "published", sinceHours: 24, orderBy: "views", order: "desc", limit: 5 }).catch(() => ({ data: [], total: 0, page: 1, pageSize: 5, totalPages: 1 }))
   ]);
 
@@ -103,7 +103,6 @@ export default async function Page() {
   const categoryArticles = Object.fromEntries(categoryArticlesEntries);
 
   const editorials = editorialPage?.data ?? [];
-  const todaysTop = todaysTopPage?.data ?? [];
   const mostRead24h = mostRead24hPage?.data ?? [];
   
   const websiteSchema = {

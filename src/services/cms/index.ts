@@ -1208,13 +1208,25 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getBreakingNews(limit = 5): Promise<CMSArticle[]> {
-      // Fetch latest news for ticker without 'breaking' filter to ensure updates
-      // Using news-articles endpoint via getArticles
-      const result = await getArticles({ 
-        status: 'published', 
-        limit: 10, // Ensure 10 items as requested
+      const result = await getArticles({
+        status: 'published',
+        breaking: true,
+        sinceHours: 72,
+        limit,
         orderBy: 'publishedAt',
-        order: 'desc'
+        order: 'desc',
+      });
+      return result.data;
+    },
+
+    async getTodaysTopNews(limit = 5): Promise<CMSArticle[]> {
+      const result = await getArticles({
+        status: 'published',
+        todaysTop: true,
+        sinceHours: 48,
+        limit,
+        orderBy: 'publishedAt',
+        order: 'desc',
       });
       return result.data;
     },

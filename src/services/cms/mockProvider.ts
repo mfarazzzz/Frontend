@@ -389,6 +389,11 @@ export const mockCMSProvider: CMSProvider = {
     const result = await this.getArticles({ breaking: true, status: 'published', limit });
     return result.data;
   },
+
+  async getTodaysTopNews(limit = 5): Promise<CMSArticle[]> {
+    const result = await this.getArticles({ todaysTop: true, status: 'published', sinceHours: 48, limit, orderBy: 'publishedAt', order: 'desc' });
+    return result.data;
+  },
   
   async getTrendingArticles(limit = 5): Promise<CMSArticle[]> {
     const result = await this.getArticles({ status: 'published', limit, orderBy: 'views' });

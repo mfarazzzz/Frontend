@@ -1294,6 +1294,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       if (isStrapi) {
         query['sort'] = `${sortField}:${sortDir}`;
         query['populate'] = '*';
+        query['publicationState'] = 'live';
       } else {
         query.sort = `${sortField}:${sortDir}`;
       }
@@ -1318,9 +1319,17 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         const rawData = response.data || [];
         const flatData = flattenStrapi(rawData);
 
+        // Keep only publicly viewable editorials to avoid homepage links that 404 on detail pages
+        const publishedOnly = flatData.filter((editorial: any) => {
+          const status = String(editorial?.status || '').toLowerCase();
+          const hasPublishedAt = Boolean(editorial?.publishedAt || editorial?.publishedDate);
+          if (status === 'published') return true;
+          return hasPublishedAt;
+        });
+
         // Normalize media URLs in editorial list
         const origin = getStrapiOrigin() || getStrapiMediaOriginFromEnv();
-        const data = flatData.map((editorial: any) => {
+        const data = publishedOnly.map((editorial: any) => {
             if (!origin) return editorial;
             const rawImage = extractStrapiMediaUrlLike((editorial as any)?.image);
             if (!rawImage) return editorial;
@@ -1328,7 +1337,13 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
             return image && image !== (editorial as any).image ? { ...editorial, image } : editorial;
         });
 
-        return { ...response, data };
+        return {
+          ...response,
+          data,
+          total: data.length,
+          pageSize: params?.limit || data.length || 20,
+          totalPages: 1,
+        };
 
       } catch (error) {
         console.error('[CMS] getEditorials failed:', error);

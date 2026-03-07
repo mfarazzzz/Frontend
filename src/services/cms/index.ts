@@ -429,9 +429,16 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       // Handle publication state
       if (input.status === 'draft') {
         query['publicationState'] = 'preview';
+      } else if (input.status === 'published') {
+        query['publicationState'] = 'live';
+      } else {
+        // Default to live for frontend, preview for admin if needed
+        // But here we let the caller decide or default to Strapi default (live)
       }
 
-      query['populate'] = '*';
+      // Explicitly populate critical fields if 'populate=*' is too heavy or shallow
+      // In v5, populate=* usually works, but for deep relations (media, author, category) it is safer to be explicit
+      query['populate'] = '*'; 
     } else {
       // Legacy or other provider logic
       if (input.category) query.category = input.category;
@@ -453,12 +460,46 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     return query;
   };
 
+  const flattenStrapi = (data: any): any => {
+    if (!data) return null;
+    if (Array.isArray(data)) return data.map(flattenStrapi);
+    if (data.data) return flattenStrapi(data.data);
+    
+    const attributes = data.attributes || data;
+    const id = data.id;
+    
+    const flat = { id, ...attributes };
+
+    // Handle image relation flattening
+    if (flat.image && typeof flat.image === 'object') {
+      const imgData = flat.image.data;
+      if (imgData) {
+         // Handle single image
+         if (!Array.isArray(imgData)) {
+            flat.image = imgData.attributes?.url || imgData.url || null;
+         }
+      }
+    }
+    
+    // Handle category relation flattening if needed
+    if (flat.category && typeof flat.category === 'object') {
+       const catData = flat.category.data;
+       if (catData && !Array.isArray(catData)) {
+          flat.category = catData.attributes?.slug || catData.slug || flat.category;
+          flat.categoryHindi = catData.attributes?.titleHindi || catData.titleHindi || flat.categoryHindi;
+       }
+    }
+
+    return flat;
+  };
+
   const getArticles = async (params?: ArticleQueryParams): Promise<PaginatedResponse<CMSArticle>> => {
     const query = buildArticleQuery(params);
 
     try {
-      const response = await fetchJson<PaginatedResponse<CMSArticle>>(
-        buildUrl('/articles', query),
+      // Use news-articles endpoint as requested
+      const response = await fetchJson<any>(
+        buildUrl('/news-articles', query),
         { method: 'GET', headers: getAuthHeaders(true) }
       );
 
@@ -472,22 +513,17 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         };
       }
 
-      const normalized = normalizeArticleListMedia(response.data);
+      // Flatten and normalize
+      const rawData = response.data || [];
+      const flatData = flattenStrapi(rawData);
+      const normalized = normalizeArticleListMedia(flatData);
+
       if (params?.category) {
         const slug = String(params.category || '').trim().toLowerCase();
         if (slug) {
           const filtered = normalized.filter(
             (article) => String(article.category || '').trim().toLowerCase() === slug,
           );
-          if (process.env.NODE_ENV !== 'production' && filtered.length !== normalized.length) {
-            const mismatchCount = normalized.length - filtered.length;
-            console.warn('Category filter mismatch detected', {
-              categorySlug: params.category,
-              returned: normalized.length,
-              filtered: filtered.length,
-              mismatchCount,
-            });
-          }
           return {
             ...response,
             data: filtered,
@@ -525,32 +561,46 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         : {};
 
       const response = await fetchJson<any>(
-        buildUrl('/articles', query),
+        buildUrl('/news-articles', query),
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );
       
-      const article = Array.isArray(response?.data) ? response.data[0] : response?.data;
-      return article ? normalizeArticleMedia(article) : null;
+      const raw = Array.isArray(response?.data) ? response.data[0] : response?.data;
+      if (!raw) return null;
+      const flat = flattenStrapi(raw);
+      return normalizeArticleMedia(flat);
     },
 
     async getArticleBySlug(slug: string): Promise<CMSArticle | null> {
       const query = {
         'filters[slug][$eq]': slug,
-        'populate': '*'
+        'populate': '*',
       };
    
-      const response = await fetchJson<any>(
-        buildUrl('/articles', query),
+      // 1. Try News Articles
+      let response = await fetchJson<any>(
+        buildUrl('/news-articles', query),
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );
+      
+      let raw = Array.isArray(response?.data) ? response.data[0] : response?.data;
+
+      // 2. Fallback to Editorial Articles if not found
+      if (!raw) {
+        response = await fetchJson<any>(
+          buildUrl('/editorial-articles', query),
+          { method: 'GET', headers: getAuthHeaders(true) },
+          { allowNotFound: true }
+        );
+        raw = Array.isArray(response?.data) ? response.data[0] : response?.data;
+      }
    
-      const article = Array.isArray(response?.data)
-        ? response.data[0]
-        : response?.data;
-   
-      return article ? normalizeArticleMedia(article) : null;
+      if (!raw) return null;
+
+      const flat = flattenStrapi(raw);
+      return normalizeArticleMedia(flat);
     },
 
     async createArticle(article: Omit<CMSArticle, 'id'>): Promise<CMSArticle> {
@@ -1159,7 +1209,14 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     },
 
     async getBreakingNews(limit = 5): Promise<CMSArticle[]> {
-      const result = await getArticles({ breaking: true, status: 'published', limit, sinceHours: 96 });
+      // Fetch latest news for ticker without 'breaking' filter to ensure updates
+      // Using news-articles endpoint via getArticles
+      const result = await getArticles({ 
+        status: 'published', 
+        limit: 10, // Ensure 10 items as requested
+        orderBy: 'publishedAt',
+        order: 'desc'
+      });
       return result.data;
     },
 
@@ -1243,8 +1300,8 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       }
 
       try {
-        const response = await fetchJson<PaginatedResponse<CMSEditorial>>(
-          buildUrl('/editorials', query),
+        const response = await fetchJson<any>(
+          buildUrl('/editorial-articles', query),
           { method: 'GET', headers: getAuthHeaders(true) }
         );
 
@@ -1258,9 +1315,13 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
             };
         }
 
+        // Flatten and Normalize
+        const rawData = response.data || [];
+        const flatData = flattenStrapi(rawData);
+
         // Normalize media URLs in editorial list
         const origin = getStrapiOrigin() || getStrapiMediaOriginFromEnv();
-        const data = (response.data || []).map((editorial) => {
+        const data = flatData.map((editorial: any) => {
             if (!origin) return editorial;
             const rawImage = extractStrapiMediaUrlLike((editorial as any)?.image);
             if (!rawImage) return editorial;
@@ -1289,16 +1350,30 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       };
    
       const response = await fetchJson<any>(
-        buildUrl('/editorials', query),
+        buildUrl('/editorial-articles', query),
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );
    
-      const editorial = Array.isArray(response?.data)
+      const raw = Array.isArray(response?.data)
         ? response.data[0]
         : response?.data;
-   
-      return editorial || null;
+      
+      if (!raw) return null;
+      
+      const flat = flattenStrapi(raw);
+      
+      // Normalize media
+      const origin = getStrapiOrigin() || getStrapiMediaOriginFromEnv();
+      if (origin && flat.image) {
+          const rawImage = extractStrapiMediaUrlLike(flat.image);
+          if (rawImage) {
+              const image = resolveStrapiMediaUrl(origin, rawImage);
+              if (image) flat.image = image;
+          }
+      }
+      
+      return flat;
     },
   };
 };

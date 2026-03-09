@@ -10,9 +10,10 @@ import Sidebar from "@/components/Sidebar";
 import SEO from "@/components/SEO";
 import { getCategoryBySlug, type Category } from "@/data/categories";
 import { useArticles } from "@/hooks/useCMS";
+import type { CMSArticle, PaginatedResponse } from "@/services/cms";
 
 const SITE_URL = "https://rampurnews.com";
-const PAGE_SIZE = 24;
+export const CATEGORY_PAGE_SIZE = 24;
 
 const buildCategoryIntro = (category: Category) => {
   const name = category.titleHindi;
@@ -23,7 +24,13 @@ const buildCategoryIntro = (category: Category) => {
 const toPageHref = (basePath: string, page: number) =>
   page <= 1 ? basePath : `${basePath}?page=${page}`;
 
-const CategoryListingInner = ({ categorySlug }: { categorySlug: string }) => {
+const CategoryListingInner = ({ 
+  categorySlug, 
+  initialArticles 
+}: { 
+  categorySlug: string;
+  initialArticles?: PaginatedResponse<CMSArticle>;
+}) => {
   const category = getCategoryBySlug(categorySlug);
   const searchParams = useSearchParams();
   const page = useMemo(() => {
@@ -31,19 +38,21 @@ const CategoryListingInner = ({ categorySlug }: { categorySlug: string }) => {
     return Number.isFinite(raw) && raw > 0 ? raw : 1;
   }, [searchParams]);
 
-  const offset = (page - 1) * PAGE_SIZE;
+  const offset = (page - 1) * CATEGORY_PAGE_SIZE;
   const { data, isLoading } = useArticles({
     category: categorySlug,
-    limit: PAGE_SIZE,
+    limit: CATEGORY_PAGE_SIZE,
     offset,
     orderBy: "publishedDate",
     order: "desc",
     status: "published",
+  }, {
+    initialData: initialArticles
   });
 
   const news = data?.data || [];
   const total = typeof data?.total === "number" ? data.total : news.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / CATEGORY_PAGE_SIZE));
 
   const basePath = category?.path || `/${categorySlug}`;
   const canonical = `${SITE_URL}${basePath}`;
@@ -186,9 +195,18 @@ const CategoryListingInner = ({ categorySlug }: { categorySlug: string }) => {
   );
 };
 
-const CategoryListing = ({ categorySlug }: { categorySlug: string }) => (
+const CategoryListing = ({ 
+  categorySlug, 
+  initialArticles 
+}: { 
+  categorySlug: string;
+  initialArticles?: PaginatedResponse<CMSArticle>;
+}) => (
   <Suspense fallback={<div className="min-h-screen bg-background" />}>
-    <CategoryListingInner categorySlug={categorySlug} />
+    <CategoryListingInner 
+      categorySlug={categorySlug} 
+      initialArticles={initialArticles} 
+    />
   </Suspense>
 );
 

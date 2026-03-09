@@ -42,12 +42,16 @@ export const cmsKeys = {
 };
 
 // Article hooks
-export const useArticles = (params?: ArticleQueryParams, options?: { enabled?: boolean }) => {
+export const useArticles = (
+  params?: ArticleQueryParams,
+  options?: { enabled?: boolean; initialData?: any }
+) => {
   const providerKey = getProviderKey();
   return useQuery({
     queryKey: [...cmsKeys.articlesList(params), providerKey],
     queryFn: () => getCMSProvider().getArticles(params),
     enabled: options?.enabled ?? true,
+    initialData: options?.initialData,
   });
 };
 

@@ -348,19 +348,8 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
       );
     }
 
-    if (params?.orderBy) {
-      const dir = (params.order || "desc").toLowerCase() === "asc" ? 1 : -1;
-      const key = params.orderBy;
-      items.sort((a: any, b: any) => {
-        const av = a?.[key];
-        const bv = b?.[key];
-        if (av === bv) return 0;
-        if (av === undefined || av === null) return 1;
-        if (bv === undefined || bv === null) return -1;
-        if (typeof av === "number" && typeof bv === "number") return (av - bv) * dir;
-        return String(av).localeCompare(String(bv)) * dir;
-      });
-    }
+    // NOTE: Client-side sorting removed - backend now provides deterministic sorting
+    // (publishedAt DESC, id DESC). The API order should be respected.
 
     const limit = params?.limit ?? 10;
     const offset = params?.offset ?? 0;

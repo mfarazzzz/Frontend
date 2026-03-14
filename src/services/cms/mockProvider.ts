@@ -171,21 +171,9 @@ export const mockCMSProvider: CMSProvider = {
       );
     }
     
-    // Sort
-    const orderBy = params?.orderBy || 'publishedAt';
-    const order = params?.order || 'desc';
-    articles.sort((a, b) => {
-      let comparison = 0;
-      if (orderBy === 'publishedDate' || orderBy === 'publishedAt') {
-        comparison = new Date(a.publishedDate).getTime() - new Date(b.publishedDate).getTime();
-      } else if (orderBy === 'views') {
-        comparison = (a.views || 0) - (b.views || 0);
-      } else if (orderBy === 'title') {
-        comparison = a.title.localeCompare(b.title);
-      }
-      return order === 'desc' ? -comparison : comparison;
-    });
-    
+    // NOTE: Client-side sorting removed - mock data should respect backend API order
+    // In production, the API provides deterministic sorting
+
     // Paginate
     const total = articles.length;
     const limit = params?.limit || 10;

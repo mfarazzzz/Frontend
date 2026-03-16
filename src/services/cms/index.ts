@@ -495,6 +495,24 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
        }
     }
 
+    // Map meta_description to seoDescription for frontend compatibility
+    if (flat.meta_description && !flat.seoDescription) {
+      flat.seoDescription = flat.meta_description;
+    }
+
+    // Map SEO title
+    if (flat.seo_title && !flat.seoTitle) {
+      flat.seoTitle = flat.seo_title;
+    }
+
+    // Normalize OpenGraph fields
+    if (flat.og_title) {
+      flat.ogTitle = flat.og_title;
+    }
+    if (flat.og_description) {
+      flat.ogDescription = flat.og_description;
+    }
+
     return flat;
   };
 

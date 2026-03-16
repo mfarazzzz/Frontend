@@ -110,6 +110,9 @@ export interface CMSArticle {
   newsKeywords?: string;
   discoverEligible?: boolean;
   schemaJson?: unknown;
+  // OpenGraph fields
+  ogTitle?: string;
+  ogDescription?: string;
   // Video fields
   videoUrl?: string;
   videoType?: 'youtube' | 'upload' | 'none';

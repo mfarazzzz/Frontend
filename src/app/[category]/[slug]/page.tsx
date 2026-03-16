@@ -124,6 +124,7 @@ export async function generateMetadata(props: {
   const bodyText = stripHtmlToText(article.content || "");
   const seoDescription =
     article.seoDescription?.trim() ||
+    article.meta_description?.trim() ||
     article.excerpt?.trim() ||
     truncateText(bodyText, 150) ||
     "ताज़ा खबरें पढ़ें | रामपुर न्यूज़";
@@ -176,8 +177,8 @@ export async function generateMetadata(props: {
     },
     openGraph: {
       type: "article",
-      title: seoTitle,
-      description: seoDescription,
+      title: article.ogTitle?.trim() || seoTitle,
+      description: article.ogDescription?.trim() || seoDescription,
       url: absoluteCanonical,
       siteName: "रामपुर न्यूज़ | Rampur News",
       publishedTime,
@@ -196,8 +197,8 @@ export async function generateMetadata(props: {
     },
     twitter: {
       card: "summary_large_image",
-      title: seoTitle,
-      description: seoDescription,
+      title: article.ogTitle?.trim() || seoTitle,
+      description: article.ogDescription?.trim() || seoDescription,
       images: [imageUrl],
     },
     other: {
@@ -251,6 +252,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
   const bodyText = article ? stripHtmlToText(article.content || "") : "";
   const description = article
     ? article.seoDescription?.trim() ||
+      article.meta_description?.trim() ||
       article.excerpt?.trim() ||
       truncateText(bodyText, 150)
     : "";

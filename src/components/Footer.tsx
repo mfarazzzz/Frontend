@@ -3,7 +3,7 @@
 import { Link } from "@/lib/router-compat";
 import { Facebook, Twitter, Youtube, Instagram, Mail, Phone, MapPin, Settings, MessageCircle, Send } from "lucide-react";
 import { categories } from "@/data/categories";
-import AdSlot from "./AdSlot";
+import AdSlotLazy from "./AdSlotLazy";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -43,7 +43,7 @@ const Footer = () => {
       <div className="container py-8">
         {/* Footer Ad Banner */}
         <div className="mb-8">
-          <AdSlot placement="footer" />
+          <AdSlotLazy placement="footer" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

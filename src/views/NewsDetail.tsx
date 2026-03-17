@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 import ShareButtons from "@/components/ShareButtons";
 import NewsCard from "@/components/NewsCard";
 import { Button } from "@/components/ui/button";
-import AdSlot from "@/components/AdSlot";
+import AdSlotLazy from "@/components/AdSlotLazy";
 import { useArticleBySlug, useArticlesByCategory } from "@/hooks/useCMS";
 
 const Sidebar = lazy(() => import("@/components/Sidebar").then(mod => ({ default: mod.default })));
@@ -454,7 +454,7 @@ const NewsDetail = ({ nextParams, initialArticle }: NewsDetailProps) => {
             ) : null}
 
             {/* Article Top Ad */}
-            <AdSlot placement="article_top" className="mb-6" />
+            <AdSlotLazy placement="article_top" className="mb-6" />
 
             {/* Share Buttons */}
             <div className="flex items-center gap-4 mb-6">
@@ -514,7 +514,7 @@ const NewsDetail = ({ nextParams, initialArticle }: NewsDetailProps) => {
             </div>
 
             {/* Article Bottom Ad */}
-            <AdSlot placement="article_bottom" className="my-8" />
+            <AdSlotLazy placement="article_bottom" className="my-8" />
 
             {relatedNews.length > 0 && (
               <section className="mt-10 pt-8 border-t border-border">

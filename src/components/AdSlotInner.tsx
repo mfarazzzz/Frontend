@@ -13,10 +13,9 @@ interface AdSlotProps {
 }
 
 /**
- * AdSlot - Client-only advertisement component
- * This component MUST only render on the client side
+ * AdSlotInner - Client-only advertisement component with hooks
  */
-export default function AdSlot({ placement, className = "" }: AdSlotProps) {
+export default function AdSlotInner({ placement, className = "" }: AdSlotProps) {
   const [ad, setAd] = useState<CMSAd | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +24,44 @@ export default function AdSlot({ placement, className = "" }: AdSlotProps) {
   const impressionTracked = useRef(false);
 
   const CMS_API_URL = "https://cms.rampurnews.com/api";
+
+  // Get impression count for an ad from localStorage
+  const getImpressionCount = useCallback((adId: string): number => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const data = localStorage.getItem(IMPRESSION_COUNTS_KEY);
+      if (!data) return 0;
+      const counts = JSON.parse(data) as Record<string, { count: number; date: string }>;
+      const today = new Date().toISOString().split("T")[0];
+      
+      if (counts[adId]?.date !== today) {
+        return 0;
+      }
+      return counts[adId]?.count || 0;
+    } catch {
+      return 0;
+    }
+  }, []);
+
+  // Increment impression count for an ad
+  const incrementImpressionCount = useCallback((adId: string): void => {
+    if (typeof window === "undefined") return;
+    try {
+      const data = localStorage.getItem(IMPRESSION_COUNTS_KEY);
+      const counts = data ? JSON.parse(data) as Record<string, { count: number; date: string }> : {};
+      const today = new Date().toISOString().split("T")[0];
+      
+      if (!counts[adId] || counts[adId].date !== today) {
+        counts[adId] = { count: 1, date: today };
+      } else {
+        counts[adId].count = Math.min(counts[adId].count + 1, MAX_IMPRESSIONS_PER_AD_PER_DAY);
+      }
+      
+      localStorage.setItem(IMPRESSION_COUNTS_KEY, JSON.stringify(counts));
+    } catch {
+      // Ignore errors
+    }
+  }, []);
 
   const fetchAd = useCallback(async () => {
     if (hasFetched.current) return;
@@ -41,7 +78,18 @@ export default function AdSlot({ placement, className = "" }: AdSlotProps) {
       const data = await response.json();
 
       if (isMounted.current && data.success && data.data?.length > 0) {
-        setAd(data.data[0]);
+        // Check frequency cap
+        const impressionCount = getImpressionCount(data.data[0].id);
+        if (impressionCount < MAX_IMPRESSIONS_PER_AD_PER_DAY) {
+          setAd(data.data[0]);
+          incrementImpressionCount(data.data[0].id);
+        } else {
+          // Frequency cap reached, try to get another ad or show placeholder
+          if (data.data.length > 1) {
+            setAd(data.data[1]);
+            incrementImpressionCount(data.data[1].id);
+          }
+        }
       }
     } catch (err) {
       if (isMounted.current) {
@@ -53,7 +101,7 @@ export default function AdSlot({ placement, className = "" }: AdSlotProps) {
         setIsLoading(false);
       }
     }
-  }, [placement]);
+  }, [placement, getImpressionCount, incrementImpressionCount]);
 
   // Track impression when ad is rendered
   const trackImpression = useCallback(async (adId: string) => {

@@ -15,6 +15,8 @@ const notoSansDevanagari = Noto_Sans_Devanagari({
   weight: ["400", "600", "700"],
   variable: "--font-noto-sans-devanagari",
   display: "swap",
+  preload: true,
+  fallback: ["system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -140,6 +142,9 @@ export default function RootLayout({
   return (
     <html lang="hi" suppressHydrationWarning>
       <head>
+        {/* Preconnect to Google Fonts for faster font loading */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

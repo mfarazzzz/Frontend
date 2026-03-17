@@ -6,6 +6,7 @@ import { Menu, X, Search, Facebook, Twitter, Youtube, Instagram, ChevronDown, Cl
 import { categories } from "@/data/categories";
 import { MegaMenu, DropdownMenu, categoryGroups } from "./MegaMenu";
 import BreakingNewsTicker from "./BreakingNewsTicker";
+import AdSlot from "./AdSlot";
 
 const Header = ({ showBreakingTicker = true }: { showBreakingTicker?: boolean }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -341,6 +342,11 @@ const Header = ({ showBreakingTicker = true }: { showBreakingTicker?: boolean })
       </nav>
 
       {showBreakingTicker ? <BreakingNewsTicker /> : null}
+
+      {/* Header Ad Banner */}
+      <div className="container py-2">
+        <AdSlot placement="header" className="mx-auto" />
+      </div>
     </header>
   );
 };

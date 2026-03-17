@@ -232,3 +232,48 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   totalPages: number;
 }
+
+// ─── Advertisement types ─────────────────────────────────────────────────────────
+
+/** Ad placement positions on the website */
+export type AdPlacement =
+  | 'header'
+  | 'sidebar'
+  | 'infeed'
+  | 'article_top'
+  | 'article_middle'
+  | 'article_bottom'
+  | 'footer'
+  | 'mobile_sticky';
+
+/** Ad type/format */
+export type AdType = 'adsense' | 'image' | 'html';
+
+/** CMS Advertisement entity */
+export interface CMSAd {
+  id: string;
+  title: string;
+  type: AdType;
+  placement: AdPlacement;
+  code?: string;
+  imageUrl?: string;
+  link?: string;
+  isActive: boolean;
+  startDate?: string;
+  endDate?: string;
+  priority: number;
+  targetUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Query parameters for fetching ads */
+export interface AdQueryParams {
+  placement?: AdPlacement;
+  isActive?: boolean;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+}
+  
+  

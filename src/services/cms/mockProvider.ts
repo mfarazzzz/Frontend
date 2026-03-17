@@ -7,7 +7,9 @@ import type {
   CMSTag,
   CMSSettings,
   ArticleQueryParams,
-  PaginatedResponse 
+  PaginatedResponse,
+  CMSAd,
+  AdQueryParams,
 } from './types';
 import type { CMSProvider } from './provider';
 import { mockNewsData } from '../../data/mockNews';
@@ -19,6 +21,7 @@ const STORAGE_KEYS = {
   AUTHORS: 'cms_authors',
   MEDIA: 'cms_media',
   SETTINGS: 'cms_settings',
+  ADS: 'cms_ads',
 };
 
 // Helper to generate unique IDs
@@ -420,5 +423,96 @@ export const mockCMSProvider: CMSProvider = {
 
   async getEditorialBySlug(_slug: string): Promise<import('./types').CMSEditorial | null> {
     return null;
+  },
+
+  // Advertisement operations
+  async getAds(params?: AdQueryParams): Promise<CMSAd[]> {
+    let ads = getStorage<CMSAd>(STORAGE_KEYS.ADS);
+
+    // Apply filters
+    if (params?.placement) {
+      ads = ads.filter(a => a.placement === params.placement);
+    }
+    if (params?.isActive !== undefined) {
+      ads = ads.filter(a => a.isActive === params.isActive);
+    }
+    if (params?.startDate) {
+      const start = new Date(params.startDate).getTime();
+      ads = ads.filter(a => {
+        if (!a.startDate) return true;
+        return new Date(a.startDate).getTime() <= start;
+      });
+    }
+    if (params?.endDate) {
+      const end = new Date(params.endDate).getTime();
+      ads = ads.filter(a => {
+        if (!a.endDate) return true;
+        return new Date(a.endDate).getTime() >= end;
+      });
+    }
+
+    // Sort by priority (higher first)
+    ads.sort((a, b) => b.priority - a.priority);
+
+    // Filter by active status and date range for display
+    const now = new Date();
+    ads = ads.filter(a => {
+      if (!a.isActive) return false;
+      if (a.startDate && new Date(a.startDate) > now) return false;
+      if (a.endDate && new Date(a.endDate) < now) return false;
+      return true;
+    });
+
+    // Apply limit
+    if (params?.limit) {
+      ads = ads.slice(0, params.limit);
+    }
+
+    return ads;
+  },
+
+  async getAdById(id: string): Promise<CMSAd | null> {
+    const ads = getStorage<CMSAd>(STORAGE_KEYS.ADS);
+    return ads.find(a => a.id === id) || null;
+  },
+
+  async createAd(ad: Omit<CMSAd, 'id' | 'createdAt' | 'updatedAt'>): Promise<CMSAd> {
+    const ads = getStorage<CMSAd>(STORAGE_KEYS.ADS);
+    const now = new Date().toISOString();
+    const newAd: CMSAd = {
+      ...ad,
+      id: generateId(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    ads.push(newAd);
+    setStorage(STORAGE_KEYS.ADS, ads);
+    return newAd;
+  },
+
+  async updateAd(id: string, updates: Partial<CMSAd>): Promise<CMSAd> {
+    const ads = getStorage<CMSAd>(STORAGE_KEYS.ADS);
+    const index = ads.findIndex(a => a.id === id);
+    if (index === -1) {
+      throw new Error('Ad not found');
+    }
+    const updatedAd = {
+      ...ads[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    ads[index] = updatedAd;
+    setStorage(STORAGE_KEYS.ADS, ads);
+    return updatedAd;
+  },
+
+  async deleteAd(id: string): Promise<void> {
+    const ads = getStorage<CMSAd>(STORAGE_KEYS.ADS);
+    const index = ads.findIndex(a => a.id === id);
+    if (index === -1) {
+      throw new Error('Ad not found');
+    }
+    ads.splice(index, 1);
+    setStorage(STORAGE_KEYS.ADS, ads);
   },
 };

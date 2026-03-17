@@ -3,6 +3,7 @@ import { TrendingUp } from "lucide-react";
 import Image from "next/image";
 import type { CMSArticle } from "@/services/cms";
 import LazyYouTubeWidget from "./LazyYouTubeWidget";
+import AdSlot from "./AdSlot";
 
 interface SidebarProps {
   trendingArticles?: CMSArticle[];
@@ -43,6 +44,9 @@ const Sidebar = ({ trendingArticles = [], todaysTop = [], mostRead = [] }: Sideb
 
   return (
     <aside className="space-y-6">
+      {/* Sidebar Ad */}
+      <AdSlot placement="sidebar" />
+
       {/* आज की बड़ी खबरें */}
       {todaysTopRecent.length > 0 && (
         <div className="sidebar-card">

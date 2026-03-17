@@ -1434,6 +1434,101 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       
       return flat;
     },
+
+    // ─── Advertisement methods ──────────────────────────────────────────────────
+
+    async getAds(params?: AdQueryParams): Promise<CMSAd[]> {
+      const query: Record<string, string | number | boolean | undefined> = {};
+
+      if (params?.placement) {
+        if (isStrapi) {
+          query['filters[placement][$eq]'] = params.placement;
+        } else {
+          query.placement = params.placement;
+        }
+      }
+      if (params?.isActive !== undefined) {
+        if (isStrapi) {
+          query['filters[isActive][$eq]'] = params.isActive;
+        } else {
+          query.isActive = params.isActive;
+        }
+      }
+      if (params?.limit) {
+        if (isStrapi) {
+          query['pagination[limit]'] = params.limit;
+        } else {
+          query.limit = params.limit;
+        }
+      }
+
+      const response = await fetchJson<any>(
+        buildUrl('/ads', query),
+        { method: 'GET', headers: getAuthHeaders(true) }
+      );
+
+      const rawData = response?.data ?? response;
+      if (!rawData) return [];
+
+      const ads = Array.isArray(rawData) ? rawData : [rawData];
+      return ads.map((ad: any) => flattenStrapi(ad));
+    },
+
+    async getAdById(id: string): Promise<CMSAd | null> {
+      const response = await fetchJson<any>(
+        buildUrl(`/ads/${id}`),
+        { method: 'GET', headers: getAuthHeaders(true) },
+        { allowNotFound: true }
+      );
+
+      const raw = response?.data ?? response;
+      if (!raw) return null;
+      return flattenStrapi(raw);
+    },
+
+    async createAd(ad: Omit<CMSAd, 'id' | 'createdAt' | 'updatedAt'>): Promise<CMSAd> {
+      const response = await fetchJson<any>(
+        buildUrl('/ads'),
+        {
+          method: 'POST',
+          headers: {
+            ...getAuthHeaders(true),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ data: ad }),
+        }
+      );
+
+      const raw = response?.data ?? response;
+      return flattenStrapi(raw);
+    },
+
+    async updateAd(id: string, updates: Partial<CMSAd>): Promise<CMSAd> {
+      const response = await fetchJson<any>(
+        buildUrl(`/ads/${id}`),
+        {
+          method: 'PUT',
+          headers: {
+            ...getAuthHeaders(true),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ data: updates }),
+        }
+      );
+
+      const raw = response?.data ?? response;
+      return flattenStrapi(raw);
+    },
+
+    async deleteAd(id: string): Promise<void> {
+      await fetchJson<any>(
+        buildUrl(`/ads/${id}`),
+        {
+          method: 'DELETE',
+          headers: getAuthHeaders(true),
+        }
+      );
+    },
   };
 };
 

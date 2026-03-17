@@ -6,6 +6,7 @@ import CategorySection from "@/components/CategorySection";
 import NewsCard from "@/components/NewsCard";
 import YouTubeRail from "@/components/YouTubeRail";
 import Sidebar from "@/components/Sidebar";
+import AdSlot from "@/components/AdSlot";
 import type { CMSArticle, CMSCategory, CMSEditorial } from "@/services/cms";
 type IndexProps = {
   heroArticles: CMSArticle[];
@@ -72,17 +73,27 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-8 space-y-8">
-            {categories.map((category) => {
+            {/* Infeed Ad after hero */}
+            <AdSlot placement="infeed" />
+
+            {categories.map((category, index) => {
               const articles = categoryArticles[category.slug] ?? [];
               if (!articles.length) return null;
               return (
-                <CategorySection
-                  key={category.id}
-                  title={category.titleHindi}
-                  articles={articles}
-                  viewAllLink={category.path || `/${category.slug}`}
-                  variant="featured"
-                />
+                <div key={category.id}>
+                  <CategorySection
+                    title={category.titleHindi}
+                    articles={articles}
+                    viewAllLink={category.path || `/${category.slug}`}
+                    variant="featured"
+                  />
+                  {/* Add infeed ad after every 2 categories (approximately every 10 articles) */}
+                  {(index + 1) % 2 === 0 && index < categories.length - 1 && (
+                    <div className="my-8">
+                      <AdSlot placement="infeed" />
+                    </div>
+                  )}
+                </div>
               );
             })}
 

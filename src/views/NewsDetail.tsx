@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import ShareButtons from "@/components/ShareButtons";
 import NewsCard from "@/components/NewsCard";
 import { Button } from "@/components/ui/button";
+import AdSlot from "@/components/AdSlot";
 import { useArticleBySlug, useArticlesByCategory } from "@/hooks/useCMS";
 
 const Sidebar = lazy(() => import("@/components/Sidebar").then(mod => ({ default: mod.default })));
@@ -452,6 +453,9 @@ const NewsDetail = ({ nextParams, initialArticle }: NewsDetailProps) => {
               </div>
             ) : null}
 
+            {/* Article Top Ad */}
+            <AdSlot placement="article_top" className="mb-6" />
+
             {/* Share Buttons */}
             <div className="flex items-center gap-4 mb-6">
               <span className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -508,6 +512,9 @@ const NewsDetail = ({ nextParams, initialArticle }: NewsDetailProps) => {
                 उत्तर प्रदेश
               </span>
             </div>
+
+            {/* Article Bottom Ad */}
+            <AdSlot placement="article_bottom" className="my-8" />
 
             {relatedNews.length > 0 && (
               <section className="mt-10 pt-8 border-t border-border">

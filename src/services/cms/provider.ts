@@ -10,6 +10,8 @@ import type {
   PaginatedResponse,
   CMSEditorial,
   EditorialQueryParams,
+  CMSAd,
+  AdQueryParams,
 } from './types';
 
 export interface CMSProvider {
@@ -65,6 +67,13 @@ export interface CMSProvider {
     limit?: number
   ): Promise<CMSArticle[]>;
   searchArticles(query: string, limit?: number): Promise<CMSArticle[]>;
+
+  // Advertisement operations
+  getAds(params?: AdQueryParams): Promise<CMSAd[]>;
+  getAdById(id: string): Promise<CMSAd | null>;
+  createAd(ad: Omit<CMSAd, 'id' | 'createdAt' | 'updatedAt'>): Promise<CMSAd>;
+  updateAd(id: string, ad: Partial<CMSAd>): Promise<CMSAd>;
+  deleteAd(id: string): Promise<void>;
 }
 
 export type CMSProviderType = 'mock' | 'strapi' | 'django' | 'sanity' | 'custom';

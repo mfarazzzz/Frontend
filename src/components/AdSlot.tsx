@@ -13,13 +13,17 @@ interface AdSlotProps {
 }
 
 // Track seen ads globally to prevent duplicate impressions
+// eslint-disable-next-line no-undef
 const globalSeenAds = new Set<string>();
+
+// Check if we're in browser environment
+const isBrowser = typeof window !== "undefined";
 
 /**
  * Get impression count for an ad from localStorage
  */
 function getImpressionCount(adId: string): number {
-  if (typeof window === "undefined") return 0;
+  if (!isBrowser) return 0;
   try {
     const data = localStorage.getItem(IMPRESSION_COUNTS_KEY);
     if (!data) return 0;
@@ -39,7 +43,7 @@ function getImpressionCount(adId: string): number {
  * Increment impression count for an ad
  */
 function incrementImpressionCount(adId: string): void {
-  if (typeof window === "undefined") return;
+  if (!isBrowser) return;
   try {
     const data = localStorage.getItem(IMPRESSION_COUNTS_KEY);
     const counts = data ? JSON.parse(data) as Record<string, { count: number; date: string }> : {};
@@ -134,6 +138,10 @@ const getAdContainerStyle = useCallback((placement: AdPlacement): React.CSSPrope
  * AdSlot - Optimized advertisement component
  */
 export default function AdSlot({ placement, className = "" }: AdSlotProps) {
+  // Return null during SSR to prevent hook errors
+  if (!isBrowser) {
+    return <div className={`ad-slot ad-slot-${placement} ${className}`} data-placement={placement} />;
+  }
   const [ad, setAd] = useState<CMSAd | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

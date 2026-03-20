@@ -23,8 +23,6 @@ export default function AdSlotInner({ placement, className = "" }: AdSlotProps) 
   const isMounted = useRef(true);
   const impressionTracked = useRef(false);
 
-  const CMS_API_URL = "https://cms.rampurnews.com/api";
-
   const parseAdsResponse = useCallback((json: any): CMSAd[] => {
     if (!json || json.success !== true) return [];
 
@@ -63,8 +61,8 @@ export default function AdSlotInner({ placement, className = "" }: AdSlotProps) 
           impressions: typeof raw.impressions === "number" ? raw.impressions : Number(raw.impressions) || undefined,
           clicks: typeof raw.clicks === "number" ? raw.clicks : Number(raw.clicks) || undefined,
           category: raw.category || undefined,
-          createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
-          updatedAt: raw.updatedAt || raw.updated_at || new Date().toISOString(),
+          createdAt: String(raw.createdAt || raw.created_at || ""),
+          updatedAt: String(raw.updatedAt || raw.updated_at || ""),
         } as CMSAd;
       })
       .filter((item): item is CMSAd => Boolean(item));
@@ -116,15 +114,26 @@ export default function AdSlotInner({ placement, className = "" }: AdSlotProps) 
       const params = new URLSearchParams({
         placement,
         active: "true",
-        limit: "1",
+        limit: "10",
       });
 
-      const response = await fetch(`${CMS_API_URL}/ads?${params.toString()}`);
+      const response = await fetch(`/api/ads?${params.toString()}`);
       const json = await response.json();
       const ads = parseAdsResponse(json);
 
       if (isMounted.current && ads.length > 0) {
-        const eligible = ads.find((candidate) => getImpressionCount(candidate.id) < MAX_IMPRESSIONS_PER_AD_PER_DAY);
+        const isRenderable = (candidate: CMSAd) => {
+          if (!candidate) return false;
+          if (candidate.type === "adsense") return Boolean(candidate.code);
+          if (candidate.type === "html") return Boolean(candidate.code);
+          if (candidate.type === "image") return Boolean(candidate.imageUrl);
+          return false;
+        };
+
+        const eligible = ads.find(
+          (candidate) =>
+            isRenderable(candidate) && getImpressionCount(candidate.id) < MAX_IMPRESSIONS_PER_AD_PER_DAY,
+        );
         if (eligible) {
           setAd(eligible);
           incrementImpressionCount(eligible.id);
@@ -148,7 +157,7 @@ export default function AdSlotInner({ placement, className = "" }: AdSlotProps) 
   // Track impression when ad is rendered
   const trackImpression = useCallback(async (adId: string) => {
     try {
-      await fetch(`${CMS_API_URL}/ads/impression`, {
+      await fetch(`/api/ads/impression`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ adId }),
@@ -243,20 +252,27 @@ export default function AdSlotInner({ placement, className = "" }: AdSlotProps) 
     }
 
     // Image ad
-    if (ad.type === "image" && ad.imageUrl && (ad.targetUrl || ad.link)) {
+    if (ad.type === "image" && ad.imageUrl) {
+      const hasLink = Boolean(ad.targetUrl || ad.link);
+      const img = (
+        <img
+          src={ad.imageUrl}
+          alt={ad.title || "Advertisement"}
+          className="max-w-full h-auto mx-auto"
+          style={getStyles()}
+        />
+      );
+      if (!hasLink) {
+        return img;
+      }
       return (
         <a 
-          href={`${CMS_API_URL}/ads/click?adId=${encodeURIComponent(ad.id)}`}
+          href={`/api/ads/click?adId=${encodeURIComponent(ad.id)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="block"
         >
-          <img 
-            src={ad.imageUrl} 
-            alt={ad.title || "Advertisement"} 
-            className="max-w-full h-auto mx-auto"
-            style={getStyles()}
-          />
+          {img}
         </a>
       );
     }

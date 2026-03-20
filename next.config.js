@@ -107,6 +107,8 @@ const nextConfig = {
     return [
       { source: "/rss/:slug.xml", destination: "/rss/category/:slug" },
       { source: "/rss/:slug", destination: "/rss/category/:slug" },
+      { source: "/api/ads", destination: "https://cms.rampurnews.com/api/ads" },
+      { source: "/api/ads/:path*", destination: "https://cms.rampurnews.com/api/ads/:path*" },
     ];
   },
   logging: {

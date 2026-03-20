@@ -25,6 +25,51 @@ export default function AdSlotInner({ placement, className = "" }: AdSlotProps) 
 
   const CMS_API_URL = "https://cms.rampurnews.com/api";
 
+  const parseAdsResponse = useCallback((json: any): CMSAd[] => {
+    if (!json || json.success !== true) return [];
+
+    const payload = json.data;
+    const rawAds: any[] = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload?.ads)
+          ? payload.ads
+          : [];
+
+    return rawAds
+      .map((raw) => {
+        if (!raw) return null;
+        const id = raw.id != null ? String(raw.id) : "";
+        if (!id) return null;
+        const imageUrl = raw.imageUrl || raw.image_url || undefined;
+        const targetUrl = raw.targetUrl || raw.target_url || undefined;
+        const link = raw.link || raw.targetUrl || raw.target_url || raw.targetUrl || undefined;
+        return {
+          id,
+          title: raw.title || "",
+          type: raw.type || "image",
+          placement: raw.placement || placement,
+          code: raw.code || raw.ad_code || undefined,
+          imageUrl,
+          link,
+          targetUrl,
+          isActive: raw.isActive === true || raw.is_active === true,
+          startDate: raw.startDate || raw.start_date || undefined,
+          endDate: raw.endDate || raw.end_date || undefined,
+          priority: typeof raw.priority === "number" ? raw.priority : Number(raw.priority) || 1,
+          weight: typeof raw.weight === "number" ? raw.weight : Number(raw.weight) || undefined,
+          deviceType: raw.deviceType || raw.device_type || undefined,
+          impressions: typeof raw.impressions === "number" ? raw.impressions : Number(raw.impressions) || undefined,
+          clicks: typeof raw.clicks === "number" ? raw.clicks : Number(raw.clicks) || undefined,
+          category: raw.category || undefined,
+          createdAt: raw.createdAt || raw.created_at || new Date().toISOString(),
+          updatedAt: raw.updatedAt || raw.updated_at || new Date().toISOString(),
+        } as CMSAd;
+      })
+      .filter((item): item is CMSAd => Boolean(item));
+  }, [placement]);
+
   // Get impression count for an ad from localStorage
   const getImpressionCount = useCallback((adId: string): number => {
     if (typeof window === "undefined") return 0;
@@ -70,25 +115,22 @@ export default function AdSlotInner({ placement, className = "" }: AdSlotProps) 
     try {
       const params = new URLSearchParams({
         placement,
-        isActive: "true",
+        active: "true",
         limit: "1",
       });
 
       const response = await fetch(`${CMS_API_URL}/ads?${params.toString()}`);
-      const data = await response.json();
+      const json = await response.json();
+      const ads = parseAdsResponse(json);
 
-      if (isMounted.current && data.success && data.data?.length > 0) {
-        // Check frequency cap
-        const impressionCount = getImpressionCount(data.data[0].id);
-        if (impressionCount < MAX_IMPRESSIONS_PER_AD_PER_DAY) {
-          setAd(data.data[0]);
-          incrementImpressionCount(data.data[0].id);
-        } else {
-          // Frequency cap reached, try to get another ad or show placeholder
-          if (data.data.length > 1) {
-            setAd(data.data[1]);
-            incrementImpressionCount(data.data[1].id);
-          }
+      if (isMounted.current && ads.length > 0) {
+        const eligible = ads.find((candidate) => getImpressionCount(candidate.id) < MAX_IMPRESSIONS_PER_AD_PER_DAY);
+        if (eligible) {
+          setAd(eligible);
+          incrementImpressionCount(eligible.id);
+        } else if (ads[0]) {
+          setAd(ads[0]);
+          incrementImpressionCount(ads[0].id);
         }
       }
     } catch (err) {
@@ -101,7 +143,7 @@ export default function AdSlotInner({ placement, className = "" }: AdSlotProps) 
         setIsLoading(false);
       }
     }
-  }, [placement, getImpressionCount, incrementImpressionCount]);
+  }, [placement, getImpressionCount, incrementImpressionCount, parseAdsResponse]);
 
   // Track impression when ad is rendered
   const trackImpression = useCallback(async (adId: string) => {
@@ -201,10 +243,10 @@ export default function AdSlotInner({ placement, className = "" }: AdSlotProps) 
     }
 
     // Image ad
-    if (ad.type === "image" && ad.imageUrl && ad.link) {
+    if (ad.type === "image" && ad.imageUrl && (ad.targetUrl || ad.link)) {
       return (
         <a 
-          href={`${CMS_API_URL}/ads/click?id=${ad.id}`}
+          href={`${CMS_API_URL}/ads/click?adId=${encodeURIComponent(ad.id)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="block"

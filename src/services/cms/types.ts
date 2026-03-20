@@ -258,11 +258,16 @@ export interface CMSAd {
   code?: string;
   imageUrl?: string;
   link?: string;
+  targetUrl?: string;
   isActive: boolean;
   startDate?: string;
   endDate?: string;
   priority: number;
-  targetUrl?: string;
+  weight?: number;
+  deviceType?: 'all' | 'mobile' | 'desktop';
+  impressions?: number;
+  clicks?: number;
+  category?: string;
   createdAt: string;
   updatedAt: string;
 }

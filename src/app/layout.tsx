@@ -3,12 +3,7 @@ import Script from "next/script";
 import { Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-
-const GA_ID_RAW = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-const GA_ID = GA_ID_RAW
-  ? GA_ID_RAW.trim().replace(/^['"]|['"]$/g, "")
-  : undefined;
-const GA_MEASUREMENT_ID = GA_ID && /^G-[A-Z0-9]+$/.test(GA_ID) ? GA_ID : undefined;
+import { isValidGA4, GA_MEASUREMENT_ID } from "@/lib/ga-config";
 
 const notoSansDevanagari = Noto_Sans_Devanagari({
   subsets: ["devanagari", "latin"],
@@ -153,7 +148,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
-        {GA_MEASUREMENT_ID ? (
+        {isValidGA4 ? (
           <>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}

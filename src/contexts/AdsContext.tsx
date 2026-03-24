@@ -46,7 +46,7 @@ export function AdsProvider({ children }: { children: React.ReactNode }) {
         const params = new URLSearchParams({
           placement,
           isActive: "true",
-          limit: "1",
+          limit: "100",
         });
 
         const response = await fetch(`${CMS_API_URL}/ads?${params.toString()}`);

@@ -16,7 +16,7 @@ export async function getAdsByPlacement(
     const params: AdQueryParams = {
       placement,
       isActive: options?.isActive ?? true,
-      limit: options?.limit ?? 1,
+      limit: options?.limit ?? 100, // Default to fetching many ads for rotation
     };
     return await provider.getAds(params);
   } catch (error) {
@@ -28,16 +28,17 @@ export async function getAdsByPlacement(
 /**
  * Get all active ads for a page
  * Useful for preloading multiple ad placements at once
+ * Returns array of ads for each placement to support rotation
  */
 export async function getPageAds(
   placements: AdPlacement[]
-): Promise<Record<AdPlacement, CMSAd | null>> {
-  const results: Record<AdPlacement, CMSAd | null> = {} as Record<AdPlacement, CMSAd | null>;
+): Promise<Record<AdPlacement, CMSAd[]>> {
+  const results: Record<AdPlacement, CMSAd[]> = {} as Record<AdPlacement, CMSAd[]>;
   
   await Promise.all(
     placements.map(async (placement) => {
-      const ads = await getAdsByPlacement(placement, { limit: 1 });
-      results[placement] = ads[0] || null;
+      const ads = await getAdsByPlacement(placement, { limit: 100 });
+      results[placement] = ads || [];
     })
   );
   

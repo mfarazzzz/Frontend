@@ -244,7 +244,31 @@ export type AdPlacement =
   | 'article_middle'
   | 'article_bottom'
   | 'footer'
-  | 'mobile_sticky';
+  | 'mobile_sticky'
+  | 'banner_1'
+  | 'banner_2'
+  | 'banner_3'
+  | 'banner_4'
+  | 'banner_5'
+  | 'banner_6'
+  | 'banner_7'
+  | 'banner_8'
+  | 'banner_9'
+  | 'banner_10';
+
+/** Valid banner placements for rotating banners */
+export const BANNER_PLACEMENTS: AdPlacement[] = [
+  'banner_1',
+  'banner_2',
+  'banner_3',
+  'banner_4',
+  'banner_5',
+  'banner_6',
+  'banner_7',
+  'banner_8',
+  'banner_9',
+  'banner_10',
+];
 
 /** Ad type/format */
 export type AdType = 'adsense' | 'image' | 'html';

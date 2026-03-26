@@ -156,24 +156,22 @@ export default function RootLayout({
         {/* Google Analytics 4 - Load gtag.js properly */}
         {GA_MEASUREMENT_ID && (
           <>
-            {/* Load gtag.js async - using standard script tag for reliability */}
-            <script
-              async
+            {/* Load gtag.js async - beforeInteractive for faster loading */}
+            <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+              strategy="beforeInteractive"
             />
             {/* Initialize gtag - this must run after gtag.js loads */}
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);}
-                  gtag('js', new Date());
-                  gtag('config', '${GA_MEASUREMENT_ID}', {
-                    send_page_view: false // We manually send page views for SPA
-                  });
-                `
-              }}
-            />
+            <Script id="ga-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}', {
+                  send_page_view: false // We manually send page views for SPA
+                });
+              `}
+            </Script>
           </>
         )}
       </head>

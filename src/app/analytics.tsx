@@ -2,83 +2,60 @@
 
 import { useEffect, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { trackSessionDepth } from "@/lib/analytics";
 
-/**
- * GA4 Analytics Component
- * 
- * This component properly tracks page views using window.gtag()
- * instead of directly using dataLayer.push
- * 
- * Usage: Import and use in src/app/providers.tsx
- */
+const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
-const GA_ID = "G-L1WDKXW81F";
-
-// Define gtag type
 declare global {
   interface Window {
     gtag: (
-      command: "config" | "event" | "js",
+      command: "config" | "event" | "js" | "set",
       targetId: string | Date,
       config?: Record<string, unknown>
     ) => void;
-    dataLayer: unknown[];
+    dataLayer?: Array<Record<string, unknown>>;
   }
 }
 
+/**
+ * GA4Tracker — inner component that fires on every route change.
+ * Must live inside <Suspense> because useSearchParams opts the
+ * subtree out of static rendering in Next.js App Router.
+ */
 function GA4Tracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Only run on client-side
-    if (typeof window === "undefined" || !GA_ID) {
-      return;
-    }
+    if (!GA_ID || typeof window === "undefined" || typeof window.gtag !== "function") return;
 
-    // Build the full URL with query parameters
-    const queryString = searchParams?.toString();
-    const pagePath = queryString ? `${pathname}?${queryString}` : pathname;
+    const qs = searchParams?.toString();
+    const pagePath = qs ? `${pathname}?${qs}` : pathname;
 
-    // Use window.gtag() to properly track page views
-    // This is the correct way to track SPA navigation in GA4
-    if (typeof window.gtag === "function") {
-      window.gtag("config", GA_ID, {
-        page_path: pagePath,
-        page_location: window.location.href,
-        page_title: document.title,
-      });
-    } else {
-      // Fallback: If gtag is not available yet, push to dataLayer
-      // This can happen if gtag.js hasn't fully loaded
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({
-        event: "page_view",
-        page_path: pagePath,
-        page_location: window.location.href,
-        page_title: document.title,
-      });
-    }
+    // gtag('config') is the correct GA4 method for SPA page tracking.
+    // It sends a page_view hit AND updates the page context for subsequent events.
+    // send_page_view:false at init means only this explicit call fires the hit.
+    window.gtag("config", GA_ID, {
+      page_path: pagePath,
+      page_location: window.location.href,
+      page_title: document.title,
+    });
+
+    // Track session depth (pages viewed in this tab session)
+    trackSessionDepth();
   }, [pathname, searchParams]);
 
   return null;
 }
 
-function GA4Loading() {
-  return null;
-}
-
 /**
- * GA4Analytics - Wrap this in your providers to track all page views
- * 
- * Uses Suspense to properly handle useSearchParams in Next.js App Router
+ * GA4Analytics — place once in layout.tsx body.
+ * Tracks every page navigation automatically, including dynamic routes.
  */
 export function GA4Analytics() {
   return (
-    <Suspense fallback={<GA4Loading />}>
+    <Suspense fallback={null}>
       <GA4Tracker />
     </Suspense>
   );
 }
-
-export default GA4Analytics;

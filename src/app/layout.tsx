@@ -3,9 +3,10 @@ import Script from "next/script";
 import { Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { GA4Analytics } from "./analytics";
 
-// GA4 Measurement ID
-const GA_MEASUREMENT_ID = "G-L1WDKXW81F";
+// Read from env — set NEXT_PUBLIC_GA_MEASUREMENT_ID in .env.local
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 const notoSansDevanagari = Noto_Sans_Devanagari({
   subsets: ["devanagari", "latin"],
@@ -76,7 +77,9 @@ export const metadata: Metadata = {
     apple: "/logo.png",
   },
   verification: {
-    google: "google-site-verification-id",
+    // Replace with your actual token from Google Search Console
+    // Go to Search Console → Add Property → HTML tag method → copy the content value
+    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION_TOKEN ?? "TbMkTrepIyMci--cPphWqe40PsqUSzfCnVj3-q-pcOk",
   },
 };
 
@@ -153,22 +156,20 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
         
-        {/* Google Analytics 4 - Load gtag.js properly */}
+        {/* Google Analytics 4 — afterInteractive is correct for analytics scripts */}
         {GA_MEASUREMENT_ID && (
           <>
-            {/* Load gtag.js async - beforeInteractive for faster loading */}
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-              strategy="beforeInteractive"
+              strategy="afterInteractive"
             />
-            {/* Initialize gtag - this must run after gtag.js loads */}
             <Script id="ga-init" strategy="afterInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
                 gtag('config', '${GA_MEASUREMENT_ID}', {
-                  send_page_view: false // We manually send page views for SPA
+                  send_page_view: false
                 });
               `}
             </Script>
@@ -177,6 +178,8 @@ export default function RootLayout({
       </head>
       <body className={`min-h-screen bg-background ${notoSansDevanagari.variable} font-sans`} suppressHydrationWarning>
         <Providers>{children}</Providers>
+        {/* SPA route-change tracker — fires page_view on every navigation */}
+        <GA4Analytics />
       </body>
     </html>
   );

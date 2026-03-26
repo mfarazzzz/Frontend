@@ -42,41 +42,43 @@ const fetchProxy = async (req: Request, path: string) => {
 export async function GET(request: Request) {
   const site = ENV_BASE;
   const now = new Date();
-  const staticPaths = [
-    "",
-    "/rampur",
-    "/up",
-    "/national",
-    "/politics",
-    "/crime",
-    "/education-jobs",
-    "/business",
-    "/entertainment",
-    "/sports",
-    "/health",
-    "/religion-culture",
-    "/food-lifestyle",
-    "/nearby",
-    "/about",
-    "/contact",
-    "/privacy",
-    "/terms",
-    "/disclaimer",
-    "/ownership",
-    "/ownership-disclosure",
-    "/editorial-policy",
-    "/press-release",
-    "/corrections-policy",
-    "/about-us",
-    "/grievance",
+  // priority + changefreq tuned per page type
+  const staticPaths: Array<{ path: string; priority: string; changefreq: string }> = [
+    { path: "",                      priority: "1.0", changefreq: "always"  },
+    { path: "/rampur",               priority: "0.9", changefreq: "hourly"  },
+    { path: "/up",                   priority: "0.9", changefreq: "hourly"  },
+    { path: "/national",             priority: "0.9", changefreq: "hourly"  },
+    { path: "/politics",             priority: "0.8", changefreq: "daily"   },
+    { path: "/crime",                priority: "0.8", changefreq: "daily"   },
+    { path: "/education-jobs",       priority: "0.8", changefreq: "daily"   },
+    { path: "/business",             priority: "0.8", changefreq: "daily"   },
+    { path: "/entertainment",        priority: "0.8", changefreq: "daily"   },
+    { path: "/sports",               priority: "0.8", changefreq: "daily"   },
+    { path: "/health",               priority: "0.7", changefreq: "weekly"  },
+    { path: "/religion-culture",     priority: "0.7", changefreq: "weekly"  },
+    { path: "/food-lifestyle",       priority: "0.7", changefreq: "weekly"  },
+    { path: "/nearby",               priority: "0.7", changefreq: "daily"   },
+    { path: "/about",                priority: "0.5", changefreq: "monthly" },
+    { path: "/contact",              priority: "0.5", changefreq: "monthly" },
+    { path: "/privacy",              priority: "0.3", changefreq: "yearly"  },
+    { path: "/terms",                priority: "0.3", changefreq: "yearly"  },
+    { path: "/disclaimer",           priority: "0.3", changefreq: "yearly"  },
+    { path: "/ownership",            priority: "0.3", changefreq: "yearly"  },
+    { path: "/ownership-disclosure", priority: "0.3", changefreq: "yearly"  },
+    { path: "/editorial-policy",     priority: "0.4", changefreq: "yearly"  },
+    { path: "/press-release",        priority: "0.6", changefreq: "weekly"  },
+    { path: "/corrections-policy",   priority: "0.3", changefreq: "yearly"  },
+    { path: "/about-us",             priority: "0.5", changefreq: "monthly" },
+    { path: "/grievance",            priority: "0.4", changefreq: "monthly" },
   ];
 
+  const staticPathSet = new Set(staticPaths.map((s) => s.path));
   const entries: string[] = [];
 
   // Static Paths
-  for (const p of staticPaths) {
+  for (const { path: p, priority, changefreq } of staticPaths) {
     entries.push(
-      `\n  <url>\n    <loc>${esc(`${site}${p}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>${p === "" ? "always" : "daily"}</changefreq>\n    <priority>${p === "" ? "1.0" : "0.8"}</priority>\n  </url>`,
+      `\n  <url>\n    <loc>${esc(`${site}${p}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`,
     );
   }
 
@@ -107,9 +109,9 @@ export async function GET(request: Request) {
   // Add Categories to sitemap
   for (const c of cats) {
     const slug = c?.slug || "";
-    if (slug && !staticPaths.includes(`/${slug}`)) {
+    if (slug && !staticPathSet.has(`/${slug}`)) {
       entries.push(
-        `\n  <url>\n    <loc>${esc(`${site}/${slug}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`,
+        `\n  <url>\n    <loc>${esc(`${site}/${slug}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`,
       );
     }
   }
@@ -151,7 +153,9 @@ export async function GET(request: Request) {
       pr = "0.7";
     }
 
-    const imagePart = p.image ? `\n    <image:image>\n      <image:loc>${esc(p.image)}</image:loc>\n      <image:title>${esc(p.title)}</image:title>\n    </image:image>` : "";
+    const imagePart = p.image
+      ? `\n    <image:image>\n      <image:loc>${esc(p.image)}</image:loc>\n      <image:title>${esc(p.title)}</image:title>${p.excerpt ? `\n      <image:caption>${esc(String(p.excerpt).slice(0, 100))}</image:caption>` : ""}\n    </image:image>`
+      : "";
 
     entries.push(
       `\n  <url>\n    <loc>${esc(url)}</loc>\n    <lastmod>${iso(dateStr)}</lastmod>\n    <changefreq>${cf}</changefreq>\n    <priority>${pr}</priority>${imagePart}\n  </url>`,

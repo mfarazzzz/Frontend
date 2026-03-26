@@ -3,7 +3,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { configureCMS, normalizeStrapiBaseUrl } from "../services/cms";
 import { ThemeProvider } from "../components/theme-provider";
-import { GA4Analytics } from "../app/analytics";
+import { GAProvider } from "@/components/GAProvider";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -91,11 +91,11 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GA4Analytics>
+      <GAProvider>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
         </ThemeProvider>
-      </GA4Analytics>
+      </GAProvider>
     </QueryClientProvider>
   );
 }

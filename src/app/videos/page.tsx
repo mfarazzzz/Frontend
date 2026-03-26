@@ -11,28 +11,10 @@ export const metadata = {
 
 export const revalidate = 600;
 
-export default async function VideosPage({ searchParams }: { searchParams: { page?: string } }) {
+export default async function VideosPage() {
   const first = YOUTUBE_CHANNELS[0];
   const playlistId = first ? uploadsPlaylistId(first.id) : null;
-  const pageSize = 24;
-  const page = Math.max(1, Number(searchParams?.page || 1));
-  // Fetch items for grid below
-  let items: Array<{ id: string; title: string; thumbnail?: string }> = [];
-  if (first) {
-    const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
-    const res = await fetch(`${base}/api/youtube/${first.id}/latest?limit=${page * pageSize}`, { cache: "no-store" });
-    if (res.ok) {
-      const json = await res.json();
-      items = (json.items || []).map((v: any) => ({
-        id: v.id,
-        title: v.title,
-        thumbnail: v.thumbnail || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
-      }));
-    }
-  }
-  const paged = items.slice((page - 1) * pageSize, page * pageSize);
-  const hasNext = items.length > page * pageSize;
-  const hasPrev = page > 1;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />

@@ -1,19 +1,21 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type VideoItem = { id: string; title: string; thumbnail?: string };
 
-export default function VideosGrid({ channelId, pageSize = 24 }: { channelId: string; pageSize?: number }) {
-  const searchParams = useSearchParams();
-  const page = useMemo(() => {
-    const n = Number(searchParams.get("page") || "1");
-    return Number.isFinite(n) && n > 0 ? n : 1;
-  }, [searchParams]);
-
+export default function VideosGrid({
+  channelId,
+  pageSize = 24,
+  page = 1,
+}: {
+  channelId: string;
+  pageSize?: number;
+  page?: number;
+}) {
+  const safePage = Number.isFinite(page) && page > 0 ? page : 1;
   const [items, setItems] = useState<VideoItem[]>([]);
   useEffect(() => {
-    const limit = Math.max(pageSize, page * pageSize);
+    const limit = Math.max(pageSize, safePage * pageSize);
     fetch(`/api/youtube/${channelId}/latest?limit=${limit}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((json) => {
@@ -25,11 +27,11 @@ export default function VideosGrid({ channelId, pageSize = 24 }: { channelId: st
         setItems(arr);
       })
       .catch(() => setItems([]));
-  }, [channelId, page, pageSize]);
+  }, [channelId, safePage, pageSize]);
 
-  const start = (page - 1) * pageSize;
+  const start = (safePage - 1) * pageSize;
   const paged = items.slice(start, start + pageSize);
-  const hasPrev = page > 1;
+  const hasPrev = safePage > 1;
   const hasNext = items.length > start + pageSize;
 
   return (
@@ -61,12 +63,12 @@ export default function VideosGrid({ channelId, pageSize = 24 }: { channelId: st
       </div>
       <div className="flex items-center justify-between mt-6">
         {hasPrev ? (
-          <a href={`?page=${page - 1}`} className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted">
+          <a href={`?page=${safePage - 1}`} className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted">
             पिछला
           </a>
         ) : <span />}
         {hasNext ? (
-          <a href={`?page=${page + 1}`} className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted">
+          <a href={`?page=${safePage + 1}`} className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted">
             अगला
           </a>
         ) : <span />}

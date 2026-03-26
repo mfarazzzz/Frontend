@@ -11,9 +11,16 @@ export const metadata = {
 
 export const revalidate = 600;
 
-export default async function VideosPage() {
+export default async function VideosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const first = YOUTUBE_CHANNELS[0];
   const playlistId = first ? uploadsPlaylistId(first.id) : null;
+  const resolvedSearchParams = await searchParams;
+  const parsedPage = Number(resolvedSearchParams?.page || "1");
+  const page = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,7 +61,7 @@ export default async function VideosPage() {
         )}
         {/* Grid below playlist */}
         <section className="mt-8">
-          {first ? <VideosGrid channelId={first.id} pageSize={24} /> : null}
+          {first ? <VideosGrid channelId={first.id} pageSize={24} page={page} /> : null}
         </section>
       </main>
       <Footer />

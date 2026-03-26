@@ -3,7 +3,9 @@ import Script from "next/script";
 import { Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import { isValidGA4, GA_MEASUREMENT_ID } from "@/lib/ga-config";
+
+// GA4 Measurement ID
+const GA_MEASUREMENT_ID = "G-L1WDKXW81F";
 
 const notoSansDevanagari = Noto_Sans_Devanagari({
   subsets: ["devanagari", "latin"],
@@ -74,7 +76,7 @@ export const metadata: Metadata = {
     apple: "/logo.png",
   },
   verification: {
-    google: "google-site-verification-id", // Replace with actual ID
+    google: "google-site-verification-id",
   },
 };
 
@@ -137,9 +139,11 @@ export default function RootLayout({
   return (
     <html lang="hi" suppressHydrationWarning>
       <head>
-        {/* Preconnect to Google Fonts for faster font loading */}
+        {/* Preconnect to Google Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* JSON-LD Schema */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
@@ -148,22 +152,28 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
-        {isValidGA4 ? (
+        
+        {/* Google Analytics 4 - Load gtag.js properly */}
+        {GA_MEASUREMENT_ID && (
           <>
+            {/* Load gtag.js async - beforeInteractive for faster loading */}
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-              strategy="lazyOnload"
+              strategy="beforeInteractive"
             />
-            <Script id="ga-script" strategy="lazyOnload">
+            {/* Initialize gtag - this must run after gtag.js loads */}
+            <Script id="ga-init" strategy="afterInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
-                gtag('config', '${GA_MEASUREMENT_ID}');
+                gtag('config', '${GA_MEASUREMENT_ID}', {
+                  send_page_view: false // We manually send page views for SPA
+                });
               `}
             </Script>
           </>
-        ) : null}
+        )}
       </head>
       <body className={`min-h-screen bg-background ${notoSansDevanagari.variable} font-sans`} suppressHydrationWarning>
         <Providers>{children}</Providers>

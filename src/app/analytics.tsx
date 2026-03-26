@@ -6,21 +6,26 @@ import { usePathname, useSearchParams } from "next/navigation";
 /**
  * GA4 Analytics Component
  * 
- * This component automatically tracks page views on all client-side navigation.
- * Place this in your providers or layout to track all pages.
+ * This component properly tracks page views using window.gtag()
+ * instead of directly using dataLayer.push
  * 
- * Uses Suspense to handle useSearchParams properly in Next.js App Router.
- * 
- * @usage
- * // In src/app/providers.tsx:
- * import { GA4Analytics } from "@/app/analytics";
- * 
- * <GA4Analytics />
+ * Usage: Import and use in src/app/providers.tsx
  */
 
-const GA_ID = "G-L1WDKXW81F"; // Your GA4 Measurement ID
+const GA_ID = "G-L1WDKXW81F";
 
-// Inner component that uses useSearchParams
+// Define gtag type
+declare global {
+  interface Window {
+    gtag: (
+      command: "config" | "event" | "js",
+      targetId: string | Date,
+      config?: Record<string, unknown>
+    ) => void;
+    dataLayer: unknown[];
+  }
+}
+
 function GA4Tracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -33,25 +38,32 @@ function GA4Tracker() {
 
     // Build the full URL with query parameters
     const queryString = searchParams?.toString();
-    const fullPath = queryString ? `${pathname}?${queryString}` : pathname;
+    const pagePath = queryString ? `${pathname}?${queryString}` : pathname;
 
-    // Push pageview event to dataLayer
-    // This triggers a pageview in GA4
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
-      event: "page_view",
-      page_path: fullPath,
-      page_location: window.location.href,
-      page_title: document.title,
-      ga4_measurement_id: GA_ID,
-    });
+    // Use window.gtag() to properly track page views
+    // This is the correct way to track SPA navigation in GA4
+    if (typeof window.gtag === "function") {
+      window.gtag("config", GA_ID, {
+        page_path: pagePath,
+        page_location: window.location.href,
+        page_title: document.title,
+      });
+    } else {
+      // Fallback: If gtag is not available yet, push to dataLayer
+      // This can happen if gtag.js hasn't fully loaded
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: "page_view",
+        page_path: pagePath,
+        page_location: window.location.href,
+        page_title: document.title,
+      });
+    }
   }, [pathname, searchParams]);
 
-  // This component doesn't render anything
   return null;
 }
 
-// Loading fallback for Suspense
 function GA4Loading() {
   return null;
 }
@@ -59,8 +71,7 @@ function GA4Loading() {
 /**
  * GA4Analytics - Wrap this in your providers to track all page views
  * 
- * This version uses Suspense to properly handle useSearchParams
- * without causing SSR/prerender errors.
+ * Uses Suspense to properly handle useSearchParams in Next.js App Router
  */
 export function GA4Analytics() {
   return (

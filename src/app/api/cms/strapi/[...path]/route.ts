@@ -84,10 +84,13 @@ async function proxyRequest(
   const isMutation = MUTATION_METHODS.has(method);
 
   if (isMutation) {
-    // For mutations, forward the client's Authorization header (JWT from users-permissions)
+    // For mutations, prefer the client's Authorization header (JWT from users-permissions).
+    // Fall back to the server-side API token so write operations from SSR/admin work too.
     const clientAuth = request.headers.get("authorization");
     if (clientAuth) {
       headers["Authorization"] = clientAuth;
+    } else if (STRAPI_API_TOKEN) {
+      headers["Authorization"] = `Bearer ${STRAPI_API_TOKEN}`;
     }
   } else if (STRAPI_API_TOKEN && !isPublicReadPath(strapiPath)) {
     // For non-public reads, attach the server-side API token

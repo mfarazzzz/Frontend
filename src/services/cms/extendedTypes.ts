@@ -203,25 +203,18 @@ export interface CMSHoliday {
   nameHindi: string;
   slug: string;
   date: string;
-  endDate?: string;
-  type: 'national' | 'state' | 'regional' | 'religious' | 'optional' | 'cultural' | 'bank';
+  // Strapi schema has no endDate field
+  type?: 'national' | 'state' | 'religious' | 'optional' | 'bank';
   religion?: 'hindu' | 'muslim' | 'christian' | 'sikh' | 'buddhist' | 'jain' | 'secular';
-  description: string;
-  descriptionHindi: string;
-  significance?: string;
-  significanceHindi?: string;
-  rituals?: string[];
-  ritualsHindi?: string[];
+  description?: string;
+  descriptionHindi?: string;
   image?: string;
-  isRecurring: boolean;
-  recurringType?: 'yearly' | 'lunar';
-  isPublicHoliday: boolean;
-  region?: string[];
-  googleCalendarLink?: string;
-  seo?: CMSSeo;
+  // Strapi uses isGazetted/isRestricted instead of isPublicHoliday/isRecurring
+  isGazetted?: boolean;
+  isRestricted?: boolean;
+  applicableStates?: string[];
   createdAt?: string;
   updatedAt?: string;
-  publishedAt?: string;
 }
 
 // ============ FOOD & LIFESTYLE MODULE ============
@@ -230,14 +223,16 @@ export interface CMSRestaurant {
   name: string;
   nameHindi: string;
   slug: string;
-  type: 'restaurant' | 'cafe' | 'street-food' | 'sweet-shop' | 'dhaba' | 'fine-dining';
+  // type is not in Strapi schema — kept optional for Frontend use only
+  type?: 'restaurant' | 'cafe' | 'street-food' | 'sweet-shop' | 'dhaba' | 'fine-dining';
   cuisine: string[];
   address: string;
   addressHindi: string;
   city: string;
   district: string;
   phone?: string;
-  priceRange: 'budget' | 'moderate' | 'premium' | 'expensive' | 'luxury';
+  // Strapi enum: budget | moderate | premium | luxury (no 'expensive')
+  priceRange: 'budget' | 'moderate' | 'premium' | 'luxury';
   rating?: number;
   reviews?: number;
   openingHours?: string;
@@ -345,7 +340,7 @@ export interface CMSEvent {
   title: string;
   titleHindi: string;
   slug: string;
-  date: string;
+  date: string;  // mapped from Strapi's startDate by the controller
   endDate?: string;
   time?: string;
   venue: string;

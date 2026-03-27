@@ -167,12 +167,10 @@ const encodeStrapiQuery = (params: Array<[string, string | number | boolean | un
 const contentTypeConfig = {
   exams: { path: "/exams", dateField: "examDate", searchFields: ["titleHindi", "title", "organizationHindi", "organization"] },
   results: { path: "/results", dateField: "resultDate", searchFields: ["titleHindi", "title", "organizationHindi", "organization"] },
-  institutions: { path: "/institutions", searchFields: ["nameHindi", "name", "address][street", "address][streetHindi", "address][city", "address][district", "address][state"] },
+  institutions: { path: "/institutions", searchFields: ["nameHindi", "name", "address.street", "address.streetHindi", "address.city", "address.district", "address.state"] },
   educationNews: { path: "/education-news", dateField: "publishedAt", searchFields: ["titleHindi", "title", "excerptHindi", "excerpt", "contentHindi", "content"] },
   holidays: { path: "/holidays", dateField: "date", searchFields: ["nameHindi", "name", "descriptionHindi", "description"] },
-  restaurants: { path: "/restaurants", searchFields: ["nameHindi", "name", "address][street", "address][streetHindi", "address][city", "address][district", "descriptionHindi", "description"] },
-  fashionStores: { path: "/fashion-stores", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
-  shoppingCentres: { path: "/shopping-centres", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
+  restaurants: { path: "/restaurants", searchFields: ["nameHindi", "name", "address.street", "address.streetHindi", "address.city", "address.district", "descriptionHindi", "description"] },
   places: { path: "/places", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
   events: {
     path: "/events",

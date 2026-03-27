@@ -82,28 +82,38 @@ export async function GET(request: Request) {
     );
   }
 
-  // Dynamic Content Fetching
-  const provider = getCMSProvider();
-  const [articlesRes, catsRes, authsRes] = await Promise.all([
-    provider.getArticles({ status: "published", limit: 5000, orderBy: "publishedDate", order: "desc" }),
-    provider.getCategories(),
-    provider.getAuthors(),
-  ]);
+  // Dynamic Content Fetching — wrapped so a Strapi outage never returns a 500 to crawlers
+  let arts: any[] = [];
+  let cats: any[] = [];
+  let auths: any[] = [];
 
-  let arts = articlesRes?.data || [];
-  let cats = catsRes || [];
-  let auths = authsRes || [];
-
-  // Fallback to Proxy if dynamic fetching fails
-  if (!arts.length || !cats.length || !auths.length) {
-    const [pArts, pCats, pAuths] = await Promise.all([
-      arts.length ? Promise.resolve(null) : fetchProxy(request, "/articles?publicationState=live&filters[publishedAt][$notNull]=true&sort=publishedAt:desc&pagination[pageSize]=5000&populate=*"),
-      cats.length ? Promise.resolve(null) : fetchProxy(request, "/categories?pagination[limit]=1000"),
-      auths.length ? Promise.resolve(null) : fetchProxy(request, "/authors?pagination[limit]=1000"),
+  try {
+    const provider = getCMSProvider();
+    const [articlesRes, catsRes, authsRes] = await Promise.all([
+      provider.getArticles({ status: "published", limit: 5000, orderBy: "publishedDate", order: "desc" }),
+      provider.getCategories(),
+      provider.getAuthors(),
     ]);
-    if (pArts?.data?.length) arts = pArts.data;
-    if (pCats?.length) cats = pCats;
-    if (pAuths?.length) auths = pAuths;
+
+    arts = articlesRes?.data || [];
+    cats = catsRes || [];
+    auths = authsRes || [];
+
+    // Fallback to Proxy if dynamic fetching returns empty results
+    if (!arts.length || !cats.length || !auths.length) {
+      const [pArts, pCats, pAuths] = await Promise.all([
+        arts.length ? Promise.resolve(null) : fetchProxy(request, "/articles?publicationState=live&filters[publishedAt][$notNull]=true&sort=publishedAt:desc&pagination[pageSize]=5000&populate=*"),
+        cats.length ? Promise.resolve(null) : fetchProxy(request, "/categories?pagination[limit]=1000"),
+        auths.length ? Promise.resolve(null) : fetchProxy(request, "/authors?pagination[limit]=1000"),
+      ]);
+      if (pArts?.data?.length) arts = pArts.data;
+      if (pCats?.length) cats = pCats;
+      if (pAuths?.length) auths = pAuths;
+    }
+  } catch (err) {
+    // CMS is unreachable — return a valid sitemap with static pages only so
+    // Googlebot never receives a 500 and doesn't penalise crawl budget.
+    console.error("[sitemap] Failed to fetch dynamic content from CMS:", err);
   }
 
   // Add Categories to sitemap

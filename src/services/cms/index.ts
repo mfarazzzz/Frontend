@@ -319,15 +319,17 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
   const fetchJson = async <T>(
     input: RequestInfo,
     init?: RequestInit,
-    options?: { allowNotFound?: boolean },
+    options?: { allowNotFound?: boolean; revalidate?: number },
   ) => {
     const isServer = typeof window === 'undefined';
     const method = String(init?.method || 'GET').toUpperCase();
-    const shouldCache = isServer && method === 'GET';
-    const defaultInit = shouldCache
-      ? ({ cache: 'no-store' } as any) // TEMPORARY: Disable cache to debug new posts issue
-      : ({ cache: 'no-store' } as any);
-    const response = await fetch(input, { ...defaultInit, ...(init as any) } as any);
+    // Server-side GET requests use ISR revalidation (default 60s).
+    // Client-side and mutation requests always bypass cache.
+    const nextInit: RequestInit =
+      isServer && method === 'GET'
+        ? ({ next: { revalidate: options?.revalidate ?? 60 } } as any)
+        : ({ cache: 'no-store' } as any);
+    const response = await fetch(input, { ...nextInit, ...(init as any) } as any);
     if (response.status === 204) {
       return null as T;
     }
@@ -600,26 +602,27 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     async getArticleBySlug(slug: string): Promise<CMSArticle | null> {
       const encodedSlug = encodeURIComponent(slug);
 
-      let response = await fetchJson<any>(
+      const response = await fetchJson<any>(
         buildUrl(`/articles/slug/${encodedSlug}`),
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );
-      let raw = response?.data ?? response;
+      const raw = response?.data ?? response;
 
+      // Only fall back to editorials if the article endpoint returned nothing (true 404).
+      // Avoids an unconditional second network request on every article page load.
       if (!raw) {
-        response = await fetchJson<any>(
+        const editorialResponse = await fetchJson<any>(
           buildUrl(`/editorials/slug/${encodedSlug}`),
           { method: 'GET', headers: getAuthHeaders(true) },
           { allowNotFound: true }
         );
-        raw = response?.data ?? response;
+        const editorialRaw = editorialResponse?.data ?? editorialResponse;
+        if (!editorialRaw) return null;
+        return normalizeArticleMedia(flattenStrapi(editorialRaw));
       }
-   
-      if (!raw) return null;
 
-      const flat = flattenStrapi(raw);
-      return normalizeArticleMedia(flat);
+      return normalizeArticleMedia(flattenStrapi(raw));
     },
 
     async createArticle(article: Omit<CMSArticle, 'id'>): Promise<CMSArticle> {
@@ -1567,7 +1570,9 @@ const defaultConfig: CMSConfig = {
 let currentConfig: CMSConfig = defaultConfig;
 
 const providerInstances: Partial<Record<CMSProviderType, CMSProvider>> = {
-  mock: mockCMSProvider,
+  // Only register mock provider when explicitly configured — avoids bundling
+  // mock data in production builds where provider is always 'strapi'.
+  ...(process.env.NEXT_PUBLIC_CMS_PROVIDER === 'mock' ? { mock: mockCMSProvider } : {}),
   strapi: createRestCMSProvider(defaultConfig),
 };
 

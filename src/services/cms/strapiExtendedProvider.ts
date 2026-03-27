@@ -559,9 +559,8 @@ export const createStrapiExtendedProvider = (config: StrapiExtendedProviderConfi
       const first = extractList<T>(result)[0];
       if (first) return applyDerivedFields(contentType, normalizeEntity(first as StrapiEntity<T>, origin)) as any;
 
-      const all = await list<T>(contentType, { limit: 2000, offset: 0 });
-      const found = all.data.find((item: any) => item?.slug === slug);
-      return found || null;
+      // Item not found — return null rather than fetching thousands of records.
+      return null;
     }
 
     const query = buildSlugQuery(contentType, slug);

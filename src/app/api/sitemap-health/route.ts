@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getCMSProvider } from "@/services/cms";
 import type { CMSArticle } from "@/services/cms";
 
@@ -34,7 +34,19 @@ const buildArticleUrl = (article: CMSArticle) => {
   return new URL(path, SITE_URL).toString();
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Require the same secret used by the revalidate webhook.
+  // Without this, anyone can trigger 50+ sequential Strapi DB queries.
+  const secret = process.env.REVALIDATE_SECRET;
+  if (secret) {
+    const token =
+      request.headers.get("x-revalidate-token") ||
+      request.nextUrl.searchParams.get("secret") ||
+      "";
+    if (!token || token !== secret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
   try {
     const [published, drafts] = await Promise.all([
       fetchAllByStatus("published"),

@@ -46,6 +46,20 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error generating news sitemap:", error);
-    return new NextResponse("Error generating news sitemap", { status: 500 });
+    // Return a valid empty sitemap so Googlebot never receives a 500.
+    // An empty sitemap is far better than a crawler-penalising error response.
+    const emptySitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+</urlset>`;
+    return new NextResponse(emptySitemap, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/xml; charset=utf-8",
+        // Short cache on error so it recovers quickly once Strapi is back
+        "Cache-Control": "public, max-age=60, s-maxage=60",
+      },
+    });
   }
 }

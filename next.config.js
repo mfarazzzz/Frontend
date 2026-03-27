@@ -107,8 +107,9 @@ const nextConfig = {
     return [
       { source: "/rss/:slug.xml", destination: "/rss/category/:slug" },
       { source: "/rss/:slug", destination: "/rss/category/:slug" },
-      { source: "/api/ads", destination: "https://cms.rampurnews.com/api/ads" },
-      { source: "/api/ads/:path*", destination: "https://cms.rampurnews.com/api/ads/:path*" },
+      // NOTE: /api/ads is handled by Frontend/src/app/api/ads/route.ts
+      // The route handler takes precedence over rewrites in Next.js, so
+      // the rewrite below was dead code and has been removed.
     ];
   },
   logging: {

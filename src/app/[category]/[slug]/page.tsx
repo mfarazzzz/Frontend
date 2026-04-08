@@ -78,6 +78,14 @@ export async function generateMetadata(props: {
     };
   }
 
+  // Don't generate real metadata for draft articles
+  if (article.status === 'draft') {
+    return {
+      title: "Article Not Found",
+      robots: { index: false, follow: false },
+    };
+  }
+
   const effectiveCategory = (article?.category || category || "").trim().toLowerCase();
   const canonicalPath = effectiveCategory ? `/${effectiveCategory}/${slug}` : `/${slug}`;
 
@@ -229,6 +237,13 @@ export default async function Page(props: { params: Promise<PageParams> }) {
   const article = await fetchArticleForSeo(slug);
   
   if (!article) {
+    notFound();
+  }
+
+  // Guard: never render draft articles on the public frontend.
+  // Strapi's findBySlug uses publicationState='live' so this should never
+  // be a draft, but as a safety net we check the status field explicitly.
+  if (article.status === 'draft') {
     notFound();
   }
 

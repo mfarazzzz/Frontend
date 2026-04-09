@@ -100,10 +100,12 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     
     // On the server, we must return an absolute URL for fetch to work.
     if (typeof window === 'undefined') {
-      const siteUrl = (process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/+$/, '');
-      if (siteUrl) {
-        return `${siteUrl}${relativePath}`;
-      }
+      const siteUrl = (
+        process.env.SITE_URL ||
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        'https://rampurnews.com'
+      ).replace(/\/+$/, '');
+      return `${siteUrl}${relativePath}`;
     }
     
     return relativePath;
@@ -327,7 +329,7 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     // Client-side and mutation requests always bypass cache.
     const nextInit: RequestInit =
       isServer && method === 'GET'
-        ? ({ next: { revalidate: options?.revalidate ?? 60 } } as any)
+        ? ({ next: { revalidate: options?.revalidate ?? 30 } } as any)
         : ({ cache: 'no-store' } as any);
     const response = await fetch(input, { ...nextInit, ...(init as any) } as any);
     if (response.status === 204) {
@@ -472,7 +474,14 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
     const attributes = data.attributes || data;
     const id = data.id;
     
-    const flat = { id, ...attributes };
+    const flat: Record<string, any> = {
+      id,
+      documentId: data.documentId,
+      publishedAt: data.publishedAt,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+      ...attributes,
+    };
 
     // Map featured_image to image (for News Articles)
     if (flat.featured_image && !flat.image) {

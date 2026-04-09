@@ -83,10 +83,11 @@ export async function generateMetadata(props: {
   // The custom `status` field is not a reliable signal — do not gate on it.
 
   const effectiveCategory = (article?.category || category || "").trim().toLowerCase();
+  const urlCategoryLower = (category || "").trim().toLowerCase();
   const canonicalPath = effectiveCategory ? `/${effectiveCategory}/${slug}` : `/${slug}`;
 
-  // Strict validation for metadata too
-  if (effectiveCategory !== (category || "").trim().toLowerCase()) {
+  // Strict validation for metadata too - case-insensitive comparison
+  if (effectiveCategory !== urlCategoryLower) {
      return {
       title: "Article Not Found", // Avoid indexing duplicate content
       robots: { index: false, follow: false }
@@ -244,12 +245,12 @@ export default async function Page(props: { params: Promise<PageParams> }) {
   const urlCategory = (category || "").trim().toLowerCase();
   const canonicalPath = effectiveCategory ? `/${effectiveCategory}/${slug}` : `/${slug}`;
 
-  // Strict category validation to prevent duplicate content
+  // Strict category validation to prevent duplicate content - case-insensitive comparison
   if (effectiveCategory && effectiveCategory !== urlCategory) {
     notFound();
   }
 
-  const canInjectSchema = !!article && (!category || !article?.category || article.category === category);
+  const canInjectSchema = !!article && (!category || !article?.category || article.category.toLowerCase() === category.toLowerCase());
 
   const shortHeadline = article?.short_headline?.trim() || "";
   const title = normalizeHeadline(

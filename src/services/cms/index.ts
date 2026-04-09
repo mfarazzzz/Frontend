@@ -620,35 +620,55 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         params.token = previewToken;
       }
 
+      const url = buildUrl(`/articles/slug/${encodedSlug}`, isPreview ? params : undefined);
+      console.log('[DEBUG getArticleBySlug] Fetching URL:', url);
+      console.log('[DEBUG getArticleBySlug] Slug:', slug);
+      console.log('[DEBUG getArticleBySlug] isPreview:', isPreview);
+
       const response = await fetchJson<any>(
-        buildUrl(`/articles/slug/${encodedSlug}`, isPreview ? params : undefined),
+        url,
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );
+      
+      console.log('[DEBUG getArticleBySlug] Raw response:', JSON.stringify(response));
       
       // Extract the article data from various possible response structures
       // Strapi v5 can return: { data: {...} } or just {...}
       let raw = response?.data ?? response;
       
+      console.log('[DEBUG getArticleBySlug] raw after extraction:', JSON.stringify(raw));
+      
       // Handle case where response is { data: null } or { data: {} }
       if (raw && typeof raw === 'object' && Object.keys(raw).length === 0) {
+        console.log('[DEBUG getArticleBySlug] raw is empty object, setting to null');
         raw = null;
       }
 
       // Only fall back to editorials if the article endpoint returned nothing (true 404).
       // DO NOT filter by status or workflowStatus - trust publishedAt as the only signal.
       if (!raw) {
+        console.log('[DEBUG getArticleBySlug] raw is null, trying editorials fallback');
         const editorialResponse = await fetchJson<any>(
           buildUrl(`/editorials/slug/${encodedSlug}`),
           { method: 'GET', headers: getAuthHeaders(true) },
           { allowNotFound: true }
         );
         const editorialRaw = editorialResponse?.data ?? editorialResponse;
-        if (!editorialRaw) return null;
+        if (!editorialRaw) {
+          console.log('[DEBUG getArticleBySlug] Editorial fallback also returned null');
+          return null;
+        }
+        console.log('[DEBUG getArticleBySlug] Returning editorial article');
         return normalizeArticleMedia(flattenStrapi(editorialRaw));
       }
 
-      return normalizeArticleMedia(flattenStrapi(raw));
+      console.log('[DEBUG getArticleBySlug] Returning normalized article');
+      const flattened = flattenStrapi(raw);
+      console.log('[DEBUG getArticleBySlug] After flattenStrapi:', JSON.stringify(flattened));
+      const normalized = normalizeArticleMedia(flattened);
+      console.log('[DEBUG getArticleBySlug] After normalizeArticleMedia:', normalized ? 'article object' : 'null');
+      return normalized;
     },
 
     async createArticle(article: Omit<CMSArticle, 'id'>): Promise<CMSArticle> {

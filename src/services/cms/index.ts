@@ -625,9 +625,18 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );
-      const raw = response?.data ?? response;
+      
+      // Extract the article data from various possible response structures
+      // Strapi v5 can return: { data: {...} } or just {...}
+      let raw = response?.data ?? response;
+      
+      // Handle case where response is { data: null } or { data: {} }
+      if (raw && typeof raw === 'object' && Object.keys(raw).length === 0) {
+        raw = null;
+      }
 
       // Only fall back to editorials if the article endpoint returned nothing (true 404).
+      // DO NOT filter by status or workflowStatus - trust publishedAt as the only signal.
       if (!raw) {
         const editorialResponse = await fetchJson<any>(
           buildUrl(`/editorials/slug/${encodedSlug}`),

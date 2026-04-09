@@ -98,13 +98,9 @@ export async function generateMetadata(props: {
     ? `/${effectiveCategory}/${slug}`
     : `/${slug}`;
 
-  // If category in URL doesn't match article's category, don't index
-  if (effectiveCategory && effectiveCategory !== urlCategory) {
-    return {
-      title: "Article Not Found",
-      robots: { index: false, follow: false },
-    };
-  }
+  // Only block indexing if categories are genuinely different slugs (not just case)
+  // Do NOT return "Article Not Found" — the article exists, just serve its metadata
+  const categoryMismatch = effectiveCategory && urlCategory && effectiveCategory !== urlCategory;
 
   const shortHeadline = article.short_headline?.trim() || "";
   const seoTitle = normalizeHeadline(
@@ -163,17 +159,19 @@ export async function generateMetadata(props: {
     },
     authors: [{ name: authorName }],
     keywords: keywordList,
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        "max-image-preview": "large",
-        "max-snippet": -1,
-        "max-video-preview": -1,
-      },
-    },
+    robots: categoryMismatch
+      ? { index: false, follow: false }
+      : {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+            "max-video-preview": -1,
+          },
+        },
     openGraph: {
       type: "article",
       title: article.ogTitle?.trim() || seoTitle,

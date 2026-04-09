@@ -51,9 +51,17 @@ const pruneSchema = (input: unknown): unknown => {
 
 const fetchArticleForSeo = async (slug: string): Promise<CMSArticle | null> => {
   try {
-    return await getCMSProvider().getArticleBySlug(slug);
+    console.log('[fetchArticleForSeo] Fetching article with slug:', slug);
+    const article = await getCMSProvider().getArticleBySlug(slug);
+    console.log('[fetchArticleForSeo] Result:', article ? `Found article: ${article.title}` : 'Article not found (null)');
+    return article;
   } catch (error) {
-    console.error("Error fetching article for SEO:", error);
+    console.error("[fetchArticleForSeo] Error fetching article:", error);
+    console.error("[fetchArticleForSeo] Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      slug,
+    });
     return null;
   }
 };

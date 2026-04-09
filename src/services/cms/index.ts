@@ -467,12 +467,35 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
   };
 
   const flattenStrapi = (data: any): any => {
-    if (!data) return null;
-    if (Array.isArray(data)) return data.map(flattenStrapi);
-    if (data.data) return flattenStrapi(data.data);
+    if (!data) {
+      console.log('[flattenStrapi] Input is null/undefined');
+      return null;
+    }
+    if (Array.isArray(data)) {
+      console.log('[flattenStrapi] Input is array, mapping over items');
+      return data.map(flattenStrapi);
+    }
+    
+    // If data has a 'data' property, unwrap it recursively
+    if (data.data) {
+      console.log('[flattenStrapi] Unwrapping data.data');
+      return flattenStrapi(data.data);
+    }
+    
+    // At this point, data should be either:
+    // 1. A Strapi v4/v5 entity: { id, attributes: {...}, ... }
+    // 2. An already-flat object from Strapi controller: { id, title, slug, ... }
     
     const attributes = data.attributes || data;
     const id = data.id;
+    
+    console.log('[flattenStrapi] Processing entity:', {
+      hasAttributes: !!data.attributes,
+      hasId: !!id,
+      hasDocumentId: !!data.documentId,
+      hasPublishedAt: !!data.publishedAt,
+      keys: Object.keys(data).slice(0, 10),
+    });
     
     const flat: Record<string, any> = {
       id,

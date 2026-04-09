@@ -53,16 +53,37 @@ const fetchArticleForSeo = async (slug: string): Promise<CMSArticle | null> => {
   try {
     console.log('[fetchArticleForSeo] Fetching article with slug:', slug);
     const article = await getCMSProvider().getArticleBySlug(slug);
-    console.log('[fetchArticleForSeo] Result:', article ? `Found article: ${article.title}` : 'Article not found (null)');
+    
+    if (!article) {
+      console.error('[fetchArticleForSeo] CRITICAL: Article transformation returned null', {
+        slug,
+        timestamp: new Date().toISOString(),
+        message: 'Data pipeline failed - article exists in Strapi but transformation returned null',
+      });
+    } else {
+      console.log('[fetchArticleForSeo] SUCCESS: Article found', {
+        slug,
+        title: article.title,
+        hasId: !!article.id,
+        hasPublishedAt: !!article.publishedAt,
+        category: article.category,
+      });
+    }
+    
     return article;
   } catch (error) {
-    console.error("[fetchArticleForSeo] Error fetching article:", error);
-    console.error("[fetchArticleForSeo] Error details:", {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+    console.error("[fetchArticleForSeo] EXCEPTION during fetch:", {
       slug,
+      error: error instanceof Error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      } : String(error),
+      timestamp: new Date().toISOString(),
     });
-    return null;
+    
+    // DO NOT SWALLOW ERRORS - Re-throw to surface the issue
+    throw new Error(`Article fetch failed for slug: ${slug}. Original error: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -239,11 +260,53 @@ export async function generateMetadata(props: {
 
 export default async function Page(props: { params: Promise<PageParams> }) {
   const { category, slug } = await props.params;
-  const article = await fetchArticleForSeo(slug);
   
-  if (!article) {
+  console.log('[Page] Rendering article page:', { category, slug });
+  
+  let article: CMSArticle | null = null;
+  
+  try {
+    article = await fetchArticleForSeo(slug);
+  } catch (error) {
+    console.error('[Page] CRITICAL: fetchArticleForSeo threw exception:', {
+      category,
+      slug,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    
+    // In development, show error details instead of 404
+    if (process.env.NODE_ENV === 'development') {
+      return (
+        <div style={{ padding: '2rem', fontFamily: 'monospace' }}>
+          <h1 style={{ color: 'red' }}>Article Fetch Failed</h1>
+          <p><strong>Slug:</strong> {slug}</p>
+          <p><strong>Category:</strong> {category}</p>
+          <p><strong>Error:</strong> {error instanceof Error ? error.message : String(error)}</p>
+          <pre style={{ background: '#f5f5f5', padding: '1rem', overflow: 'auto' }}>
+            {error instanceof Error ? error.stack : 'No stack trace'}
+          </pre>
+        </div>
+      );
+    }
+    
+    // In production, log and show 404
     notFound();
   }
+  
+  if (!article) {
+    console.error('[Page] CRITICAL: Article is null after successful fetch', {
+      category,
+      slug,
+      message: 'This should never happen - fetchArticleForSeo should throw instead of returning null',
+    });
+    notFound();
+  }
+
+  console.log('[Page] Article loaded successfully:', {
+    slug,
+    title: article.title,
+    category: article.category,
+  });
 
   // Guard: Strapi's findBySlug uses publicationState='live' so only published
   // articles are returned. No need to check the custom status field here —

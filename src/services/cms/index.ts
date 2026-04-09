@@ -656,8 +656,9 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       
       console.log('[DEBUG getArticleBySlug] Raw response:', JSON.stringify(response));
       
-      // Extract the article data from various possible response structures
-      // Strapi v5 can return: { data: {...} } or just {...}
+      // CRITICAL FIX: Handle both response structures
+      // Strapi controller returns flat object: { id, title, slug, ... }
+      // But some endpoints return wrapped: { data: {...} }
       let raw = response?.data ?? response;
       
       console.log('[DEBUG getArticleBySlug] raw after extraction:', JSON.stringify(raw));
@@ -683,14 +684,68 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
           return null;
         }
         console.log('[DEBUG getArticleBySlug] Returning editorial article');
+        
+        // CRITICAL: Detect if already flat (Strapi controller response)
+        const isAlreadyFlat = editorialRaw.id && !editorialRaw.attributes;
+        if (isAlreadyFlat) {
+          console.log('[DEBUG getArticleBySlug] Editorial is already flat, skipping flattenStrapi');
+          return normalizeArticleMedia(editorialRaw);
+        }
         return normalizeArticleMedia(flattenStrapi(editorialRaw));
       }
 
       console.log('[DEBUG getArticleBySlug] Returning normalized article');
+      
+      // CRITICAL FIX: Detect if response is already flat (from Strapi controller)
+      // Flat response has: id, title, slug, etc. at root level (no attributes wrapper)
+      const isAlreadyFlat = raw.id && !raw.attributes;
+      console.log('[DEBUG getArticleBySlug] isAlreadyFlat:', isAlreadyFlat);
+      
+      if (isAlreadyFlat) {
+        console.log('[DEBUG getArticleBySlug] Response is already flat, skipping flattenStrapi');
+        const normalized = normalizeArticleMedia(raw);
+        console.log('[DEBUG getArticleBySlug] After normalizeArticleMedia (flat path):', normalized ? 'article object' : 'null');
+        
+        if (!normalized) {
+          console.error('[CRITICAL] normalizeArticleMedia returned null for valid flat article:', {
+            slug,
+            hasId: !!raw.id,
+            hasTitle: !!raw.title,
+            hasPublishedAt: !!raw.publishedAt,
+          });
+          // DEFENSIVE: Return raw article if normalization fails
+          return raw as CMSArticle;
+        }
+        
+        return normalized;
+      }
+      
+      // Standard path: flatten Strapi v4/v5 wrapped response
       const flattened = flattenStrapi(raw);
       console.log('[DEBUG getArticleBySlug] After flattenStrapi:', JSON.stringify(flattened));
+      
+      if (!flattened) {
+        console.error('[CRITICAL] flattenStrapi returned null for non-flat response:', {
+          slug,
+          rawKeys: Object.keys(raw).slice(0, 10),
+        });
+        // DEFENSIVE: Try to use raw if flattening fails
+        return normalizeArticleMedia(raw);
+      }
+      
       const normalized = normalizeArticleMedia(flattened);
       console.log('[DEBUG getArticleBySlug] After normalizeArticleMedia:', normalized ? 'article object' : 'null');
+      
+      if (!normalized) {
+        console.error('[CRITICAL] normalizeArticleMedia returned null after successful flatten:', {
+          slug,
+          hasId: !!flattened.id,
+          hasTitle: !!flattened.title,
+        });
+        // DEFENSIVE: Return flattened article if normalization fails
+        return flattened as CMSArticle;
+      }
+      
       return normalized;
     },
 

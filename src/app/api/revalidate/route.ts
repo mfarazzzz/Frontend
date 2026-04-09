@@ -31,9 +31,18 @@ export async function POST(request: NextRequest) {
   const type = typeof payload?.type === "string" ? payload.type.trim() : "";
   const category = typeof payload?.category === "string" ? payload.category.trim() : "";
 
+  // Always revalidate base paths
   const paths = new Set<string>(["/", "/sitemap.xml", "/sitemap-news.xml", "/news-sitemap.xml"]);
 
-  if (type === "article" && slug) {
+  // Accept explicit paths array from publish handler (single-source revalidation)
+  if (Array.isArray(payload?.paths)) {
+    for (const p of payload.paths) {
+      if (typeof p === "string" && p.trim()) paths.add(p.trim());
+    }
+  }
+
+  // Fallback: derive paths from slug + category if no explicit paths provided
+  if (type === "article" && slug && !Array.isArray(payload?.paths)) {
     let categorySlug = category;
     if (!categorySlug) {
       try {
@@ -47,19 +56,23 @@ export async function POST(request: NextRequest) {
     if (categorySlug) {
       paths.add(`/${categorySlug}/${slug}`);
       paths.add(`/${categorySlug}`);
+    } else if (slug) {
+      paths.add(`/${slug}`);
     }
   }
 
+  const revalidated: string[] = [];
   for (const path of paths) {
     try {
       revalidatePath(path);
+      revalidated.push(path);
     } catch {
       void 0;
     }
   }
 
   return NextResponse.json(
-    { ok: true, revalidated: Array.from(paths) },
+    { ok: true, revalidated },
     { status: 200, headers: { "Cache-Control": "no-store" } },
   );
 }

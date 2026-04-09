@@ -608,18 +608,26 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       return normalizeArticleMedia(flat);
     },
 
-    async getArticleBySlug(slug: string): Promise<CMSArticle | null> {
+    async getArticleBySlug(slug: string, options?: { preview?: boolean; previewToken?: string }): Promise<CMSArticle | null> {
       const encodedSlug = encodeURIComponent(slug);
+      const isPreview = options?.preview === true;
+      const previewToken = options?.previewToken;
+
+      // Build query params for preview mode
+      const params: Record<string, string | number | boolean | undefined> = {};
+      if (isPreview && previewToken) {
+        params.preview = 'true';
+        params.token = previewToken;
+      }
 
       const response = await fetchJson<any>(
-        buildUrl(`/articles/slug/${encodedSlug}`),
+        buildUrl(`/articles/slug/${encodedSlug}`, isPreview ? params : undefined),
         { method: 'GET', headers: getAuthHeaders(true) },
         { allowNotFound: true }
       );
       const raw = response?.data ?? response;
 
       // Only fall back to editorials if the article endpoint returned nothing (true 404).
-      // Avoids an unconditional second network request on every article page load.
       if (!raw) {
         const editorialResponse = await fetchJson<any>(
           buildUrl(`/editorials/slug/${encodedSlug}`),

@@ -468,34 +468,20 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
 
   const flattenStrapi = (data: any): any => {
     if (!data) {
-      console.log('[flattenStrapi] Input is null/undefined');
       return null;
     }
-    if (Array.isArray(data)) {
-      console.log('[flattenStrapi] Input is array, mapping over items');
-      return data.map(flattenStrapi);
-    }
+    if (Array.isArray(data)) return data.map(flattenStrapi);
     
     // If data has a 'data' property, unwrap it recursively
     if (data.data) {
-      console.log('[flattenStrapi] Unwrapping data.data');
       return flattenStrapi(data.data);
     }
     
-    // At this point, data should be either:
+    // At this point, data is either:
     // 1. A Strapi v4/v5 entity: { id, attributes: {...}, ... }
     // 2. An already-flat object from Strapi controller: { id, title, slug, ... }
-    
     const attributes = data.attributes || data;
     const id = data.id;
-    
-    console.log('[flattenStrapi] Processing entity:', {
-      hasAttributes: !!data.attributes,
-      hasId: !!id,
-      hasDocumentId: !!data.documentId,
-      hasPublishedAt: !!data.publishedAt,
-      keys: Object.keys(data).slice(0, 10),
-    });
     
     const flat: Record<string, any> = {
       id,
@@ -636,7 +622,6 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       const isPreview = options?.preview === true;
       const previewToken = options?.previewToken;
 
-      // Build query params for preview mode
       const params: Record<string, string | number | boolean | undefined> = {};
       if (isPreview && previewToken) {
         params.preview = 'true';
@@ -644,109 +629,100 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       }
 
       const url = buildUrl(`/articles/slug/${encodedSlug}`, isPreview ? params : undefined);
-      console.log('[DEBUG getArticleBySlug] Fetching URL:', url);
-      console.log('[DEBUG getArticleBySlug] Slug:', slug);
-      console.log('[DEBUG getArticleBySlug] isPreview:', isPreview);
+      console.log(`[getArticleBySlug] slug="${slug}" url="${url}"`);
 
-      const response = await fetchJson<any>(
-        url,
-        { method: 'GET', headers: getAuthHeaders(true) },
-        { allowNotFound: true }
-      );
-      
-      console.log('[DEBUG getArticleBySlug] Raw response:', JSON.stringify(response));
-      
-      // CRITICAL FIX: Handle both response structures
-      // Strapi controller returns flat object: { id, title, slug, ... }
-      // But some endpoints return wrapped: { data: {...} }
-      let raw = response?.data ?? response;
-      
-      console.log('[DEBUG getArticleBySlug] raw after extraction:', JSON.stringify(raw));
-      
-      // Handle case where response is { data: null } or { data: {} }
-      if (raw && typeof raw === 'object' && Object.keys(raw).length === 0) {
-        console.log('[DEBUG getArticleBySlug] raw is empty object, setting to null');
-        raw = null;
-      }
-
-      // Only fall back to editorials if the article endpoint returned nothing (true 404).
-      // DO NOT filter by status or workflowStatus - trust publishedAt as the only signal.
-      if (!raw) {
-        console.log('[DEBUG getArticleBySlug] raw is null, trying editorials fallback');
-        const editorialResponse = await fetchJson<any>(
-          buildUrl(`/editorials/slug/${encodedSlug}`),
+      let response: any = null;
+      try {
+        response = await fetchJson<any>(
+          url,
           { method: 'GET', headers: getAuthHeaders(true) },
           { allowNotFound: true }
         );
-        const editorialRaw = editorialResponse?.data ?? editorialResponse;
-        if (!editorialRaw) {
-          console.log('[DEBUG getArticleBySlug] Editorial fallback also returned null');
+      } catch (err) {
+        console.error(`[getArticleBySlug] fetchJson threw for slug="${slug}":`, err instanceof Error ? err.message : err);
+        return null;
+      }
+
+      console.log(`[getArticleBySlug] response type="${typeof response}" isNull=${response === null}`);
+      if (response !== null && typeof response === 'object') {
+        console.log(`[getArticleBySlug] response keys:`, Object.keys(response).slice(0, 10));
+      }
+
+      // ── STEP 1: Extract the article object from the response ──────────────
+      // Strapi custom controller (findBySlug) returns a FLAT object directly:
+      //   { id, documentId, title, slug, category, publishedAt, ... }
+      // Standard Strapi REST returns a wrapped object:
+      //   { data: { id, attributes: {...} } }
+      // We must handle both.
+      let raw: any = null;
+
+      if (!response) {
+        // True 404 or network error — fall through to editorial fallback
+        raw = null;
+      } else if (response.id) {
+        // Already a flat article object (Strapi custom controller response)
+        console.log(`[getArticleBySlug] FLAT response detected (has id, no data wrapper)`);
+        raw = response;
+      } else if (response.data) {
+        // Wrapped response: { data: {...} } or { data: [{...}] }
+        console.log(`[getArticleBySlug] WRAPPED response detected (has data property)`);
+        const d = response.data;
+        raw = Array.isArray(d) ? (d[0] ?? null) : d;
+      } else {
+        // Unknown structure — log and try to use it anyway
+        console.warn(`[getArticleBySlug] UNKNOWN response structure, attempting to use as-is:`, Object.keys(response).slice(0, 10));
+        raw = response;
+      }
+
+      console.log(`[getArticleBySlug] raw after extraction: id="${raw?.id}" title="${raw?.title}" publishedAt="${raw?.publishedAt}"`);
+
+      // ── STEP 2: Editorial fallback ────────────────────────────────────────
+      if (!raw || !raw.id) {
+        console.log(`[getArticleBySlug] No article found, trying editorial fallback for slug="${slug}"`);
+        let editorialResponse: any = null;
+        try {
+          editorialResponse = await fetchJson<any>(
+            buildUrl(`/editorials/slug/${encodedSlug}`),
+            { method: 'GET', headers: getAuthHeaders(true) },
+            { allowNotFound: true }
+          );
+        } catch (err) {
+          console.error(`[getArticleBySlug] editorial fetchJson threw:`, err instanceof Error ? err.message : err);
+        }
+
+        if (!editorialResponse) {
+          console.log(`[getArticleBySlug] Editorial also returned null for slug="${slug}"`);
           return null;
         }
-        console.log('[DEBUG getArticleBySlug] Returning editorial article');
-        
-        // CRITICAL: Detect if already flat (Strapi controller response)
-        const isAlreadyFlat = editorialRaw.id && !editorialRaw.attributes;
-        if (isAlreadyFlat) {
-          console.log('[DEBUG getArticleBySlug] Editorial is already flat, skipping flattenStrapi');
-          return normalizeArticleMedia(editorialRaw);
+
+        const editorialRaw = editorialResponse.id
+          ? editorialResponse
+          : (editorialResponse.data
+              ? (Array.isArray(editorialResponse.data) ? editorialResponse.data[0] : editorialResponse.data)
+              : editorialResponse);
+
+        if (!editorialRaw?.id) {
+          console.log(`[getArticleBySlug] Editorial raw has no id, returning null`);
+          return null;
         }
+
+        console.log(`[getArticleBySlug] Returning editorial article id="${editorialRaw.id}"`);
         return normalizeArticleMedia(flattenStrapi(editorialRaw));
       }
 
-      console.log('[DEBUG getArticleBySlug] Returning normalized article');
-      
-      // CRITICAL FIX: Detect if response is already flat (from Strapi controller)
-      // Flat response has: id, title, slug, etc. at root level (no attributes wrapper)
-      const isAlreadyFlat = raw.id && !raw.attributes;
-      console.log('[DEBUG getArticleBySlug] isAlreadyFlat:', isAlreadyFlat);
-      
-      if (isAlreadyFlat) {
-        console.log('[DEBUG getArticleBySlug] Response is already flat, skipping flattenStrapi');
-        const normalized = normalizeArticleMedia(raw);
-        console.log('[DEBUG getArticleBySlug] After normalizeArticleMedia (flat path):', normalized ? 'article object' : 'null');
-        
-        if (!normalized) {
-          console.error('[CRITICAL] normalizeArticleMedia returned null for valid flat article:', {
-            slug,
-            hasId: !!raw.id,
-            hasTitle: !!raw.title,
-            hasPublishedAt: !!raw.publishedAt,
-          });
-          // DEFENSIVE: Return raw article if normalization fails
-          return raw as CMSArticle;
-        }
-        
-        return normalized;
+      // ── STEP 3: Transform ─────────────────────────────────────────────────
+      // If raw is already flat (from Strapi custom controller), flattenStrapi
+      // is safe to call — it will spread the object over itself harmlessly.
+      // But we add a guard: if it has no attributes, skip the recursive unwrap.
+      const article = flattenStrapi(raw);
+
+      if (!article) {
+        console.error(`[getArticleBySlug] flattenStrapi returned null for raw id="${raw.id}" — using raw directly`);
+        return normalizeArticleMedia(raw as CMSArticle);
       }
-      
-      // Standard path: flatten Strapi v4/v5 wrapped response
-      const flattened = flattenStrapi(raw);
-      console.log('[DEBUG getArticleBySlug] After flattenStrapi:', JSON.stringify(flattened));
-      
-      if (!flattened) {
-        console.error('[CRITICAL] flattenStrapi returned null for non-flat response:', {
-          slug,
-          rawKeys: Object.keys(raw).slice(0, 10),
-        });
-        // DEFENSIVE: Try to use raw if flattening fails
-        return normalizeArticleMedia(raw);
-      }
-      
-      const normalized = normalizeArticleMedia(flattened);
-      console.log('[DEBUG getArticleBySlug] After normalizeArticleMedia:', normalized ? 'article object' : 'null');
-      
-      if (!normalized) {
-        console.error('[CRITICAL] normalizeArticleMedia returned null after successful flatten:', {
-          slug,
-          hasId: !!flattened.id,
-          hasTitle: !!flattened.title,
-        });
-        // DEFENSIVE: Return flattened article if normalization fails
-        return flattened as CMSArticle;
-      }
-      
-      return normalized;
+
+      console.log(`[getArticleBySlug] SUCCESS id="${article.id}" title="${article.title}" category="${article.category}"`);
+      return normalizeArticleMedia(article);
     },
 
     async createArticle(article: Omit<CMSArticle, 'id'>): Promise<CMSArticle> {

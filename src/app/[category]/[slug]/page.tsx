@@ -59,17 +59,13 @@ const pruneSchema = (input: unknown): unknown => {
  */
 const fetchArticle = async (slug: string): Promise<CMSArticle | null> => {
   try {
-    console.log(`[fetchArticle] slug="${slug}"`);
     const article = await getCMSProvider().getArticleBySlug(slug);
-    if (article) {
-      console.log(`[fetchArticle] OK slug="${slug}" title="${article.title}" category="${article.category}"`);
-    } else {
-      console.warn(`[fetchArticle] NULL slug="${slug}" — Strapi returned no article`);
+    if (!article) {
+      console.warn(`[fetchArticle] no article for slug="${slug}"`);
     }
     return article;
   } catch (err) {
-    // Log but do NOT re-throw — a fetch error must not cause a 404
-    console.error(`[fetchArticle] ERROR slug="${slug}"`, err instanceof Error ? err.message : err);
+    console.error(`[fetchArticle] error for slug="${slug}":`, err instanceof Error ? err.message : err);
     return null;
   }
 };
@@ -217,17 +213,12 @@ export async function generateMetadata(props: {
 export default async function Page(props: { params: Promise<PageParams> }) {
   const { category, slug } = await props.params;
 
-  console.log(`[Page] category="${category}" slug="${slug}"`);
-
   const article = await fetchArticle(slug);
 
   // Only 404 if Strapi confirmed the article does not exist
   if (!article) {
-    console.warn(`[Page] notFound — no article for slug="${slug}"`);
     notFound();
   }
-
-  console.log(`[Page] article.category="${article.category}" urlCategory="${category}"`);
 
   const effectiveCategory = (article.category || "").trim().toLowerCase();
   const urlCategory = (category || "").trim().toLowerCase();

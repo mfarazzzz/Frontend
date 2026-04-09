@@ -629,7 +629,6 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       }
 
       const url = buildUrl(`/articles/slug/${encodedSlug}`, isPreview ? params : undefined);
-      console.log(`[getArticleBySlug] slug="${slug}" url="${url}"`);
 
       let response: any = null;
       try {
@@ -639,13 +638,8 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
           { allowNotFound: true }
         );
       } catch (err) {
-        console.error(`[getArticleBySlug] fetchJson threw for slug="${slug}":`, err instanceof Error ? err.message : err);
+        console.error(`[getArticleBySlug] fetch error for slug="${slug}":`, err instanceof Error ? err.message : err);
         return null;
-      }
-
-      console.log(`[getArticleBySlug] response type="${typeof response}" isNull=${response === null}`);
-      if (response !== null && typeof response === 'object') {
-        console.log(`[getArticleBySlug] response keys:`, Object.keys(response).slice(0, 10));
       }
 
       // ── STEP 1: Extract the article object from the response ──────────────
@@ -653,32 +647,21 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
       //   { id, documentId, title, slug, category, publishedAt, ... }
       // Standard Strapi REST returns a wrapped object:
       //   { data: { id, attributes: {...} } }
-      // We must handle both.
       let raw: any = null;
 
       if (!response) {
-        // True 404 or network error — fall through to editorial fallback
         raw = null;
       } else if (response.id) {
-        // Already a flat article object (Strapi custom controller response)
-        console.log(`[getArticleBySlug] FLAT response detected (has id, no data wrapper)`);
         raw = response;
       } else if (response.data) {
-        // Wrapped response: { data: {...} } or { data: [{...}] }
-        console.log(`[getArticleBySlug] WRAPPED response detected (has data property)`);
         const d = response.data;
         raw = Array.isArray(d) ? (d[0] ?? null) : d;
       } else {
-        // Unknown structure — log and try to use it anyway
-        console.warn(`[getArticleBySlug] UNKNOWN response structure, attempting to use as-is:`, Object.keys(response).slice(0, 10));
         raw = response;
       }
 
-      console.log(`[getArticleBySlug] raw after extraction: id="${raw?.id}" title="${raw?.title}" publishedAt="${raw?.publishedAt}"`);
-
       // ── STEP 2: Editorial fallback ────────────────────────────────────────
       if (!raw || !raw.id) {
-        console.log(`[getArticleBySlug] No article found, trying editorial fallback for slug="${slug}"`);
         let editorialResponse: any = null;
         try {
           editorialResponse = await fetchJson<any>(
@@ -687,13 +670,10 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
             { allowNotFound: true }
           );
         } catch (err) {
-          console.error(`[getArticleBySlug] editorial fetchJson threw:`, err instanceof Error ? err.message : err);
+          console.error(`[getArticleBySlug] editorial fetch error:`, err instanceof Error ? err.message : err);
         }
 
-        if (!editorialResponse) {
-          console.log(`[getArticleBySlug] Editorial also returned null for slug="${slug}"`);
-          return null;
-        }
+        if (!editorialResponse) return null;
 
         const editorialRaw = editorialResponse.id
           ? editorialResponse
@@ -701,27 +681,19 @@ const createRestCMSProvider = (config: CMSConfig): CMSProvider => {
               ? (Array.isArray(editorialResponse.data) ? editorialResponse.data[0] : editorialResponse.data)
               : editorialResponse);
 
-        if (!editorialRaw?.id) {
-          console.log(`[getArticleBySlug] Editorial raw has no id, returning null`);
-          return null;
-        }
+        if (!editorialRaw?.id) return null;
 
-        console.log(`[getArticleBySlug] Returning editorial article id="${editorialRaw.id}"`);
         return normalizeArticleMedia(flattenStrapi(editorialRaw));
       }
 
       // ── STEP 3: Transform ─────────────────────────────────────────────────
-      // If raw is already flat (from Strapi custom controller), flattenStrapi
-      // is safe to call — it will spread the object over itself harmlessly.
-      // But we add a guard: if it has no attributes, skip the recursive unwrap.
       const article = flattenStrapi(raw);
 
       if (!article) {
-        console.error(`[getArticleBySlug] flattenStrapi returned null for raw id="${raw.id}" — using raw directly`);
+        console.error(`[getArticleBySlug] flattenStrapi returned null for slug="${slug}", using raw`);
         return normalizeArticleMedia(raw as CMSArticle);
       }
 
-      console.log(`[getArticleBySlug] SUCCESS id="${article.id}" title="${article.title}" category="${article.category}"`);
       return normalizeArticleMedia(article);
     },
 

@@ -166,13 +166,13 @@ export async function generateMetadata(props: { params: Promise<PageParams> }): 
       description,
       url: canonicalUrl,
       siteName: "रामपुर न्यूज़ | Rampur News",
-      images: author.avatar ? [author.avatar] : [`${SITE_URL}/og-image.jpg`],
+      images: author.avatar ? [author.avatar] : [`${SITE_URL}/og-image.svg`],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: author.avatar ? [author.avatar] : [`${SITE_URL}/og-image.jpg`],
+      images: author.avatar ? [author.avatar] : [`${SITE_URL}/og-image.svg`],
     },
   };
 }
@@ -331,7 +331,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
         ? author.socialLinks.coverImage.trim()
         : typeof author.socialLinks?.banner === "string"
           ? author.socialLinks.banner.trim()
-          : `${SITE_URL}/og-image.jpg`;
+          : `${SITE_URL}/og-image.svg`;
   const stats = [
     { label: "कुल लेख", value: String(total) },
     { label: "श्रेणियां", value: String(categories.length) },

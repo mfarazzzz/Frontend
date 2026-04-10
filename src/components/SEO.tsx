@@ -48,7 +48,7 @@ const SEO = ({
   title,
   description,
   canonical,
-  ogImage = "https://rampurnews.com/og-image.jpg",
+  ogImage = "https://rampurnews.com/og-image.svg",
   ogType = "website",
   article,
   newsArticle,

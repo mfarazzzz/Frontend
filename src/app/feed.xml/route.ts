@@ -4,6 +4,15 @@ import { generateRSSFeed } from "@/utils/generateFeeds";
 
 export const dynamic = "force-dynamic";
 
+const EMPTY_RSS = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>रामपुर न्यूज़ | Rampur News</title>
+    <link>https://rampurnews.com</link>
+    <description>रामपुर और उत्तर प्रदेश की ताज़ा खबरें</description>
+  </channel>
+</rss>`;
+
 export async function GET() {
   try {
     const provider = getCMSProvider();
@@ -40,7 +49,13 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Error generating RSS feed:", error);
-    return new NextResponse("Error generating RSS feed", { status: 500 });
+    console.error("Error generating feed.xml:", error);
+    return new NextResponse(EMPTY_RSS, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/rss+xml; charset=utf-8",
+        "Cache-Control": "public, max-age=60, s-maxage=60",
+      },
+    });
   }
 }

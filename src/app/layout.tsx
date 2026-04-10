@@ -13,7 +13,7 @@ const notoSansDevanagari = Noto_Sans_Devanagari({
   weight: ["400", "600", "700"],
   variable: "--font-noto-sans-devanagari",
   display: "swap",
-  preload: false,
+  preload: true,
   fallback: ["system-ui", "sans-serif"],
 });
 
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     locale: "hi_IN",
     images: [
       {
-        url: "https://rampurnews.com/og-image.jpg",
+        url: "https://rampurnews.com/og-image.svg",
         width: 1200,
         height: 630,
         alt: "रामपुर न्यूज़ | Rampur News",
@@ -70,16 +70,14 @@ export const metadata: Metadata = {
     title: "रामपुर न्यूज़ | Rampur News",
     description:
       "रामपुर और उत्तर प्रदेश की ताज़ा खबरें: स्थानीय, शिक्षा, खेल, मनोरंजन और अधिक।",
-    images: ["https://rampurnews.com/og-image.jpg"],
+    images: ["https://rampurnews.com/og-image.svg"],
   },
   icons: {
     icon: "/logo.png",
     apple: "/logo.png",
   },
   verification: {
-    // Replace with your actual token from Google Search Console
-    // Go to Search Console → Add Property → HTML tag method → copy the content value
-    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION_TOKEN ?? "TbMkTrepIyMci--cPphWqe40PsqUSzfCnVj3-q-pcOk",
+    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION_TOKEN,
   },
 };
 
@@ -110,30 +108,6 @@ const organizationSchema = {
   description: "रामपुर और उत्तर प्रदेश की ताज़ा खबरें: स्थानीय, शिक्षा, खेल, मनोरंजन और अधिक।"
 };
 
-const websiteSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "रामपुर न्यूज़ | Rampur News",
-  url: "https://rampurnews.com",
-  description: "रामपुर और उत्तर प्रदेश की ताज़ा खबरें: स्थानीय, शिक्षा, खेल, मनोरंजन और अधिक।",
-  inLanguage: "hi-IN",
-  publisher: {
-    "@type": "Organization",
-    name: "रामपुर न्यूज़ | Rampur News",
-    logo: {
-      "@type": "ImageObject",
-      url: "https://rampurnews.com/logo.png",
-      width: 768,
-      height: 768,
-    },
-  },
-  potentialAction: {
-    "@type": "SearchAction",
-    target: "https://rampurnews.com/search?q={search_term_string}",
-    "query-input": "required name=search_term_string"
-  }
-};
-
 export default function RootLayout({
   children,
 }: {
@@ -146,14 +120,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
-        {/* JSON-LD Schema */}
+        {/* JSON-LD Schema — Organization only. WebSite schema lives in page.tsx (homepage) */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
         
         {/* Google Analytics 4 — afterInteractive is correct for analytics scripts */}

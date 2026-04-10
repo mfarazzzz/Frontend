@@ -1,5 +1,6 @@
 import NewsDetail from "../../../views/NewsDetail";
 import type { Metadata } from "next";
+import { cache } from "react";
 import { type CMSArticle, getCMSProvider } from "../../../services/cms";
 import {
   deriveAiSeoSignals,
@@ -10,7 +11,7 @@ import {
 import { notFound } from "next/navigation";
 
 const SITE_URL = "https://rampurnews.com";
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.svg`;
 const buildOgImageUrl = (title: string) =>
   `${SITE_URL}/api/og?title=${encodeURIComponent(title)}`;
 const toAbsoluteUrl = (value?: string) => {
@@ -53,11 +54,11 @@ const pruneSchema = (input: unknown): unknown => {
 };
 
 /**
- * Fetch article by slug — NEVER throws, always returns null on failure.
- * The only valid reason to return null is when Strapi confirms the article
- * does not exist (404). Any other error is logged but does NOT cause a 404.
+ * Fetch article by slug — deduplicated with React cache() so generateMetadata
+ * and Page share a single Strapi request per render pass. Never throws —
+ * returns null on any error so the page can call notFound() cleanly.
  */
-const fetchArticle = async (slug: string): Promise<CMSArticle | null> => {
+const fetchArticle = cache(async (slug: string): Promise<CMSArticle | null> => {
   try {
     const article = await getCMSProvider().getArticleBySlug(slug);
     if (!article) {
@@ -68,7 +69,7 @@ const fetchArticle = async (slug: string): Promise<CMSArticle | null> => {
     console.error(`[fetchArticle] error for slug="${slug}":`, err instanceof Error ? err.message : err);
     return null;
   }
-};
+});
 
 export const revalidate = 60;
 

@@ -42,13 +42,13 @@ export const metadata: Metadata = {
     description: "Rampur News की टीम के लेखकों और संपादकों से मिलें।",
     url: `${SITE_URL}/our-team`,
     siteName: "रामपुर न्यूज़ | Rampur News",
-    images: [`${SITE_URL}/og-image.svg`],
+    images: [`${SITE_URL}/og-image.jpg`],
   },
   twitter: {
     card: "summary_large_image",
     title: "Our Team | Rampur News",
     description: "Rampur News की टीम के लेखकों और संपादकों से मिलें।",
-    images: [`${SITE_URL}/og-image.svg`],
+    images: [`${SITE_URL}/og-image.jpg`],
   },
 };
 

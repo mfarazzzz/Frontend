@@ -11,7 +11,7 @@ import {
 import { notFound } from "next/navigation";
 
 const SITE_URL = "https://rampurnews.com";
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.svg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 const buildOgImageUrl = (title: string) =>
   `${SITE_URL}/api/og?title=${encodeURIComponent(title)}`;
 const toAbsoluteUrl = (value?: string) => {

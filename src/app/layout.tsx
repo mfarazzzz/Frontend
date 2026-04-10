@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     locale: "hi_IN",
     images: [
       {
-        url: "https://rampurnews.com/og-image.svg",
+        url: "https://rampurnews.com/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "रामपुर न्यूज़ | Rampur News",
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     title: "रामपुर न्यूज़ | Rampur News",
     description:
       "रामपुर और उत्तर प्रदेश की ताज़ा खबरें: स्थानीय, शिक्षा, खेल, मनोरंजन और अधिक।",
-    images: ["https://rampurnews.com/og-image.svg"],
+    images: ["https://rampurnews.com/og-image.jpg"],
   },
   icons: {
     icon: "/logo.png",

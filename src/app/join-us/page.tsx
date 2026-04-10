@@ -34,14 +34,14 @@ export const metadata: Metadata = {
       "Rampur News के साथ सामाजिक बदलाव, सीखने और पहचान का मंच। छात्र, युवा और प्रोफेशनल सभी के लिए।",
     url: `${SITE_URL}/join-us`,
     siteName: "रामपुर न्यूज़ | Rampur News",
-    images: [`${SITE_URL}/og-image.svg`],
+    images: [`${SITE_URL}/og-image.jpg`],
   },
   twitter: {
     card: "summary_large_image",
     title: "हमसे जुड़ें | Volunteer Journalism India",
     description:
       "समाज में बदलाव लाने के लिए स्वयंसेवक बनें। Rampur News के साथ अपनी पहचान और अनुभव बनाएं।",
-    images: [`${SITE_URL}/og-image.svg`],
+    images: [`${SITE_URL}/og-image.jpg`],
   },
 };
 

@@ -93,7 +93,7 @@ export default function AuthorArticleTabs({ articles, categories }: AuthorArticl
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {activeTab.articles.map((article) => {
-            const imageUrl = article.image || "/og-image.svg";
+            const imageUrl = article.image || "/og-image.jpg";
             const excerpt = getExcerpt(article);
             const categoryLabel = getCategoryLabel(article, categories);
             const publishedLabel = formatDate(article.publishedDate || article.publishedAt);

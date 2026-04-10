@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   title: "संपादकीय और विशेष लेख | Rampur News",
   description:
     "रामपुर न्यूज़ पर संपादकीय, विचार, रिव्यू, इंटरव्यू और विशेष रिपोर्ट पढ़ें। Editorials, opinions, reviews, interviews and special reports from rampurnews.com.",
+  alternates: { canonical: "https://rampurnews.com/editorials" },
+  robots: { index: true, follow: true },
   openGraph: {
     title: "संपादकीय और विशेष लेख | Rampur News",
     description:
@@ -19,15 +21,14 @@ export const metadata: Metadata = {
     url: "https://rampurnews.com/editorials",
     siteName: "रामपुर न्यूज़ | Rampur News",
     locale: "hi_IN",
+    images: [{ url: "https://rampurnews.com/og-image.jpg", width: 1200, height: 630, alt: "संपादकीय | Rampur News" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "संपादकीय और विशेष लेख | Rampur News",
     description:
       "रामपुर न्यूज़ पर संपादकीय, विचार, रिव्यू, इंटरव्यू और विशेष रिपोर्ट पढ़ें।",
-  },
-  alternates: {
-    canonical: "https://rampurnews.com/editorials",
+    images: ["https://rampurnews.com/og-image.jpg"],
   },
 };
 

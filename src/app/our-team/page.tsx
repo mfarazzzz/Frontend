@@ -31,23 +31,23 @@ const buildAuthorSummary = (author: CMSAuthor) => {
 };
 
 export const metadata: Metadata = {
-  title: "Our Team | Rampur News",
-  description: "Rampur News की टीम के लेखकों और संपादकों से मिलें।",
-  alternates: {
-    canonical: "/our-team",
-  },
+  title: "हमारी टीम | रामपुर न्यूज़ - Our Team",
+  description: "रामपुर न्यूज़ की टीम के अनुभवी पत्रकारों और संपादकों से मिलें। हम रामपुर और उत्तर प्रदेश की विश्वसनीय खबरें पहुँचाने के लिए प्रतिबद्ध हैं।",
+  alternates: { canonical: `${SITE_URL}/our-team` },
+  robots: { index: true, follow: true },
   openGraph: {
     type: "website",
-    title: "Our Team | Rampur News",
-    description: "Rampur News की टीम के लेखकों और संपादकों से मिलें।",
+    title: "हमारी टीम | रामपुर न्यूज़",
+    description: "रामपुर न्यूज़ की टीम के अनुभवी पत्रकारों और संपादकों से मिलें।",
     url: `${SITE_URL}/our-team`,
     siteName: "रामपुर न्यूज़ | Rampur News",
-    images: [`${SITE_URL}/og-image.jpg`],
+    locale: "hi_IN",
+    images: [{ url: `${SITE_URL}/og-image.jpg`, width: 1200, height: 630, alt: "Rampur News Team" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Our Team | Rampur News",
-    description: "Rampur News की टीम के लेखकों और संपादकों से मिलें।",
+    title: "हमारी टीम | रामपुर न्यूज़",
+    description: "रामपुर न्यूज़ की टीम के अनुभवी पत्रकारों और संपादकों से मिलें।",
     images: [`${SITE_URL}/og-image.jpg`],
   },
 };

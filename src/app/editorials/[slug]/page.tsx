@@ -34,6 +34,7 @@ export async function generateMetadata(props: {
   if (!editorial) {
     return {
       title: "Editorial Not Found | Rampur News",
+      robots: { index: false, follow: false },
     };
   }
 
@@ -45,25 +46,52 @@ export async function generateMetadata(props: {
     "";
   const canonicalUrl =
     editorial.canonicalUrl || `${SITE_URL}/editorials/${editorial.slug}`;
+  const imageUrl = editorial.image && editorial.image !== "/placeholder.svg"
+    ? editorial.image
+    : `${SITE_URL}/og-image.jpg`;
+  const keywords = editorial.newsKeywords
+    ? editorial.newsKeywords.split(",").map((k: string) => k.trim()).filter(Boolean)
+    : ["संपादकीय", "रामपुर", "Rampur News"];
 
   return {
     title: `${title} | Rampur News`,
     description,
+    keywords,
+    authors: editorial.author ? [{ name: editorial.author }] : undefined,
     alternates: { canonical: canonicalUrl },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
     openGraph: {
       title,
       description,
       url: canonicalUrl,
       type: "article",
+      siteName: "रामपुर न्यूज़ | Rampur News",
+      locale: "hi_IN",
       publishedTime: editorial.publishedAt,
-      modifiedTime: editorial.modifiedDate,
-      images: editorial.image ? [{ url: editorial.image }] : [],
+      modifiedTime: editorial.modifiedDate || editorial.publishedAt,
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: editorial.image ? [editorial.image] : [],
+      images: [imageUrl],
+    },
+    other: {
+      "article:section": editorialTypeLabel[editorial.editorialType] || "संपादकीय",
+      "article:published_time": editorial.publishedAt || "",
+      "article:modified_time": editorial.modifiedDate || editorial.publishedAt || "",
+      "ai-content-declaration": "human-written",
+      "googlebot-news": "index, follow",
     },
   };
 }
@@ -143,6 +171,20 @@ export default async function EditorialDetailPage(props: {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "होम", item: `${SITE_URL}/` },
+              { "@type": "ListItem", position: 2, name: "संपादकीय", item: `${SITE_URL}/editorials` },
+              { "@type": "ListItem", position: 3, name: editorial.titleHindi || editorial.title, item: canonicalUrl },
+            ],
+          }),
+        }}
       />
 
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">

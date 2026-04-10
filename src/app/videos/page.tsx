@@ -1,12 +1,31 @@
+import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { YOUTUBE_CHANNELS, uploadsPlaylistId } from "@/config/youtube";
 import VideosGrid from "@/components/VideosGrid";
 
-export const metadata = {
-  title: "वीडियो | Rampur News",
-  description: "रामपुर न्यूज़ के सभी नवीनतम यूट्यूब वीडियो एक ही जगह देखें",
-  alternates: { canonical: "/videos" },
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com").replace(/\/+$/, "");
+
+export const metadata: Metadata = {
+  title: "वीडियो | रामपुर न्यूज़ - Rampur News Videos",
+  description: "रामपुर न्यूज़ के सभी नवीनतम यूट्यूब वीडियो एक ही जगह देखें। रामपुर और उत्तर प्रदेश की ताज़ा वीडियो खबरें।",
+  alternates: { canonical: `${SITE_URL}/videos` },
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: "website",
+    title: "वीडियो | रामपुर न्यूज़",
+    description: "रामपुर न्यूज़ के सभी नवीनतम यूट्यूब वीडियो एक ही जगह देखें।",
+    url: `${SITE_URL}/videos`,
+    siteName: "रामपुर न्यूज़ | Rampur News",
+    locale: "hi_IN",
+    images: [{ url: `${SITE_URL}/og-image.jpg`, width: 1200, height: 630, alt: "Rampur News Videos" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "वीडियो | रामपुर न्यूज़",
+    description: "रामपुर न्यूज़ के सभी नवीनतम यूट्यूब वीडियो एक ही जगह देखें।",
+    images: [`${SITE_URL}/og-image.jpg`],
+  },
 };
 
 export const revalidate = 600;

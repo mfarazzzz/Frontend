@@ -42,7 +42,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
     types: {
-      "application/rss+xml": [{ url: "/rss.xml", title: "Rampur News RSS" }],
+      "application/rss+xml": [
+        { url: "/rss.xml", title: "Rampur News RSS" },
+        { url: "/feed.xml", title: "Rampur News Feed" },
+      ],
       "application/atom+xml": [{ url: "/atom.xml", title: "Rampur News Atom" }],
     },
   },

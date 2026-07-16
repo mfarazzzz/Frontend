@@ -180,7 +180,6 @@ export async function GET(request: NextRequest) {
 
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               {logoSrc && (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={logoSrc}
                   alt="logo"

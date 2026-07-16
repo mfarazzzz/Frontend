@@ -18,7 +18,9 @@
       "esnext",
       "es2020"
     ],
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "strict": false,
     "noEmit": true,
     "incremental": true,
@@ -27,7 +29,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "plugins": [
       {
         "name": "next"

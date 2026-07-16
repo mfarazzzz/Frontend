@@ -1,0 +1,120 @@
+   Γû▓ Next.js 15.5.20
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully in 65s
+   Skipping validation of types
+   Linting ...
+
+ ΓÜá The Next.js plugin was not detected in your ESLint configuration. See https://nextjs.org/docs/app/api-reference/config/eslint#migrating-existing-config
+   Collecting page data ...
+ ΓÜá Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/50) ...
+   Generating static pages (12/50) 
+   Generating static pages (24/50) 
+   Generating static pages (37/50) 
+ Γ£ô Generating static pages (50/50)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS  Revalidate  Expire
+Γöî ╞Æ /                                    1.21 kB         147 kB
+Γö£ Γùï /_not-found                            188 B         102 kB
+Γö£ ╞Æ /[category]                           2.6 kB         153 kB
+Γö£ ╞Æ /[category]/[slug]                     153 B         165 kB
+Γö£ Γùï /about                                 146 B         170 kB
+Γö£ Γùï /about-us                              146 B         170 kB
+Γö£ ╞Æ /amp/[category]/[slug]                 188 B         102 kB
+Γö£ ╞Æ /api/ads                               188 B         102 kB
+Γö£ ╞Æ /api/ads/click                         188 B         102 kB
+Γö£ ╞Æ /api/ads/impression                    188 B         102 kB
+Γö£ ╞Æ /api/cms/strapi/[...path]              188 B         102 kB
+Γö£ ╞Æ /api/og                                188 B         102 kB
+Γö£ ╞Æ /api/revalidate                        188 B         102 kB
+Γö£ ╞Æ /api/sitemap-health                    188 B         102 kB
+Γö£ ╞Æ /api/youtube/[channelId]/latest        188 B         102 kB
+Γö£ ╞Æ /atom.xml                              188 B         102 kB
+Γö£ Γùï /authors                               169 B         106 kB         30s      1y
+Γö£ ╞Æ /authors/[slug]                      2.45 kB         120 kB
+Γö£ Γùï /business                            2.64 kB         153 kB         30s      1y
+Γö£ ╞Æ /business/[slug]                       153 B         165 kB
+Γö£ Γùï /contact                               145 B         170 kB
+Γö£ Γùï /corrections-policy                    146 B         170 kB
+Γö£ Γùï /crime                               2.64 kB         153 kB         30s      1y
+Γö£ ╞Æ /crime/[slug]                          153 B         165 kB
+Γö£ Γùï /disclaimer                            146 B         170 kB
+Γö£ Γùï /editorial-policy                      146 B         170 kB
+Γö£ ╞Æ /editorials                            183 B         111 kB
+Γö£ ╞Æ /editorials/[slug]                     183 B         111 kB
+Γö£ Γùï /education-jobs                      13.1 kB         182 kB         30s      1y
+Γö£ Γùï /education-jobs/career                 965 B         151 kB
+Γö£ Γùï /education-jobs/exams                7.03 kB         209 kB
+Γö£ ╞Æ /education-jobs/exams/[slug]         5.18 kB         173 kB
+Γö£ Γùï /education-jobs/institutions         8.41 kB         206 kB
+Γö£ ╞Æ /education-jobs/institutions/[slug]  2.12 kB         164 kB
+Γö£ Γùï /education-jobs/news                 7.23 kB         176 kB
+Γö£ ╞Æ /education-jobs/news/[slug]          6.33 kB         182 kB
+Γö£ Γùï /education-jobs/results                 5 kB         205 kB
+Γö£ ╞Æ /education-jobs/results/[slug]       4.83 kB         173 kB
+Γö£ Γùï /entertainment                       2.64 kB         153 kB         30s      1y
+Γö£ ╞Æ /entertainment/[slug]                  153 B         165 kB
+Γö£ ╞Æ /feed.xml                              188 B         102 kB
+Γö£ Γùï /food-lifestyle                      6.75 kB         169 kB         30s      1y
+Γö£ ╞Æ /food-lifestyle/[slug]                 153 B         165 kB
+Γö£ Γùï /food-lifestyle/events               4.57 kB         197 kB
+Γö£ ╞Æ /food-lifestyle/events/[slug]        5.31 kB         173 kB
+Γö£ Γùï /food-lifestyle/fashion              4.09 kB         196 kB
+Γö£ ╞Æ /food-lifestyle/fashion/[slug]       2.79 kB         190 kB
+Γö£ Γùï /food-lifestyle/places               3.96 kB         189 kB
+Γö£ ╞Æ /food-lifestyle/places/[slug]        2.73 kB         190 kB
+Γö£ Γùï /food-lifestyle/restaurants          4.28 kB         196 kB
+Γö£ ╞Æ /food-lifestyle/restaurants/[slug]   3.48 kB         191 kB
+Γö£ Γùï /food-lifestyle/shopping             4.32 kB         197 kB
+Γö£ ╞Æ /food-lifestyle/shopping/[slug]      2.83 kB         190 kB
+Γö£ Γùï /grievance                             146 B         170 kB
+Γö£ Γùï /health                              2.64 kB         153 kB         30s      1y
+Γö£ ╞Æ /health/[slug]                         153 B         165 kB
+Γö£ Γùï /international                       2.65 kB         153 kB         30s      1y
+Γö£ ╞Æ /international/[slug]                  153 B         165 kB
+Γö£ Γùï /join-us                             4.46 kB         149 kB
+Γö£ Γùï /national                            2.64 kB         153 kB         30s      1y
+Γö£ ╞Æ /national/[slug]                       153 B         165 kB
+Γö£ Γùï /nearby                              2.64 kB         153 kB         30s      1y
+Γö£ ╞Æ /nearby/[slug]                         153 B         165 kB
+Γö£ ╞Æ /news-sitemap.xml                      188 B         102 kB
+Γö£ Γùï /our-team                              169 B         106 kB         30s      1y
+Γö£ Γùï /ownership                             146 B         170 kB
+Γö£ Γùï /ownership-disclosure                  146 B         170 kB
+Γö£ Γùï /politics                            2.64 kB         153 kB         30s      1y
+Γö£ ╞Æ /politics/[slug]                       153 B         165 kB
+Γö£ Γùï /press-release                         146 B         170 kB
+Γö£ ╞Æ /press-release/[slug]                  153 B         165 kB
+Γö£ Γùï /privacy                               146 B         170 kB
+Γö£ Γùï /rampur                              2.64 kB         153 kB         30s      1y
+Γö£ ╞Æ /rampur/[slug]                         153 B         165 kB
+Γö£ Γùï /religion-culture                    2.65 kB         153 kB         30s      1y
+Γö£ ╞Æ /religion-culture/[slug]               153 B         165 kB
+Γö£ Γùï /religion-culture/holidays           5.34 kB         176 kB
+Γö£ ╞Æ /religion-culture/holidays/[slug]    4.61 kB         172 kB
+Γö£ Γùï /robots.txt                            188 B         102 kB
+Γö£ ╞Æ /rss-discover.xml                      188 B         102 kB
+Γö£ ╞Æ /rss-monetization.xml                  188 B         102 kB
+Γö£ ╞Æ /rss-news.xml                          188 B         102 kB
+Γö£ ╞Æ /rss.xml                               188 B         102 kB
+Γö£ ╞Æ /rss/category/[slug]                   188 B         102 kB
+Γö£ ╞Æ /sitemap.xml                           188 B         102 kB
+Γö£ Γùï /sports                              2.64 kB         153 kB         30s      1y
+Γö£ ╞Æ /sports/[slug]                         153 B         165 kB
+Γö£ Γùï /terms                                 146 B         170 kB
+Γö£ Γùï /up                                  2.63 kB         153 kB         30s      1y
+Γö£ ╞Æ /up/[slug]                             153 B         165 kB
+Γöö ╞Æ /videos                              1.01 kB         139 kB
++ First Load JS shared by all             102 kB
+  Γö£ chunks/1255-ab54a41c275880be.js        46 kB
+  Γö£ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+  Γöö other shared chunks (total)          2.08 kB
+
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+

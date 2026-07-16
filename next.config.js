@@ -96,6 +96,14 @@ if (strapiOriginRemotePattern) {
 const nextConfig = {
   reactStrictMode: true,
   compress: true,
+  webpack(config) {
+    // Explicit @/ path alias — fixes resolution on Hostinger deployment
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    };
+    return config;
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns,

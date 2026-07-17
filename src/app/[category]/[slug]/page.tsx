@@ -9,6 +9,8 @@ import {
   truncateText,
 } from "../../../lib/utils";
 import { notFound } from "next/navigation";
+import { extractLocationTags, getLocationBySlug } from "@/data/locations";
+import { generateArticleKeywords, buildArticleSeoTitle } from "@/lib/seo-keywords";
 
 const SITE_URL = "https://rampurnews.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
@@ -133,10 +135,26 @@ export async function generateMetadata(props: {
     views: article.views,
     publishedDate: article.publishedDate,
     modifiedDate: article.modifiedDate,
+    location: article.location,
   });
 
-  const keywordList =
-    ai.keywords.length > 0
+  // Extract city tags from article data
+  const detectedCities = extractLocationTags(article.tags, article.title, article.content);
+  const citySlugs = detectedCities.length > 0
+    ? detectedCities.map(l => l.slug)
+    : (article.location ? [article.location] : ['rampur']);
+
+  // Generate city-aware keywords
+  const cityKeywords = generateArticleKeywords({
+    cities: citySlugs,
+    category: effectiveCategory,
+    title: article.title,
+    tags: article.tags,
+  });
+
+  const keywordList = cityKeywords.length > 0
+    ? cityKeywords
+    : ai.keywords.length > 0
       ? ai.keywords
       : [article.categoryHindi, "रामपुर", "Rampur"];
   const canonical = article.canonicalUrl?.trim() || canonicalPath;
@@ -211,6 +229,84 @@ export async function generateMetadata(props: {
   };
 }
 
+/**
+ * Auto-generate FAQ schema from article content.
+ * Only generates for explainer/Q&A-shaped articles — skips straight news reports.
+ * Heuristic: article must have Q&A indicators like questions marks, "क्या", "कैसे", "क्यों",
+ * or be from education/health categories which are typically informational.
+ */
+function generateFaqFromArticle(
+  article: CMSArticle,
+  title: string,
+  category: string,
+): object | null {
+  const bodyText = stripHtmlToText(article.content || '').slice(0, 1000);
+  if (!bodyText || bodyText.length < 100) return null;
+
+  // Check if article is Q&A/explainer shaped (not straight news)
+  const qaIndicators = ['?', '?', 'क्या', 'कैसे', 'क्यों', 'कब', 'कहां', 'कौन', 'कितना'];
+  const titleLower = (article.title || '').toLowerCase();
+  const contentSnippet = bodyText.toLowerCase();
+  const isExplainerCategory = ['education-jobs', 'health', 'business'].includes(category);
+  const hasQaSignals = qaIndicators.some(q => titleLower.includes(q) || contentSnippet.includes(q));
+  const hasMultipleQuestions = (bodyText.match(/[?？]/g) || []).length >= 2;
+
+  // Only generate FAQ for explainer/informational content
+  if (!isExplainerCategory && !hasQaSignals && !hasMultipleQuestions) {
+    return null;
+  }
+
+  const detectedCities = extractLocationTags(article.tags, article.title, article.content);
+  const primaryCity = detectedCities[0]?.nameHindi || 'रामपुर';
+  const categoryHindi = article.categoryHindi || getCategoryHindi(category);
+  const excerpt = article.excerpt?.trim() || truncateText(bodyText, 150);
+
+  const questions: { name: string; acceptedAnswer: { "@type": string; text: string } }[] = [];
+
+  // Q1: What is this news about?
+  questions.push({
+    name: `${title} — क्या है पूरी खबर?`,
+    acceptedAnswer: { "@type": "Answer", text: excerpt },
+  });
+
+  // Q2: City-specific question
+  questions.push({
+    name: `${primaryCity} में आज क्या हुआ?`,
+    acceptedAnswer: { "@type": "Answer", text: `${primaryCity} से जुड़ी इस खबर के अनुसार: ${truncateText(bodyText, 200)}` },
+  });
+
+  // Q3: Category-specific
+  if (category === 'crime') {
+    questions.push({
+      name: `${primaryCity} में अपराध की ताज़ा खबर क्या है?`,
+      acceptedAnswer: { "@type": "Answer", text: excerpt },
+    });
+  } else if (category === 'politics') {
+    questions.push({
+      name: `${primaryCity} में राजनीतिक हलचल क्या है?`,
+      acceptedAnswer: { "@type": "Answer", text: excerpt },
+    });
+  } else if (category === 'education-jobs') {
+    questions.push({
+      name: `${primaryCity} में शिक्षा/नौकरी का ताज़ा अपडेट क्या है?`,
+      acceptedAnswer: { "@type": "Answer", text: excerpt },
+    });
+  } else {
+    questions.push({
+      name: `${primaryCity} ${categoryHindi} समाचार — मुख्य बातें क्या हैं?`,
+      acceptedAnswer: { "@type": "Answer", text: excerpt },
+    });
+  }
+
+  if (questions.length < 2) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: questions.map(q => ({ "@type": "Question", ...q })),
+  };
+}
+
 export default async function Page(props: { params: Promise<PageParams> }) {
   const { category, slug } = await props.params;
 
@@ -278,6 +374,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
     views: article.views,
     publishedDate: article.publishedDate,
     modifiedDate: article.modifiedDate,
+    location: article.location,
   });
 
   const keywordList =
@@ -374,6 +471,20 @@ export default async function Page(props: { params: Promise<PageParams> }) {
       }
     : null;
 
+  // Generate FAQ schema from article content (3-5 Q&A pairs)
+  const faqSchema = canInjectSchema ? generateFaqFromArticle(article, title, effectiveCategory) : null;
+
+  // Speakable schema for voice assistants and AI answer engines
+  const speakableSchema = canInjectSchema ? {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: [".article-headline", ".article-summary", "h1", ".excerpt"],
+    },
+    url: absoluteCanonical,
+  } : null;
+
   return (
     <>
       {newsArticleSchema ? (
@@ -386,6 +497,18 @@ export default async function Page(props: { params: Promise<PageParams> }) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
+      ) : null}
+      {faqSchema ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      ) : null}
+      {speakableSchema ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
         />
       ) : null}
       <NewsDetail nextParams={{ category, slug }} initialArticle={article} />

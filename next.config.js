@@ -115,9 +115,18 @@ const nextConfig = {
     return [
       { source: "/rss/:slug.xml", destination: "/rss/category/:slug" },
       { source: "/rss/:slug", destination: "/rss/category/:slug" },
-      // NOTE: /api/ads is handled by Frontend/src/app/api/ads/route.ts
-      // The route handler takes precedence over rewrites in Next.js, so
-      // the rewrite below was dead code and has been removed.
+      // City hub pages — serve city/[slug] for known city slugs
+      { source: "/moradabad", destination: "/city/moradabad" },
+      { source: "/bareilly", destination: "/city/bareilly" },
+      { source: "/amroha", destination: "/city/amroha" },
+      { source: "/sambhal", destination: "/city/sambhal" },
+      { source: "/bijnor", destination: "/city/bijnor" },
+      { source: "/rudrapur", destination: "/city/rudrapur" },
+      { source: "/pilibhit", destination: "/city/pilibhit" },
+      { source: "/shahjahanpur", destination: "/city/shahjahanpur" },
+      { source: "/budaun", destination: "/city/budaun" },
+      // Region hub
+      { source: "/rohilkhand", destination: "/city/rohilkhand" },
     ];
   },
   logging: {

@@ -5,6 +5,8 @@ import { buildCategoryMetadata } from "@/lib/categoryMetadata";
 import { getCategoryBySlug } from "@/data/categories";
 import { getCMSProvider } from "@/services/cms";
 
+const SITE_URL = "https://rampurnews.com";
+
 type PageParams = {
   category: string;
 };
@@ -58,9 +60,40 @@ export default async function Page(props: {
     });
   } catch (error) {
     console.error("Failed to prefetch articles:", error);
-    // Don't fail the page, let client-side handle it or show empty
     initialArticles = undefined; 
   }
 
-  return <CategoryListing categorySlug={slug} initialArticles={initialArticles} />;
+  const canonical = `${SITE_URL}${match.path}`;
+
+  // CollectionPage JSON-LD
+  const collectionPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${canonical}#collection`,
+    name: `${match.titleHindi} समाचार | रामपुर न्यूज़`,
+    description: match.description,
+    url: canonical,
+    inLanguage: "hi-IN",
+    isPartOf: { "@type": "WebSite", "@id": `${SITE_URL}/#website` },
+    about: { "@type": "Thing", name: match.titleHindi },
+    publisher: { "@type": "NewsMediaOrganization", "@id": `${SITE_URL}/#organization` },
+  };
+
+  // BreadcrumbList JSON-LD
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "होम", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: match.titleHindi, item: canonical },
+    ],
+  };
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <CategoryListing categorySlug={slug} initialArticles={initialArticles} />
+    </>
+  );
 }

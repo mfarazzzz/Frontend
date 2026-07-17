@@ -162,6 +162,7 @@ export function deriveAiSeoSignals(input: {
   views?: number;
   publishedDate?: string;
   modifiedDate?: string;
+  location?: string;
 }): AiSeoSignals {
   const title = input.title || "";
   const body = stripHtmlToText(input.content || input.excerpt || "");
@@ -253,10 +254,37 @@ export function deriveAiSeoSignals(input: {
     .filter(Boolean)
     .slice(0, 30);
 
+  // ── Location-based long-tail keywords ──────────────────────────────────────
+  // When CMSArticle.location is set, generate city-specific keyword variants
+  const locationKeywords: string[] = [];
+  const loc = (input.location || "").trim();
+  if (loc) {
+    // Location taxonomy mapping (slug → Hindi name)
+    const cityHindiMap: Record<string, string> = {
+      rampur: "रामपुर", moradabad: "मुरादाबाद", bareilly: "बरेली",
+      amroha: "अमरोहा", sambhal: "संभल", bijnor: "बिजनौर",
+      rudrapur: "रुद्रपुर", pilibhit: "पीलीभीत", shahjahanpur: "शाहजहाँपुर",
+      budaun: "बदायूं",
+    };
+    const cityHindi = cityHindiMap[loc.toLowerCase()] || loc;
+    locationKeywords.push(
+      `${cityHindi} में आज की ताज़ा खबर`,
+      `${cityHindi} की मुख्य खबरें आज`,
+      `आज का ${cityHindi} समाचार हिंदी में`,
+      `${cityHindi} न्यूज़`,
+      `${cityHindi} समाचार`,
+    );
+  }
+
+  const finalKeywords = uniq([...tokens, ...locationKeywords])
+    .map((k) => k.trim())
+    .filter(Boolean)
+    .slice(0, 35);
+
   return {
     primaryEntity,
     mentions,
-    keywords: tokens,
+    keywords: finalKeywords,
     readTimeMinutes,
     freshnessScore,
     trendingScore,

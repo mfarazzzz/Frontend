@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCMSProvider } from "@/services/cms";
+import { LOCATIONS, REGIONS } from "@/data/locations";
 
 export const dynamic = "force-dynamic";
 
@@ -68,6 +69,14 @@ const STATIC_PATHS: Array<{ path: string; priority: string; changefreq: string }
   { path: "/disclaimer",                priority: "0.3", changefreq: "yearly"  },
   { path: "/ownership",                 priority: "0.3", changefreq: "yearly"  },
   { path: "/ownership-disclosure",      priority: "0.3", changefreq: "yearly"  },
+  // City hub pages (auto-generated from location taxonomy)
+  ...LOCATIONS.filter(l => l.slug !== 'rampur').map(l => ({
+    path: `/${l.slug}`,
+    priority: l.isPrimary ? "0.9" : "0.8",
+    changefreq: "hourly" as string,
+  })),
+  // Region hub
+  { path: "/rohilkhand",               priority: "0.8", changefreq: "hourly"  },
 ];
 
 const STATIC_PATH_SET = new Set(STATIC_PATHS.map((s) => s.path));
@@ -157,6 +166,22 @@ export async function GET() {
     if (!slug) continue;
     entries.push(
       `\n  <url>\n    <loc>${esc(`${SITE}/authors/${slug}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>`,
+    );
+  }
+
+  // ── Tags (extracted from articles) ────────────────────────────────────────
+  const tagSet = new Set<string>();
+  for (const a of arts) {
+    if (Array.isArray(a?.tags)) {
+      for (const t of a.tags) {
+        const tag = String(t || '').trim();
+        if (tag && tag.length > 1) tagSet.add(tag);
+      }
+    }
+  }
+  for (const tag of tagSet) {
+    entries.push(
+      `\n  <url>\n    <loc>${esc(`${SITE}/tags/${encodeURIComponent(tag)}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.5</priority>\n  </url>`,
     );
   }
 

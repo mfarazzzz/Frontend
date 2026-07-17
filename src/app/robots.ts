@@ -8,20 +8,38 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin", "/api/admin", "/api/"],
+        disallow: ["/admin", "/api/admin", "/api/cms", "/api/debug"],
       },
-      // Block AI scrapers that don't respect robots meta
+      // Explicitly allow AI search crawlers for citation/GEO traffic
       {
-        userAgent: ["GPTBot", "ChatGPT-User", "CCBot", "anthropic-ai", "Claude-Web"],
+        userAgent: ["GPTBot", "ChatGPT-User"],
+        allow: "/",
+        disallow: ["/admin", "/api/admin", "/api/cms"],
+      },
+      {
+        userAgent: ["ClaudeBot", "Claude-Web", "anthropic-ai"],
+        allow: "/",
+        disallow: ["/admin", "/api/admin", "/api/cms"],
+      },
+      {
+        userAgent: ["PerplexityBot"],
+        allow: "/",
+        disallow: ["/admin", "/api/admin", "/api/cms"],
+      },
+      {
+        userAgent: ["Google-Extended"],
+        allow: "/",
+        disallow: ["/admin", "/api/admin", "/api/cms"],
+      },
+      // Block generic scraper bots that don't add value
+      {
+        userAgent: ["CCBot"],
         disallow: ["/"],
       },
     ],
     sitemap: [
       `${BASE_URL}/sitemap.xml`,
       `${BASE_URL}/news-sitemap.xml`,
-      `${BASE_URL}/rss.xml`,
-      `${BASE_URL}/feed.xml`,
-      `${BASE_URL}/atom.xml`,
     ],
     host: BASE_URL,
   };

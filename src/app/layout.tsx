@@ -86,8 +86,10 @@ export const metadata: Metadata = {
 
 const organizationSchema = {
   "@context": "https://schema.org",
-  "@type": "Organization",
+  "@type": "NewsMediaOrganization",
+  "@id": "https://rampurnews.com/#organization",
   name: "रामपुर न्यूज़ | Rampur News",
+  alternateName: ["Rampur News", "रामपुर न्यूज़", "RampurNews"],
   url: "https://rampurnews.com",
   logo: {
     "@type": "ImageObject",
@@ -98,17 +100,38 @@ const organizationSchema = {
   sameAs: [
     "https://www.facebook.com/rampurnews",
     "https://twitter.com/RampurNews",
-    "https://www.instagram.com/rampurnews"
+    "https://www.instagram.com/rampurnews",
+    "https://www.youtube.com/@rampurnewsdotcom",
+    "https://whatsapp.com/channel/0029Vb7TEPsLI8Yg4gbsqe3O",
   ],
   contactPoint: {
     "@type": "ContactPoint",
-    telephone: "+91-1234567890",
     contactType: "customer service",
     areaServed: "IN",
-    availableLanguage: "Hindi"
+    availableLanguage: ["Hindi", "English"],
   },
-  foundingDate: "2020",
-  description: "रामपुर और उत्तर प्रदेश की ताज़ा खबरें: स्थानीय, शिक्षा, खेल, मनोरंजन और अधिक।"
+  foundingDate: "2024",
+  description: "रामपुर और रोहिलखंड क्षेत्र (मुरादाबाद, बरेली, अमरोहा, संभल, बिजनौर, पीलीभीत, शाहजहाँपुर, बदायूं) की ताज़ा, विश्वसनीय हिंदी खबरें।",
+  areaServed: [
+    { "@type": "City", name: "Rampur, Uttar Pradesh" },
+    { "@type": "City", name: "Moradabad, Uttar Pradesh" },
+    { "@type": "City", name: "Bareilly, Uttar Pradesh" },
+    { "@type": "City", name: "Amroha, Uttar Pradesh" },
+    { "@type": "City", name: "Sambhal, Uttar Pradesh" },
+    { "@type": "City", name: "Bijnor, Uttar Pradesh" },
+    { "@type": "City", name: "Rudrapur, Uttarakhand" },
+    { "@type": "City", name: "Pilibhit, Uttar Pradesh" },
+    { "@type": "City", name: "Shahjahanpur, Uttar Pradesh" },
+    { "@type": "City", name: "Budaun, Uttar Pradesh" },
+    { "@type": "AdministrativeArea", name: "Rohilkhand" },
+    { "@type": "State", name: "Uttar Pradesh" },
+  ],
+  publishingPrinciples: "https://rampurnews.com/editorial-policy",
+  correctionsPolicy: "https://rampurnews.com/corrections-policy",
+  ethicsPolicy: "https://rampurnews.com/editorial-policy",
+  masthead: "https://rampurnews.com/about",
+  ownershipFundingInfo: "https://rampurnews.com/ownership",
+  actionableFeedbackPolicy: "https://rampurnews.com/contact",
 };
 
 export default function RootLayout({
@@ -123,10 +146,28 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
-        {/* JSON-LD Schema — Organization only. WebSite schema lives in page.tsx (homepage) */}
+        {/* JSON-LD Schema — Organization + WebSite */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "@id": "https://rampurnews.com/#website",
+            name: "रामपुर न्यूज़ | Rampur News",
+            alternateName: ["Rampur News", "RampurNews.com"],
+            url: "https://rampurnews.com",
+            inLanguage: "hi-IN",
+            publisher: { "@id": "https://rampurnews.com/#organization" },
+            potentialAction: {
+              "@type": "SearchAction",
+              target: { "@type": "EntryPoint", urlTemplate: "https://rampurnews.com/search?q={search_term_string}" },
+              "query-input": "required name=search_term_string",
+            },
+          }) }}
         />
         
         {/* Google Analytics 4 — afterInteractive is correct for analytics scripts */}

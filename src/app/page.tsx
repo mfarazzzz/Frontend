@@ -40,20 +40,20 @@ export default async function Page() {
   const provider = getCMSProvider();
 
   // Parallelize data fetching for better performance
-  // Hero articles use the aggregator to show content from BOTH Custom CMS and Strapi
+  // Use aggregator to show content from BOTH Custom CMS and Strapi
   const [
     heroAggregated,
     categoriesRaw,
     editorialPage,
-    trendingArticles,
-    todaysTop,
+    trendingAggregated,
+    breakingAggregated,
     mostRead24hPage
   ] = await Promise.all([
     getAggregatedList('articles', { pageSize: 8, sort: 'publishedAt', order: 'desc' }).catch(() => ({ data: [] })),
     provider.getCategories().catch(() => []),
     provider.getEditorials({ limit: 5, orderBy: "publishedDate", order: "desc" }).catch(() => ({ data: [] })),
-    provider.getTrendingArticles(8).catch(() => []),
-    provider.getTodaysTopNews(5).catch(() => []),
+    getAggregatedList('articles', { pageSize: 8, sort: 'publishedAt', order: 'desc' }).catch(() => ({ data: [] })),
+    getAggregatedList('articles', { pageSize: 5, sort: 'publishedAt', order: 'desc' }).catch(() => ({ data: [] })),
     provider.getArticles({ status: "published", sinceHours: 24, orderBy: "views", order: "desc", limit: 5 }).catch(() => ({ data: [], total: 0, page: 1, pageSize: 5, totalPages: 1 }))
   ]);
 
@@ -63,6 +63,9 @@ export default async function Page() {
     heroArticles = await provider.getFeaturedArticles(3).catch(() => []);
   }
   const heroPrimary = heroArticles[0];
+
+  const trendingArticles = (trendingAggregated as any).data || [];
+  const todaysTop = (breakingAggregated as any).data || [];
 
   const preferredOrder = [
     "rampur",
@@ -96,11 +99,14 @@ export default async function Page() {
 
   const categoryArticlesEntries = await Promise.all(
     categories.map(async (category) => {
-      const articles = await provider.getArticlesByCategory(
-        category.slug, 
-        7
-      ).catch(() => []);
-      return [category.slug, articles] as const;
+      // Use aggregator to show articles from BOTH Custom CMS and Strapi
+      const result = await getAggregatedList('articles', {
+        category: category.slug,
+        pageSize: 7,
+        sort: 'publishedAt',
+        order: 'desc',
+      }).catch(() => ({ data: [] }));
+      return [category.slug, (result as any).data || []] as const;
     }),
   );
   const categoryArticles = Object.fromEntries(categoryArticlesEntries);

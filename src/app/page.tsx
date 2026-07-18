@@ -1,6 +1,7 @@
 import Index from "@/views/Index";
 import type { Metadata } from "next";
 import { getCMSProvider } from "@/services/cms";
+import { getAggregatedList } from "@/services/cms/aggregator";
 
 export const metadata: Metadata = {
   title: "रामपुर की ताज़ा खबरें | रामपुर न्यूज़ | Rampur News",
@@ -39,15 +40,16 @@ export default async function Page() {
   const provider = getCMSProvider();
 
   // Parallelize data fetching for better performance
+  // Hero articles use the aggregator to show content from BOTH Custom CMS and Strapi
   const [
-    heroArticlesRes,
+    heroAggregated,
     categoriesRaw,
     editorialPage,
     trendingArticles,
     todaysTop,
     mostRead24hPage
   ] = await Promise.all([
-    provider.getHeroArticles(8).catch(() => []),
+    getAggregatedList('articles', { pageSize: 8, sort: 'publishedAt', order: 'desc' }).catch(() => ({ data: [] })),
     provider.getCategories().catch(() => []),
     provider.getEditorials({ limit: 5, orderBy: "publishedDate", order: "desc" }).catch(() => ({ data: [] })),
     provider.getTrendingArticles(8).catch(() => []),
@@ -55,7 +57,8 @@ export default async function Page() {
     provider.getArticles({ status: "published", sinceHours: 24, orderBy: "views", order: "desc", limit: 5 }).catch(() => ({ data: [], total: 0, page: 1, pageSize: 5, totalPages: 1 }))
   ]);
 
-  let heroArticles = heroArticlesRes;
+  // Hero articles come from aggregator (both sources merged, newest first)
+  let heroArticles = (heroAggregated as any).data || [];
   if (!heroArticles || heroArticles.length === 0) {
     heroArticles = await provider.getFeaturedArticles(3).catch(() => []);
   }

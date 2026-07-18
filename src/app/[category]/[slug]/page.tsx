@@ -57,30 +57,47 @@ const pruneSchema = (input: unknown): unknown => {
 };
 
 /**
- * Fetch article by slug — uses the aggregator to check Custom CMS (Supabase)
- * first, then falls back to Strapi for historical content.
+ * Fetch article by slug — checks Custom CMS (Supabase) first via direct URL,
+ * then falls back to Strapi for historical content.
  * Deduplicated with React cache() so generateMetadata and Page share a single
  * request per render pass. Never throws — returns null on any error.
  */
 const fetchArticle = cache(async (slug: string): Promise<CMSArticle | null> => {
+  // Direct Custom CMS fetch (hardcoded URL to avoid any env var issues)
   try {
-    // Aggregator: Custom CMS first → Strapi fallback
-    const { data } = await resolveBySlug<any>('articles', slug);
-    if (data) {
-      return data as CMSArticle;
+    const cmsUrl = `https://cms.rampurnews.com/api/public/articles/${encodeURIComponent(slug)}`;
+    const res = await fetch(cmsUrl, {
+      next: { revalidate: 60 },
+      headers: { Accept: 'application/json' },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.data) {
+        return json.data as CMSArticle;
+      }
     }
-    console.warn(`[fetchArticle] no article for slug="${slug}" in either source`);
-    return null;
-  } catch (err) {
-    // If aggregator throws (both sources down), fall back to Strapi-only provider
-    try {
-      const article = await getCMSProvider().getArticleBySlug(slug);
-      return article;
-    } catch {
-      console.error(`[fetchArticle] all sources failed for slug="${slug}":`, err instanceof Error ? err.message : err);
-      return null;
-    }
+  } catch {
+    // Custom CMS unavailable — continue to Strapi fallback
   }
+
+  // Strapi fallback for historical content
+  try {
+    const article = await getCMSProvider().getArticleBySlug(slug);
+    if (article) return article;
+  } catch {
+    // Strapi also failed
+  }
+
+  // Final fallback: aggregator (tries both sources with timeout)
+  try {
+    const { data } = await resolveBySlug<any>('articles', slug);
+    if (data) return data as CMSArticle;
+  } catch {
+    // Both sources exhausted
+  }
+
+  console.warn(`[fetchArticle] no article for slug="${slug}" in any source`);
+  return null;
 });
 
 export const revalidate = 60;

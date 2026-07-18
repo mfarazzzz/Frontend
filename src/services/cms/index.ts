@@ -1634,18 +1634,20 @@ const getEnvStrapiUrl = () => {
   return '';
 };
 
+import { createCustomCmsProvider } from './customCmsProvider';
+
 const defaultConfig: CMSConfig = {
-  provider: 'strapi',
-  baseUrl: getEnvStrapiUrl(),
+  provider: 'custom',
+  baseUrl: (process.env.NEXT_PUBLIC_CUSTOM_CMS_URL || process.env.CUSTOM_CMS_URL || 'https://cms.rampurnews.com').replace(/\/+$/, ''),
 };
 
 let currentConfig: CMSConfig = defaultConfig;
 
 const providerInstances: Partial<Record<CMSProviderType, CMSProvider>> = {
-  // Only register mock provider when explicitly configured — avoids bundling
-  // mock data in production builds where provider is always 'strapi'.
   ...(process.env.NEXT_PUBLIC_CMS_PROVIDER === 'mock' ? { mock: mockCMSProvider } : {}),
-  strapi: createRestCMSProvider(defaultConfig),
+  custom: createCustomCmsProvider(),
+  // Strapi kept as fallback — can be activated via localStorage or env override
+  strapi: createRestCMSProvider({ provider: 'strapi', baseUrl: getEnvStrapiUrl() }),
 };
 
 let didHydrateFromStorage = false;
@@ -1688,7 +1690,9 @@ export const getCMSProvider = (): CMSProvider => {
 export const configureCMS = (config: CMSConfig): void => {
   currentConfig = config;
 
-  if ((config.provider === 'strapi' || config.provider === 'django' || config.provider === 'custom') && config.baseUrl) {
+  if (config.provider === 'custom') {
+    providerInstances['custom'] = createCustomCmsProvider();
+  } else if ((config.provider === 'strapi' || config.provider === 'django') && config.baseUrl) {
     providerInstances[config.provider] = createRestCMSProvider(config);
   }
 };

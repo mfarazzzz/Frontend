@@ -17,6 +17,14 @@ export const categories: Category[] = [
     path: "/rampur",
   },
   {
+    id: "local",
+    slug: "local",
+    titleHindi: "स्थानीय",
+    titleEnglish: "Local News",
+    description: "स्थानीय समाचार और ज़मीनी खबरें।",
+    path: "/local",
+  },
+  {
     id: "up",
     slug: "up",
     titleHindi: "उत्तर प्रदेश",
@@ -65,6 +73,14 @@ export const categories: Category[] = [
     path: "/education-jobs",
   },
   {
+    id: "education",
+    slug: "education",
+    titleHindi: "शिक्षा",
+    titleEnglish: "Education",
+    description: "शिक्षा से जुड़ी ताज़ा खबरें।",
+    path: "/education",
+  },
+  {
     id: "career",
     slug: "career",
     titleHindi: "करियर",
@@ -105,6 +121,14 @@ export const categories: Category[] = [
     path: "/health",
   },
   {
+    id: "technology",
+    slug: "technology",
+    titleHindi: "टेक्नोलॉजी",
+    titleEnglish: "Technology",
+    description: "टेक्नोलॉजी और डिजिटल दुनिया की खबरें।",
+    path: "/technology",
+  },
+  {
     id: "religion-culture",
     slug: "religion-culture",
     titleHindi: "धर्म और संस्कृति",
@@ -127,6 +151,14 @@ export const categories: Category[] = [
     titleEnglish: "Nearby",
     description: "रामपुर के आसपास के इलाकों की महत्वपूर्ण खबरें।",
     path: "/nearby",
+  },
+  {
+    id: "editorials",
+    slug: "editorials",
+    titleHindi: "संपादकीय",
+    titleEnglish: "Editorials",
+    description: "संपादकीय, विश्लेषण और विशेष रिपोर्ट।",
+    path: "/editorials",
   },
 ];
 

@@ -50,7 +50,7 @@ function getCustomCmsUrl(): string {
   return (
     process.env.NEXT_PUBLIC_CUSTOM_CMS_URL ||
     process.env.CUSTOM_CMS_URL ||
-    'http://localhost:3001'
+    'https://cms.rampurnews.com'
   ).replace(/\/+$/, '');
 }
 

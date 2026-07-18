@@ -57,6 +57,12 @@ const remotePatterns = [
     pathname: "/**",
   },
   {
+    // Supabase Storage (cms-media bucket) — for images uploaded via Custom CMS
+    protocol: "https",
+    hostname: "qjnhaazliulyuqngfrkd.supabase.co",
+    pathname: "/storage/**",
+  },
+  {
     protocol: "http",
     hostname: "localhost",
     port: "3000",

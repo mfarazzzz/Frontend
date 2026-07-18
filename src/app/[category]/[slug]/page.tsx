@@ -2,6 +2,7 @@ import NewsDetail from "../../../views/NewsDetail";
 import type { Metadata } from "next";
 import { cache } from "react";
 import { type CMSArticle, getCMSProvider } from "../../../services/cms";
+import { resolveBySlug } from "../../../services/cms/aggregator";
 import {
   deriveAiSeoSignals,
   getCategoryHindi,
@@ -56,20 +57,29 @@ const pruneSchema = (input: unknown): unknown => {
 };
 
 /**
- * Fetch article by slug — deduplicated with React cache() so generateMetadata
- * and Page share a single Strapi request per render pass. Never throws —
- * returns null on any error so the page can call notFound() cleanly.
+ * Fetch article by slug — uses the aggregator to check Custom CMS (Supabase)
+ * first, then falls back to Strapi for historical content.
+ * Deduplicated with React cache() so generateMetadata and Page share a single
+ * request per render pass. Never throws — returns null on any error.
  */
 const fetchArticle = cache(async (slug: string): Promise<CMSArticle | null> => {
   try {
-    const article = await getCMSProvider().getArticleBySlug(slug);
-    if (!article) {
-      console.warn(`[fetchArticle] no article for slug="${slug}"`);
+    // Aggregator: Custom CMS first → Strapi fallback
+    const { data } = await resolveBySlug<any>('articles', slug);
+    if (data) {
+      return data as CMSArticle;
     }
-    return article;
-  } catch (err) {
-    console.error(`[fetchArticle] error for slug="${slug}":`, err instanceof Error ? err.message : err);
+    console.warn(`[fetchArticle] no article for slug="${slug}" in either source`);
     return null;
+  } catch (err) {
+    // If aggregator throws (both sources down), fall back to Strapi-only provider
+    try {
+      const article = await getCMSProvider().getArticleBySlug(slug);
+      return article;
+    } catch {
+      console.error(`[fetchArticle] all sources failed for slug="${slug}":`, err instanceof Error ? err.message : err);
+      return null;
+    }
   }
 });
 

@@ -4,6 +4,7 @@ import CategoryListing, { CATEGORY_PAGE_SIZE } from "@/views/CategoryListing";
 import { buildCategoryMetadata } from "@/lib/categoryMetadata";
 import { getCategoryBySlug } from "@/data/categories";
 import { getCMSProvider } from "@/services/cms";
+import { getAggregatedList } from "@/services/cms/aggregator";
 
 const SITE_URL = "https://rampurnews.com";
 
@@ -50,17 +51,36 @@ export default async function Page(props: {
 
   let initialArticles;
   try {
-    initialArticles = await getCMSProvider().getArticles({
+    // Aggregated fetch: merges articles from Custom CMS (Supabase) + Strapi
+    const aggregated = await getAggregatedList('articles', {
       category: slug,
-      limit: CATEGORY_PAGE_SIZE,
-      offset,
-      orderBy: "publishedDate",
-      order: "desc",
-      status: "published",
+      pageSize: CATEGORY_PAGE_SIZE,
+      page: currentPage,
+      sort: 'publishedAt',
+      order: 'desc',
     });
+    initialArticles = {
+      data: aggregated.data,
+      total: aggregated.meta.pagination.total,
+      page: aggregated.meta.pagination.page,
+      pageSize: aggregated.meta.pagination.pageSize,
+      totalPages: aggregated.meta.pagination.pageCount,
+    };
   } catch (error) {
     console.error("Failed to prefetch articles:", error);
-    initialArticles = undefined; 
+    // Fallback to Strapi-only if aggregator throws
+    try {
+      initialArticles = await getCMSProvider().getArticles({
+        category: slug,
+        limit: CATEGORY_PAGE_SIZE,
+        offset,
+        orderBy: "publishedDate",
+        order: "desc",
+        status: "published",
+      });
+    } catch {
+      initialArticles = undefined;
+    }
   }
 
   const canonical = `${SITE_URL}${match.path}`;

@@ -130,9 +130,31 @@ export async function fetchStrapi<T = any>(
   if (params.sort) url.searchParams.set('sort[0]', `${params.sort}:${params.order || 'desc'}`);
   url.searchParams.set('populate', '*');
 
+  // Category filter — passed to API (may be ignored by custom controllers)
+  if (params.category) {
+    url.searchParams.set('filters[category][slug][$eq]', String(params.category));
+  }
+
+  // Search filter
+  if (params.search) {
+    url.searchParams.set('filters[title][$containsi]', String(params.search));
+  }
+
+  // Featured filter
+  if (params.featured) {
+    url.searchParams.set('filters[isFeatured][$eq]', 'true');
+  }
+
+  // Breaking filter
+  if (params.breaking) {
+    url.searchParams.set('filters[isBreaking][$eq]', 'true');
+  }
+
   const headers: Record<string, string> = {};
   const token = getStrapiToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token && token !== 'PASTE_YOUR_STRAPI_API_TOKEN_HERE') {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   try {
     const res = await fetch(url.toString(), {
@@ -142,8 +164,22 @@ export async function fetchStrapi<T = any>(
     } as RequestInit);
     if (!res.ok) return { data: [], total: 0 };
     const json = await res.json();
-    const data = (json.data ?? []).map((item: any) => normalizeStrapi(item));
-    const total = json.meta?.pagination?.total ?? data.length;
+    let data = (json.data ?? []).map((item: any) => normalizeStrapi(item));
+
+    // Client-side category filtering: the Strapi custom controller may ignore
+    // server-side filters. Apply category filter defensively on the client.
+    if (params.category) {
+      const targetCategory = String(params.category).toLowerCase();
+      data = data.filter((item: any) => {
+        const itemCategory = String(item?.category || '').toLowerCase();
+        return itemCategory === targetCategory;
+      });
+    }
+
+    // Use filtered data length as total when client-side filtering was applied,
+    // since Strapi's pagination.total doesn't account for our client-side filter.
+    const rawTotal = json.meta?.pagination?.total ?? data.length;
+    const total = params.category ? data.length : rawTotal;
     return { data, total };
   } catch {
     return { data: [], total: 0 };
@@ -184,8 +220,38 @@ async function fetchStrapiBySlug<T = any>(
 function normalizeStrapi(entity: any): any {
   if (!entity) return null;
   // Strapi v4: { id, attributes: { ... } } → flatten
+  // Strapi custom controller: { id, slug, category, ... } → already flat
   const attrs = entity.attributes ?? entity;
-  return { id: String(entity.id ?? entity.documentId ?? ''), ...attrs };
+  const id = String(entity.id ?? entity.documentId ?? '');
+
+  // Handle category relation: may be { data: { attributes: { slug } } } or a plain string
+  let category = attrs.category;
+  let categoryHindi = attrs.categoryHindi;
+  if (category && typeof category === 'object') {
+    const catData = category.data;
+    if (catData && !Array.isArray(catData)) {
+      category = catData.attributes?.slug || catData.slug || '';
+      categoryHindi = catData.attributes?.titleHindi || catData.titleHindi || categoryHindi || '';
+    }
+  }
+
+  // Handle image relation: may be { data: { attributes: { url } } } or string
+  let image = attrs.image || attrs.featured_image || '';
+  if (image && typeof image === 'object') {
+    const imgData = image.data;
+    if (imgData && !Array.isArray(imgData)) {
+      image = imgData.attributes?.url || imgData.url || '';
+    }
+  }
+
+  return {
+    id,
+    ...attrs,
+    category: typeof category === 'string' ? category : '',
+    categoryHindi: categoryHindi || '',
+    image: typeof image === 'string' ? image : '',
+    publishedAt: attrs.publishedAt || attrs.publishedDate || attrs.created_at || '',
+  };
 }
 
 // ─── Aggregation ──────────────────────────────────────────────────────────────

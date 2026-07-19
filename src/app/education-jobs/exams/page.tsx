@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import ExamCalendarPage from "@/views/education/ExamCalendar";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "परीक्षा कैलेंडर 2026 | शिक्षा और नौकरियां - रामपुर न्यूज़",
   description:

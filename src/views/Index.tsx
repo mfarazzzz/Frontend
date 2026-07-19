@@ -1,5 +1,3 @@
-import Image from "next/image";
-import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategorySection from "@/components/CategorySection";
@@ -8,37 +6,25 @@ import YouTubeRail from "@/components/YouTubeRail";
 import Sidebar from "@/components/Sidebar";
 import AdSlotLazy from "@/components/AdSlotLazy";
 import type { CMSArticle, CMSCategory, CMSEditorial } from "@/services/cms";
+
+/** Minimal category shape needed for homepage rendering */
+interface HomepageCategory {
+  id: string;
+  slug: string;
+  titleHindi: string;
+  path?: string;
+  template?: string;
+  showAdAfter?: boolean;
+}
+
 type IndexProps = {
   heroArticles: CMSArticle[];
-  categories: CMSCategory[];
+  categories: (CMSCategory | HomepageCategory)[];
   categoryArticles: Record<string, CMSArticle[]>;
-  editorials: CMSEditorial[];
+  editorials: (CMSEditorial | CMSArticle)[];
   trendingArticles: CMSArticle[];
   todaysTop?: CMSArticle[];
   mostRead24h?: CMSArticle[];
-};
-
-const hasRealImage = (src?: string | null) => {
-  if (!src) return false;
-  const lowered = src.toLowerCase();
-  if (lowered.includes("placeholder")) return false;
-  if (lowered.includes("news-placeholder")) return false;
-  return true;
-};
-
-const formatRelativeTimeHindi = (dateString?: string) => {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "";
-  const now = new Date();
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  if (seconds < 60) return "अभी";
-  if (minutes < 60) return `${minutes} मिनट पहले`;
-  if (hours < 24) return `${hours} घंटे पहले`;
-  return `${days} दिन पहले`;
 };
 
 const Index = ({ heroArticles, categories, categoryArticles, editorials, trendingArticles, todaysTop = [], mostRead24h = [] }: IndexProps) => {
@@ -46,12 +32,26 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
   const heroSecondary = heroArticles.slice(1, 5);
   const sidebarTrending = trendingArticles.slice(0, 6);
 
+  // Determine which sections have content
+  const activeSections = categories.filter((cat) => {
+    const articles = categoryArticles[cat.slug] ?? [];
+    return articles.length > 0;
+  });
+
+  // Decide ad placement: only after every 3rd section (not every section)
+  const adAfterIndices = new Set<number>();
+  activeSections.forEach((_, index) => {
+    if ((index + 1) % 3 === 0) adAfterIndices.add(index);
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
       <main className="container max-w-6xl px-4 py-6 article-links">
         <h1 className="sr-only">रामपुर न्यूज़ | Rampur News - ताज़ा खबरें, स्थानीय समाचार</h1>
+        
+        {/* ─── Hero Section ─── */}
         {heroPrimary && (
           <section className="mb-8 grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] gap-6">
             <div>
@@ -64,31 +64,45 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
             </div>
           </section>
         )}
+
         {/* Mini videos rail below hero */}
         <YouTubeRail />
 
-        {/* Smart sections are moved to sidebar */}
-
-        {/* Main Content with Sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* ─── Main Content with Sidebar ─── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
           {/* Main Content */}
           <div className="lg:col-span-8 space-y-8">
-            {/* Infeed Ad after hero */}
+            {/* Single ad after hero area */}
             <AdSlotLazy placement="infeed" />
 
-            {categories.map((category, index) => {
+            {activeSections.map((category, index) => {
               const articles = categoryArticles[category.slug] ?? [];
               if (!articles.length) return null;
+
+              // Map config template to component variant
+              const templateMap: Record<string, "default" | "featured" | "grid" | "compact-list" | "timeline" | "two-col-grid"> = {
+                'featured': 'featured',
+                'grid': 'grid',
+                'compact-list': 'compact-list',
+                'hero-sidebar': 'featured',
+                'editorial-picks': 'featured',
+                'horizontal-scroll': 'grid',
+                'carousel': 'grid',
+                'two-columns': 'two-col-grid',
+              };
+              const configTemplate = (category as HomepageCategory).template || '';
+              const variant = templateMap[configTemplate] || 'featured';
+              const showAd = adAfterIndices.has(index);
+
               return (
                 <div key={category.id}>
                   <CategorySection
                     title={category.titleHindi}
                     articles={articles}
                     viewAllLink={category.path || `/${category.slug}`}
-                    variant="featured"
+                    variant={variant}
                   />
-                  {/* Add infeed ad after every 2 categories (approximately every 10 articles) */}
-                  {(index + 1) % 2 === 0 && index < categories.length - 1 && (
+                  {showAd && (
                     <div className="my-8">
                       <AdSlotLazy placement="infeed" />
                     </div>
@@ -97,14 +111,15 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
               );
             })}
 
+            {/* Editorials section */}
             {editorials.length > 0 && (
               <CategorySection
                 title="संपादकीय"
                 viewAllLink="/editorials"
-                variant="featured"
+                variant="compact-list"
                 articles={editorials.map((editorial) => ({
                   id: editorial.id,
-                  title: editorial.titleHindi || editorial.title,
+                  title: (editorial as any).titleHindi || editorial.title,
                   slug: editorial.slug,
                   excerpt: editorial.excerpt,
                   content: editorial.content,
@@ -112,12 +127,12 @@ const Index = ({ heroArticles, categories, categoryArticles, editorials, trendin
                   category: "editorials",
                   categoryHindi: "संपादकीय",
                   author: editorial.author,
-                  publishedAt: editorial.publishedAt || editorial.publishedDate,
-                  publishedDate: editorial.publishedDate,
+                  publishedAt: editorial.publishedAt || (editorial as any).publishedDate,
+                  publishedDate: (editorial as any).publishedDate,
                   status: editorial.status,
-                  contentType: editorial.editorialType,
-                  isEditorsPick: editorial.isEditorsPick,
-                  isFeatured: editorial.isFeatured,
+                  contentType: (editorial as any).editorialType || (editorial as any).contentType,
+                  isEditorsPick: (editorial as any).isEditorsPick,
+                  isFeatured: (editorial as any).isFeatured,
                 }))}
               />
             )}

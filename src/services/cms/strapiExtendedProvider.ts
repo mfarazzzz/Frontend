@@ -171,6 +171,8 @@ const contentTypeConfig = {
   educationNews: { path: "/education-news", dateField: "publishedAt", searchFields: ["titleHindi", "title", "excerptHindi", "excerpt", "contentHindi", "content"] },
   holidays: { path: "/holidays", dateField: "date", searchFields: ["nameHindi", "name", "descriptionHindi", "description"] },
   restaurants: { path: "/restaurants", searchFields: ["nameHindi", "name", "address.street", "address.streetHindi", "address.city", "address.district", "descriptionHindi", "description"] },
+  fashionStores: { path: "/fashion-stores", searchFields: ["nameHindi", "name", "address", "addressHindi", "city", "district"] },
+  shoppingCentres: { path: "/shopping-centres", searchFields: ["nameHindi", "name", "address", "addressHindi", "city", "district"] },
   places: { path: "/places", searchFields: ["nameHindi", "name", "city", "district", "descriptionHindi", "description"] },
   events: {
     path: "/events",

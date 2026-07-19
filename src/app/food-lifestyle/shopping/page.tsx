@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import ShoppingPage from "@/views/lifestyle/Shopping";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "रामपुर के शॉपिंग सेंटर, मॉल और प्रसिद्ध स्थान | रामपुर न्यूज़",
   description:

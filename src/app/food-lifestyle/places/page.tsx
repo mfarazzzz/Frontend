@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import PlacesPage from "@/views/lifestyle/PlacesPage";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title:
     "रामपुर के प्रसिद्ध स्थान - ऐतिहासिक, धार्मिक और दर्शनीय स्थल | रामपुर न्यूज़",

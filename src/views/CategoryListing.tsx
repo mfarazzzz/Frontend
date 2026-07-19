@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
@@ -7,18 +7,15 @@ import Footer from "@/components/Footer";
 import CategoryHeader from "@/components/CategoryHeader";
 import NewsCard from "@/components/NewsCard";
 import Sidebar from "@/components/Sidebar";
-import SEO from "@/components/SEO";
+import AdSlotLazy from "@/components/AdSlotLazy";
 import { getCategoryBySlug, type Category } from "@/data/categories";
-import { useArticles } from "@/hooks/useCMS";
+import { CATEGORY_PAGE_SIZE, SITE_URL } from "@/lib/constants";
 import type { CMSArticle, PaginatedResponse } from "@/services/cms";
-
-const SITE_URL = "https://rampurnews.com";
-export const CATEGORY_PAGE_SIZE = 24;
 
 const buildCategoryIntro = (category: Category) => {
   const name = category.titleHindi;
   const english = category.titleEnglish;
-  return `${name} (${english}) सेक्शन में आप रामपुर और उत्तर प्रदेश से जुड़े सबसे भरोसेमंद और समय पर अपडेट पढ़ते हैं। यहां स्थानीय प्रशासन, विकास, कानून व्यवस्था, शिक्षा, रोजगार, स्वास्थ्य, खेल और संस्कृति से संबंधित खबरें नियमित रूप से प्रकाशित होती हैं। हमारी संपादकीय टीम तथ्य-आधारित रिपोर्टिंग, संदर्भ और पृष्ठभूमि के साथ समाचार प्रस्तुत करती है ताकि पाठक आसानी से विषय की समझ बना सकें। इस पेज पर आपको ताज़ा खबरें, ग्राउंड रिपोर्ट, इंटरव्यू, विश्लेषण और उपयोगी सूचनाएं मिलेंगी जो दैनिक जीवन से जुड़ी हैं। हर खबर को आसान भाषा में संक्षिप्त और स्पष्ट रूप से प्रकाशित किया जाता है ताकि पाठक जल्दी निर्णय ले सकें। हम महत्वपूर्ण घोषणाओं, सार्वजनिक सेवाओं और सामुदायिक गतिविधियों को भी कवर करते हैं। यदि आप इस श्रेणी की सभी नई अपडेट्स सबसे पहले पढ़ना चाहते हैं, तो इस पेज को नियमित रूप से देखें और साझा करें।`;
+  return `${name} (${english}) सेक्शन में आप रामपुर और उत्तर प्रदेश से जुड़े सबसे भरोसेमंद और समय पर अपडेट पढ़ते हैं। यहां स्थानीय प्रशासन, विकास, कानून व्यवस्था, शिक्षा, रोजगार, स्वास्थ्य, खेल और संस्कृति से संबंधित खबरें नियमित रूप से प्रकाशित होती हैं।`;
 };
 
 const toPageHref = (basePath: string, page: number) =>
@@ -38,20 +35,43 @@ const CategoryListingInner = ({
     return Number.isFinite(raw) && raw > 0 ? raw : 1;
   }, [searchParams]);
 
-  const offset = (page - 1) * CATEGORY_PAGE_SIZE;
-  const { data, isLoading } = useArticles({
-    category: categorySlug,
-    limit: CATEGORY_PAGE_SIZE,
-    offset,
-    orderBy: "publishedDate",
-    order: "desc",
-    status: "published",
-  }, {
-    initialData: initialArticles
-  });
+  // Use server-provided data directly — no client-side refetch that breaks category filtering
+  const [articles, setArticles] = useState<PaginatedResponse<CMSArticle> | undefined>(initialArticles);
+  const [isLoading, setIsLoading] = useState(!initialArticles);
 
-  const news = data?.data || [];
-  const total = typeof data?.total === "number" ? data.total : news.length;
+  // Only fetch client-side when navigating to a different page (pagination)
+  const fetchPage = useCallback(async (pageNum: number) => {
+    if (pageNum === 1 && initialArticles) {
+      setArticles(initialArticles);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        category: categorySlug,
+        page: String(pageNum),
+        pageSize: String(CATEGORY_PAGE_SIZE),
+      });
+      const res = await fetch(`/api/category-articles?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setArticles(data);
+      }
+    } catch (err) {
+      console.error("[CategoryListing] Fetch error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [categorySlug, initialArticles]);
+
+  useEffect(() => {
+    if (page > 1 || !initialArticles) {
+      fetchPage(page);
+    }
+  }, [page, fetchPage, initialArticles]);
+
+  const news = articles?.data || [];
+  const total = typeof articles?.total === "number" ? articles.total : news.length;
   const totalPages = Math.max(1, Math.ceil(total / CATEGORY_PAGE_SIZE));
 
   const basePath = category?.path || `/${categorySlug}`;
@@ -117,14 +137,13 @@ const CategoryListingInner = ({
     ],
   };
 
+  // Split articles for category layout: hero + grid + list
+  const heroArticle = news[0];
+  const gridArticles = news.slice(1, 7);
+  const listArticles = news.slice(7);
+
   return (
     <div className="min-h-screen bg-background">
-      <SEO
-        title={`${category.titleHindi} समाचार`}
-        description={category.description}
-        canonical={category.path}
-        ogType="website"
-      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
@@ -142,43 +161,99 @@ const CategoryListingInner = ({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8">
             {isLoading ? (
-              <div className="text-center py-12">लोड हो रहा है...</div>
-            ) : news.length === 0 ? (
-              <div className="text-center py-12">इस श्रेणी में कोई समाचार नहीं मिला</div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {news.map((article) => (
-                  <NewsCard key={article.id} article={article} />
+              <div className="space-y-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="animate-pulse bg-muted rounded-lg h-24" />
                 ))}
+              </div>
+            ) : news.length === 0 ? (
+              <div className="text-center py-12 space-y-4">
+                <p className="text-lg text-muted-foreground">इस श्रेणी में अभी कोई समाचार उपलब्ध नहीं है</p>
+                <p className="text-sm text-muted-foreground">कृपया बाद में पुनः देखें या अन्य श्रेणियां देखें</p>
+                <Link href="/" className="inline-block mt-4 px-6 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors">
+                  होम पेज पर जाएं
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Hero article for category */}
+                {heroArticle && (
+                  <section>
+                    <NewsCard article={heroArticle} variant="featured" imagePriority />
+                  </section>
+                )}
+
+                {/* Grid section */}
+                {gridArticles.length > 0 && (
+                  <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {gridArticles.map((article) => (
+                      <NewsCard key={article.id} article={article} />
+                    ))}
+                  </section>
+                )}
+
+                {/* Ad between grid and list */}
+                {listArticles.length > 0 && (
+                  <AdSlotLazy placement="infeed" />
+                )}
+
+                {/* Remaining articles as compact list */}
+                {listArticles.length > 0 && (
+                  <section className="space-y-1">
+                    {listArticles.map((article) => (
+                      <NewsCard key={article.id} article={article} variant="horizontal" />
+                    ))}
+                  </section>
+                )}
               </div>
             )}
 
+            {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex flex-wrap items-center justify-between gap-3 mt-8">
+              <nav className="flex flex-wrap items-center justify-between gap-3 mt-8 pt-6 border-t border-border" aria-label="पेजिनेशन">
                 <div className="text-sm text-muted-foreground">
-                  पेज {page} / {totalPages}
+                  पेज {page} / {totalPages} ({total} समाचार)
                 </div>
-                <div className="flex items-center gap-3">
-                  {page > 1 ? (
+                <div className="flex items-center gap-2">
+                  {page > 1 && (
                     <Link
                       href={toPageHref(basePath, page - 1)}
-                      className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted"
+                      className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted transition-colors"
                       prefetch={false}
                     >
-                      पिछला
+                      ← पिछला
                     </Link>
-                  ) : null}
-                  {page < totalPages ? (
+                  )}
+                  {/* Page numbers (show max 5) */}
+                  {(() => {
+                    const start = Math.max(1, page - 2);
+                    const end = Math.min(totalPages, start + 4);
+                    return Array.from({ length: end - start + 1 }, (_, i) => start + i).map((p) => (
+                      <Link
+                        key={p}
+                        href={toPageHref(basePath, p)}
+                        className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm transition-colors ${
+                          p === page
+                            ? "bg-red-700 text-white font-bold"
+                            : "border border-border hover:bg-muted"
+                        }`}
+                        prefetch={false}
+                      >
+                        {p}
+                      </Link>
+                    ));
+                  })()}
+                  {page < totalPages && (
                     <Link
                       href={toPageHref(basePath, page + 1)}
-                      className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted"
+                      className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted transition-colors"
                       prefetch={false}
                     >
-                      अगला
+                      अगला →
                     </Link>
-                  ) : null}
+                  )}
                 </div>
-              </div>
+              </nav>
             )}
           </div>
 

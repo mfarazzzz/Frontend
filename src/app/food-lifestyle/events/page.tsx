@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import EventsPage from "@/views/lifestyle/Events";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "रामपुर के आगामी कार्यक्रम और इवेंट्स | रामपुर न्यूज़",
   description:

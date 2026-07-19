@@ -1,7 +1,6 @@
 import Index from "@/views/Index";
 import type { Metadata } from "next";
-import { getCMSProvider } from "@/services/cms";
-import { getAggregatedList } from "@/services/cms/aggregator";
+import { getHomepageData } from "@/services/content/homepageService";
 
 export const metadata: Metadata = {
   title: "रामपुर की ताज़ा खबरें | रामपुर न्यूज़ | Rampur News",
@@ -13,7 +12,7 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     title: "रामपुर की ताज़ा खबरें | रामपुर न्यूज़ | Rampur News",
-    description: "रामपुर न्यूज़ - रामपुर जिले और उत्तर प्रदेश की ताज़ा, विश्वसनीय खबरें। राजनीति, अपराध, शिक्षा, खेल, मनोरंजन और स्थानीय समाचार。",
+    description: "रामपुर न्यूज़ - रामपुर जिले और उत्तर प्रदेश की ताज़ा, विश्वसनीय खबरें। राजनीति, अपराध, शिक्षा, खेल, मनोरंजन और स्थानीय समाचार।",
     siteName: "रामपुर न्यूज़ | Rampur News",
     images: [
       {
@@ -37,82 +36,39 @@ export default async function Page() {
   const siteUrl = "https://rampurnews.com";
   const siteName = "रामपुर न्यूज़ | Rampur News";
 
-  const provider = getCMSProvider();
+  // Single entry point: fetches all homepage data in parallel with proper category filtering
+  const homepageData = await getHomepageData();
 
-  // Parallelize data fetching for better performance
-  // Use aggregator to show content from BOTH Custom CMS and Strapi
-  const [
-    heroAggregated,
-    categoriesRaw,
-    editorialPage,
-    trendingAggregated,
-    breakingAggregated,
-    mostRead24hPage
-  ] = await Promise.all([
-    getAggregatedList('articles', { pageSize: 8, sort: 'publishedAt', order: 'desc' }).catch(() => ({ data: [] })),
-    provider.getCategories().catch(() => []),
-    provider.getEditorials({ limit: 5, orderBy: "publishedDate", order: "desc" }).catch(() => ({ data: [] })),
-    getAggregatedList('articles', { pageSize: 8, sort: 'publishedAt', order: 'desc' }).catch(() => ({ data: [] })),
-    getAggregatedList('articles', { pageSize: 5, sort: 'publishedAt', order: 'desc' }).catch(() => ({ data: [] })),
-    provider.getArticles({ status: "published", sinceHours: 24, orderBy: "views", order: "desc", limit: 5 }).catch(() => ({ data: [], total: 0, page: 1, pageSize: 5, totalPages: 1 }))
-  ]);
+  const {
+    heroArticles,
+    sections,
+    trendingArticles,
+    todaysTop,
+    mostRead24h,
+  } = homepageData;
 
-  // Hero articles come from aggregator (both sources merged, newest first)
-  let heroArticles = (heroAggregated as any).data || [];
-  if (!heroArticles || heroArticles.length === 0) {
-    heroArticles = await provider.getFeaturedArticles(3).catch(() => []);
-  }
   const heroPrimary = heroArticles[0];
 
-  const trendingArticles = (trendingAggregated as any).data || [];
-  const todaysTop = (breakingAggregated as any).data || [];
+  // Build category articles map and categories array for Index view
+  const categoryArticles: Record<string, typeof heroArticles> = {};
+  const categories: Array<{ id: string; slug: string; titleHindi: string; path: string; template?: string; showAdAfter?: boolean }> = [];
 
-  const preferredOrder = [
-    "rampur",
-    "up",
-    "nearby",
-    "national",
-    "religion-culture",
-    "sports",
-    "education-jobs",
-    "career", // Added Career category
-    "international",
-  ];
-
-  const bySlug: Record<string, (typeof categoriesRaw)[number]> = {};
-  for (const cat of categoriesRaw) {
-    bySlug[cat.slug] = cat;
+  for (const { config, data } of sections) {
+    if (config.contentType === 'editorials') continue;
+    categoryArticles[config.category || config.id] = data.articles;
+    categories.push({
+      id: config.id,
+      slug: config.category || config.id,
+      titleHindi: config.title,
+      path: config.viewAllLink,
+      template: config.template,
+      showAdAfter: config.showAdAfter,
+    });
   }
 
-  const ordered: (typeof categoriesRaw)[number][] = [];
-  // Ensure we respect preferredOrder exactly, even if fetch order varies
-  for (const slug of preferredOrder) {
-    const cat = categoriesRaw.find(c => c.slug === slug);
-    if (cat) ordered.push(cat);
-  }
-  // Add any remaining categories not in preferred list
-  for (const cat of categoriesRaw) {
-    if (!preferredOrder.includes(cat.slug)) ordered.push(cat);
-  }
-  // Increase slice to include career if it's further down
-  const categories = ordered.slice(0, 10);
-
-  const categoryArticlesEntries = await Promise.all(
-    categories.map(async (category) => {
-      // Use aggregator to show articles from BOTH Custom CMS and Strapi
-      const result = await getAggregatedList('articles', {
-        category: category.slug,
-        pageSize: 7,
-        sort: 'publishedAt',
-        order: 'desc',
-      }).catch(() => ({ data: [] }));
-      return [category.slug, (result as any).data || []] as const;
-    }),
-  );
-  const categoryArticles = Object.fromEntries(categoryArticlesEntries);
-
-  const editorials = editorialPage?.data ?? [];
-  const mostRead24h = mostRead24hPage?.data ?? [];
+  // Get editorials section
+  const editorialsSection = sections.find((s) => s.config.id === 'editorials');
+  const editorials = editorialsSection?.data.articles || [];
   
   const websiteSchema = {
     "@context": "https://schema.org",

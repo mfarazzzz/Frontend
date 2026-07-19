@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import HolidaysCalendarPage from "@/views/culture/HolidaysCalendar";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "छुट्टियों का कैलेंडर 2026 | धार्मिक त्योहार और राष्ट्रीय अवकाश - रामपुर न्यूज़",
   description:

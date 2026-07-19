@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import CareerListing from "@/views/education/CareerListing";
+import { CategoryPageServer } from "@/lib/categoryPage";
 
 export const metadata: Metadata = {
   title: "करियर - शिक्षा एवं नौकरियां | रामपुर न्यूज़",
@@ -20,7 +20,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
-  return <CareerListing />;
-}
+export const revalidate = 30;
 
+export default function Page() {
+  return <CategoryPageServer categorySlug="career" />;
+}

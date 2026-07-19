@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import RestaurantsPage from "@/views/lifestyle/Restaurants";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "रामपुर के बेहतरीन रेस्तरां और खाने की जगहें | रामपुर न्यूज़",
   description:

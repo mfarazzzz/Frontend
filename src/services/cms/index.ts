@@ -1637,7 +1637,7 @@ const getEnvStrapiUrl = () => {
 import { createCustomCmsProvider } from './customCmsProvider';
 
 const defaultConfig: CMSConfig = {
-  provider: 'strapi',
+  provider: 'custom',
   baseUrl: getEnvStrapiUrl(),
 };
 
@@ -1656,24 +1656,9 @@ const hydrateCMSConfigFromStorage = (): void => {
   if (typeof window === 'undefined') return;
   didHydrateFromStorage = true;
 
-  try {
-    const savedStrapi = window.localStorage.getItem('strapi_config');
-    if (savedStrapi) {
-      const parsed = JSON.parse(savedStrapi) as { baseUrl?: string; apiKey?: string } | null;
-      const baseUrl = typeof parsed?.baseUrl === 'string' ? normalizeStrapiBaseUrl(parsed.baseUrl) : '';
-      if (baseUrl) {
-        configureCMS({
-          provider: 'strapi',
-          baseUrl,
-          apiKey: parsed?.apiKey || undefined,
-        });
-        return;
-      }
-    }
-  } catch (error) {
-    void error;
-  }
-
+  // No longer hydrate Strapi config from localStorage.
+  // The Custom CMS is now the default and only runtime provider.
+  // Legacy localStorage keys (strapi_config) are ignored.
 };
 
 export const getCMSProvider = (): CMSProvider => {
@@ -1691,7 +1676,7 @@ export const configureCMS = (config: CMSConfig): void => {
 
   if (config.provider === 'custom') {
     providerInstances['custom'] = createCustomCmsProvider();
-  } else if ((config.provider === 'strapi' || config.provider === 'django' || config.provider === 'custom') && config.baseUrl) {
+  } else if ((config.provider === 'strapi' || config.provider === 'django') && config.baseUrl) {
     providerInstances[config.provider] = createRestCMSProvider(config);
   }
 };

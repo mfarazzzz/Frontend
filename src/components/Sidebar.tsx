@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Clock, Eye } from "lucide-react";
 import Image from "next/image";
 import type { CMSArticle } from "@/services/cms";
 import LazyYouTubeWidget from "./LazyYouTubeWidget";
@@ -10,6 +10,26 @@ interface SidebarProps {
   todaysTop?: CMSArticle[];
   mostRead?: CMSArticle[];
 }
+
+const formatRelativeTimeHindi = (dateString: string) => {
+  const timestamp = new Date(dateString).getTime();
+  if (Number.isNaN(timestamp)) return "";
+  const diffSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+
+  if (diffSeconds < 60) return "अभी";
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) return `${diffMinutes} मि.`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} घंटे`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays} दिन`;
+  const diffWeeks = Math.floor(diffDays / 7);
+  if (diffWeeks < 4) return `${diffWeeks} हफ्ते`;
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) return `${diffMonths} महीने`;
+  const diffYears = Math.floor(diffDays / 365);
+  return `${diffYears} साल`;
+};
 
 const Sidebar = ({ trendingArticles = [], todaysTop = [], mostRead = [] }: SidebarProps) => {
   const now = Date.now();
@@ -22,39 +42,20 @@ const Sidebar = ({ trendingArticles = [], todaysTop = [], mostRead = [] }: Sideb
     return now - timestamp <= fortyEightHoursMs;
   });
 
-  const formatRelativeTimeHindi = (dateString: string) => {
-    const timestamp = new Date(dateString).getTime();
-    if (Number.isNaN(timestamp)) return "";
-    const diffSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
-
-    if (diffSeconds < 60) return "अभी";
-    const diffMinutes = Math.floor(diffSeconds / 60);
-    if (diffMinutes < 60) return `${diffMinutes} मिनट पहले`;
-    const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} घंटे पहले`;
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays} दिन पहले`;
-    const diffWeeks = Math.floor(diffDays / 7);
-    if (diffWeeks < 4) return `${diffWeeks} हफ्ते पहले`;
-    const diffMonths = Math.floor(diffDays / 30);
-    if (diffMonths < 12) return `${diffMonths} महीने पहले`;
-    const diffYears = Math.floor(diffDays / 365);
-    return `${diffYears} साल पहले`;
-  };
-
   return (
     <aside className="space-y-6">
-      {/* Sidebar Ad */}
-      <AdSlotLazy placement="sidebar" />
-
-      {/* आज की बड़ी खबरें */}
+      {/* ─── आज की बड़ी खबरें (Today's Top) ─── */}
       {todaysTopRecent.length > 0 && (
-        <div className="sidebar-card">
-          <h3 className="sidebar-title border-l-4 border-red-700 pl-3 mb-4">
+        <div className="bg-card rounded-lg border border-border p-4">
+          <h3 className="flex items-center gap-2 text-base font-bold mb-4 border-l-4 border-red-700 pl-3">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" />
+            </span>
             आज की बड़ी खबरें
           </h3>
           <div className="space-y-3">
-            {todaysTopRecent.map((item) => (
+            {todaysTopRecent.slice(0, 4).map((item) => (
               <Link key={item.id} href={`/${item.category}/${item.slug}`} className="flex items-start gap-3 group">
                 <div className="relative w-14 h-14 rounded-md overflow-hidden bg-muted flex-shrink-0">
                   {item.image ? (
@@ -67,12 +68,13 @@ const Sidebar = ({ trendingArticles = [], todaysTop = [], mostRead = [] }: Sideb
                     />
                   ) : null}
                 </div>
-                <div className="min-w-0">
-                  <h4 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-red-700">
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-red-700 transition-colors">
                     {item.title}
                   </h4>
-                  <p className="meta-text">
-                    {formatRelativeTimeHindi(item.publishedDate)}
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                    <Clock size={10} />
+                    {formatRelativeTimeHindi(item.publishedAt || item.publishedDate || "")}
                   </p>
                 </div>
               </Link>
@@ -81,116 +83,113 @@ const Sidebar = ({ trendingArticles = [], todaysTop = [], mostRead = [] }: Sideb
         </div>
       )}
 
-      {/* Trending Editorial List */}
-      <div className="sidebar-card">
-        <div className="sidebar-title">
-          <TrendingUp className="text-primary" size={18} />
-          <h3 className="text-base font-semibold">ट्रेंडिंग</h3>
-        </div>
-        <div className="space-y-3">
-          {trendingArticles.map((article, index) => (
-            <Link
-              key={article.id}
-              href={`/${article.category}/${article.slug}`}
-              className="flex items-start gap-3 group"
-            >
-              <div className="text-3xl font-bold text-gray-300 leading-none min-w-[1.5rem] text-center">{index + 1}</div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-red-700 transition-colors">
-                  {article.title}
-                </h4>
-                <span className="meta-text mt-1 block">
-                  {formatRelativeTimeHindi(article.publishedDate)}
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
+      {/* ─── Sidebar Ad ─── */}
+      <AdSlotLazy placement="sidebar" />
 
-      {/* YouTube Widget */}
+      {/* ─── ट्रेंडिंग (Trending) ─── */}
+      {trendingArticles.length > 0 && (
+        <div className="bg-card rounded-lg border border-border p-4">
+          <h3 className="flex items-center gap-2 text-base font-bold mb-4">
+            <TrendingUp className="text-red-700" size={18} />
+            ट्रेंडिंग
+          </h3>
+          <div className="space-y-3">
+            {trendingArticles.slice(0, 6).map((article, index) => (
+              <Link
+                key={article.id}
+                href={`/${article.category}/${article.slug}`}
+                className="flex items-start gap-3 group"
+              >
+                <div className="text-2xl font-bold text-red-700/30 leading-none min-w-[1.5rem] text-center select-none">
+                  {index + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-red-700 transition-colors">
+                    {article.title}
+                  </h4>
+                  <span className="text-xs text-muted-foreground mt-1 block">
+                    {formatRelativeTimeHindi(article.publishedAt || article.publishedDate || "")}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ─── YouTube Widget ─── */}
       <LazyYouTubeWidget />
 
-      {/* सबसे ज्यादा पढ़ी गयी खबरे (above follow) */}
-      <div className="sidebar-card">
-        <h3 className="sidebar-title border-l-4 border-red-700 pl-3 mb-4">
-          सबसे ज्यादा पढ़ी गयी खबरे
-        </h3>
-        {mostRead.slice(0, 5).map((item, index) => (
-          <Link
-            key={item.id}
-            href={`/${item.category}/${item.slug}`}
-            className="flex gap-3 mb-4 group"
-          >
-            <span className="text-3xl font-bold text-gray-300 leading-none min-w-[1.5rem] text-center">
-              {index + 1}
-            </span>
-            <div className="min-w-0">
-              <h4 className="font-semibold text-sm leading-snug group-hover:text-red-700 line-clamp-2">
-                {item.title}
-              </h4>
-              <p className="meta-text">
-                {formatRelativeTimeHindi(item.publishedDate)}
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {/* ─── सबसे ज्यादा पढ़ी गयी (Most Read) ─── */}
+      {mostRead.length > 0 && (
+        <div className="bg-card rounded-lg border border-border p-4">
+          <h3 className="flex items-center gap-2 text-base font-bold mb-4 border-l-4 border-red-700 pl-3">
+            <Eye size={16} className="text-muted-foreground" />
+            सबसे ज्यादा पढ़ी गयी
+          </h3>
+          <div className="space-y-3">
+            {mostRead.slice(0, 5).map((item, index) => (
+              <Link
+                key={item.id}
+                href={`/${item.category}/${item.slug}`}
+                className="flex gap-3 group"
+              >
+                <span className="text-2xl font-bold text-gray-200 leading-none min-w-[1.5rem] text-center select-none">
+                  {index + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-semibold text-sm leading-snug group-hover:text-red-700 line-clamp-2 transition-colors">
+                    {item.title}
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatRelativeTimeHindi(item.publishedAt || item.publishedDate || "")}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* Social Media Follow */}
-      <div className="sidebar-card">
-        <h3 className="text-base font-semibold mb-3">
-          हमसे जुड़ें
-        </h3>
+      {/* ─── हमसे जुड़ें (Social Follow) ─── */}
+      <div className="bg-card rounded-lg border border-border p-4">
+        <h3 className="text-base font-bold mb-3">हमसे जुड़ें</h3>
         <div className="grid grid-cols-2 gap-2">
-          {/* WhatsApp Channel */}
           <a
             href="https://whatsapp.com/channel/0029Vb7TEPsLI8Yg4gbsqe3O"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 py-3 bg-[#25D366] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center justify-center gap-2 py-2.5 bg-[#25D366] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
           >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-            </svg>
-            <span className="text-sm font-medium">व्हाट्सएप</span>
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+            व्हाट्सएप
           </a>
-          
-          {/* Facebook */}
           <a
             href="https://www.facebook.com/profile.php?id=61586930678729"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 py-3 bg-[#1877F2] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center justify-center gap-2 py-2.5 bg-[#1877F2] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
           >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-            </svg>
-            <span className="text-sm font-medium">फेसबुक</span>
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            फेसबुक
           </a>
-
-          {/* YouTube */}
           <a
             href="https://www.youtube.com/@rampurnewsdotcom"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 py-3 bg-[#FF0000] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center justify-center gap-2 py-2.5 bg-[#FF0000] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
           >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-            </svg>
-            <span className="text-sm font-medium">यूट्यूब</span>
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            यूट्यूब
           </a>
           <a
             href="https://instagram.com/RampurNews"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-[#f09433] via-[#e6683c] to-[#bc1888] text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-[#f09433] via-[#e6683c] to-[#bc1888] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
           >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.789.306 1.459.717 2.126 1.384s.666 1.336 1.384 2.126c.765.297 1.636.499 2.913.558C8.333 23.985 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.297-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.015 15.26 0 12 0zm0 2.16c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.585-.069 4.85c-.148 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.85-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.85 0-3.204.012-3.584.07-4.85C2.451 3.901 3.96 2.35 7.22 2.23c1.265-.057 1.645-.069 4.85-.069zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
-            </svg>
-            <span className="text-sm font-medium">इंस्टाग्राम</span>
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.765.297 1.636.499 2.913.558C8.333 23.985 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558a5.89 5.89 0 0 0 2.126-1.384 5.89 5.89 0 0 0 1.384-2.126c.297-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913a5.89 5.89 0 0 0-1.384-2.126A5.89 5.89 0 0 0 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.585-.069 4.85c-.148 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.85-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.85 0-3.204.012-3.584.07-4.85C2.38 3.9 3.9 2.38 7.15 2.23c1.265-.057 1.645-.069 4.85-.069zM12 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405a1.44 1.44 0 1 1-2.88 0 1.44 1.44 0 0 1 2.88 0z"/></svg>
+            इंस्टाग्राम
           </a>
         </div>
       </div>

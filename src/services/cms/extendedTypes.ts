@@ -203,15 +203,21 @@ export interface CMSHoliday {
   nameHindi: string;
   slug: string;
   date: string;
-  // Strapi schema has no endDate field
+  endDate?: string;
   type?: 'national' | 'state' | 'religious' | 'optional' | 'bank';
   religion?: 'hindu' | 'muslim' | 'christian' | 'sikh' | 'buddhist' | 'jain' | 'secular';
+  significance?: string;
+  significanceHindi?: string;
+  rituals?: string[];
+  ritualsHindi?: string[];
+  recurringType?: 'yearly' | 'lunar' | 'custom';
   description?: string;
   descriptionHindi?: string;
   image?: string;
-  // Strapi uses isGazetted/isRestricted instead of isPublicHoliday/isRecurring
   isGazetted?: boolean;
   isRestricted?: boolean;
+  isPublicHoliday?: boolean;
+  isRecurring?: boolean;
   applicableStates?: string[];
   createdAt?: string;
   updatedAt?: string;

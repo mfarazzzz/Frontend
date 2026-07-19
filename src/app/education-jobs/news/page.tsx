@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import EducationNewsSection from "@/views/education/NewsSection";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "शिक्षा समाचार - परीक्षा अपडेट, छात्रवृत्ति, एडमिशन | रामपुर न्यूज़",
   description:

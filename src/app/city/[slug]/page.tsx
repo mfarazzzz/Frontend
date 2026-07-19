@@ -11,7 +11,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getLocationBySlug, getAllLocationSlugs, getLocationsByRegion, LOCATIONS } from "@/data/locations";
 import { buildCityHubTitle, buildCityHubDescription, generateArticleKeywords } from "@/lib/seo-keywords";
-import { getCMSProvider } from "@/services/cms";
+import { getAggregatedList } from "@/services/cms/aggregator";
 import CategoryListing from "@/views/CategoryListing";
 
 const SITE_URL = "https://rampurnews.com";
@@ -73,17 +73,23 @@ export default async function CityHubPage(props: { params: Promise<PageParams> }
     notFound();
   }
 
-  // Fetch articles tagged to this city
+  // Fetch articles tagged to this city via aggregator (both CMS sources)
   let initialArticles;
   try {
-    const provider = getCMSProvider();
-    initialArticles = await provider.getArticles({
+    const aggregated = await getAggregatedList("articles", {
       search: location.nameHindi,
-      status: "published",
-      limit: 20,
-      orderBy: "publishedDate",
+      pageSize: 20,
+      page: 1,
+      sort: "publishedAt",
       order: "desc",
     });
+    initialArticles = {
+      data: aggregated.data,
+      total: aggregated.meta.pagination.total,
+      page: aggregated.meta.pagination.page,
+      pageSize: aggregated.meta.pagination.pageSize,
+      totalPages: aggregated.meta.pagination.pageCount,
+    };
   } catch {
     initialArticles = undefined;
   }

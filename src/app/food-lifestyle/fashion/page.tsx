@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import FashionPage from "@/views/lifestyle/Fashion";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "रामपुर की बेहतरीन कपड़े और फैशन की दुकानें | रामपुर न्यूज़",
   description:

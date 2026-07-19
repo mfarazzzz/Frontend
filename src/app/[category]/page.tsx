@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import CategoryListing, { CATEGORY_PAGE_SIZE } from "@/views/CategoryListing";
+import CategoryListing from "@/views/CategoryListing";
+import { CATEGORY_PAGE_SIZE } from "@/lib/constants";
 import { buildCategoryMetadata } from "@/lib/categoryMetadata";
 import { getCategoryBySlug } from "@/data/categories";
 import { getCMSProvider } from "@/services/cms";

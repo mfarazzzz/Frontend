@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import InstitutionsPage from "@/views/education/Institutions";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "संस्थान और कॉलेज डायरेक्टरी | शिक्षा - रामपुर न्यूज़",
   description:

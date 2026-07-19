@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import LifestyleHub from "@/views/lifestyle/LifestyleHub";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "खान-पान और लाइफस्टाइल - रेस्तरां, शॉपिंग, इवेंट्स | रामपुर न्यूज़",
   description:

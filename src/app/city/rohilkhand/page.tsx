@@ -6,7 +6,7 @@
  */
 import type { Metadata } from "next";
 import { getLocationsByRegion } from "@/data/locations";
-import { getCMSProvider } from "@/services/cms";
+import { getAggregatedList } from "@/services/cms/aggregator";
 import CategoryListing from "@/views/CategoryListing";
 
 const SITE_URL = "https://rampurnews.com";
@@ -36,14 +36,20 @@ export default async function RohilkhandPage() {
 
   let initialArticles;
   try {
-    const provider = getCMSProvider();
-    initialArticles = await provider.getArticles({
+    const aggregated = await getAggregatedList("articles", {
       search: searchTerms,
-      status: "published",
-      limit: 30,
-      orderBy: "publishedDate",
+      pageSize: 30,
+      page: 1,
+      sort: "publishedAt",
       order: "desc",
     });
+    initialArticles = {
+      data: aggregated.data,
+      total: aggregated.meta.pagination.total,
+      page: aggregated.meta.pagination.page,
+      pageSize: aggregated.meta.pagination.pageSize,
+      totalPages: aggregated.meta.pagination.pageCount,
+    };
   } catch {
     initialArticles = undefined;
   }

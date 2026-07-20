@@ -191,16 +191,19 @@ export function createCustomCmsProvider(): CMSProvider {
     },
 
     async getBreakingNews(limit = 5): Promise<CMSArticle[]> {
-      // First try to get articles explicitly marked as breaking
+      // Fetch articles explicitly marked as breaking, sorted by newest first
       const response = await fetchJson<any>(buildUrl('/articles', { pageSize: limit, breaking: 'true', sort: 'published_at', order: 'desc' }));
-      const breakingArticles = (response?.data || []).map(mapArticle);
+      const articles = (response?.data || []).map(mapArticle);
 
-      if (breakingArticles.length > 0) return breakingArticles;
+      // Filter to only articles published within the last 48 hours (breaking is time-sensitive)
+      const cutoff = Date.now() - 48 * 60 * 60 * 1000;
+      const recent = articles.filter((a) => {
+        const pubDate = new Date(a.publishedAt || a.publishedDate || 0).getTime();
+        return pubDate >= cutoff;
+      });
 
-      // Fallback: if no breaking articles found, return the latest published articles
-      // so the ticker always shows fresh content
-      const fallback = await fetchJson<any>(buildUrl('/articles', { pageSize: limit, sort: 'published_at', order: 'desc' }));
-      return (fallback?.data || []).map(mapArticle);
+      // Return only genuine breaking news — NO fallback to regular articles
+      return recent;
     },
 
     async getTodaysTopNews(limit = 5): Promise<CMSArticle[]> {

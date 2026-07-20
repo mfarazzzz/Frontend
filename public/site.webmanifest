@@ -1,0 +1,43 @@
+{
+  "name": "रामपुर न्यूज़ | Rampur News",
+  "short_name": "Rampur News",
+  "description": "रामपुर और उत्तर प्रदेश की ताज़ा, विश्वसनीय खबरें",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#dc2626",
+  "orientation": "portrait-primary",
+  "lang": "hi",
+  "categories": ["news", "education"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "768x768",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "रामपुर खबरें",
+      "url": "/rampur",
+      "description": "रामपुर की ताज़ा खबरें"
+    },
+    {
+      "name": "उत्तर प्रदेश",
+      "url": "/up",
+      "description": "यूपी की खबरें"
+    },
+    {
+      "name": "ब्रेकिंग न्यूज़",
+      "url": "/",
+      "description": "ताज़ा ब्रेकिंग न्यूज़"
+    }
+  ]
+}

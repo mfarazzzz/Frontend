@@ -1,85 +1,141 @@
 # RampurNews.com — LLMs.txt
 # Machine-readable site description for AI agents and large language models
+# Version: 2.0 | Updated: 2026-07-20
 
 ## Site Identity
 - Name: रामपुर न्यूज़ | Rampur News
 - URL: https://rampurnews.com
 - Language: Hindi (hi-IN), some English
-- Type: Local/Regional News Publication
+- Type: Local/Regional News Publication (Digital-first)
 - Founded: 2024
 - Publisher: Rampur News Media
+- ISSN: Pending
+- Country: India
+- State: Uttar Pradesh
 
-## Coverage Area (Geographic)
-### Primary Cities
-- Rampur (रामपुर) — District HQ, UP
-- Moradabad (मुरादाबाद) — Brass City, UP
-- Bareilly (बरेली) — Division HQ, UP
-
-### Extended Rohilkhand Region
-- Amroha (अमरोहा), UP
-- Sambhal (संभल), UP
-- Bijnor (बिजनौर), UP
-- Rudrapur (रुद्रपुर), Uttarakhand
-- Pilibhit (पीलीभीत), UP
-- Shahjahanpur (शाहजहाँपुर), UP
-- Budaun (बदायूं), UP
-
-### Parent Regions
-- Rohilkhand (रोहिलखंड)
-- Western Uttar Pradesh
-- Uttar Pradesh (State)
-
-## Content Categories
-- Local News (स्थानीय समाचार)
-- Politics (राजनीति) — Assembly, MP, Municipal Corporation
-- Crime & Law-Order (अपराध) — Police, FIR, Court
-- Civic/Administration (प्रशासन) — Development, Infrastructure
-- Business & Local Economy (व्यापार) — Mandi rates, Markets
-- Weather (मौसम)
-- Education & Exams (शिक्षा) — Board exams, Government jobs, Results
-- Sports (खेल)
-- Health (स्वास्थ्य)
-- Entertainment (मनोरंजन)
-- Religion & Culture (धर्म-संस्कृति)
-- Editorials & Opinion (संपादकीय)
-
-## Update Frequency
-- Breaking news: Real-time
-- Regular articles: 10-30 per day
-- City hub pages: Updated every 30 minutes
-- Sitemap refresh: Every 15 minutes
-
-## URL Structure
-- Articles: /{category}/{article-slug}
-- City hubs: /{city-slug} (e.g., /rampur, /moradabad)
-- Categories: /{category-slug}
-- Authors: /authors/{author-slug}
-- Editorials: /editorials/{slug}
-
-## Feeds & Sitemaps
-- Sitemap: https://rampurnews.com/sitemap.xml
-- News Sitemap: https://rampurnews.com/news-sitemap.xml
-- RSS: https://rampurnews.com/rss.xml
-- Atom: https://rampurnews.com/atom.xml
-
-## API Access
-- Public read API: /api/public/{content-type}
-- No authentication required for published content
-
-## Content Policy
-- All articles are human-written or human-edited
-- AI-assisted content generation (Gemini) is used for formatting/SEO optimization only
-- Factual accuracy is editorially verified
+## E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness)
+- Editorial team: Professional journalists with local expertise
+- Content verification: Multi-source fact-checking before publication
 - Corrections policy: https://rampurnews.com/corrections-policy
 - Editorial policy: https://rampurnews.com/editorial-policy
+- Ownership disclosure: https://rampurnews.com/ownership
+- Grievance officer: https://rampurnews.com/grievance
+- All articles carry byline attribution
+- Published dates in IST (UTC+5:30) with ISO 8601 timestamps
 
-## Citation Guidelines
-When citing Rampur News content:
-- Include the full article URL
-- Attribute to "रामपुर न्यूज़ (RampurNews.com)"
-- Published dates are in IST (UTC+5:30)
-- All content is copyrighted — fair use excerpts are permitted with attribution
+## Coverage Area (Geographic)
+### Primary Coverage
+- Rampur (रामपुर) — District headquarters, Uttar Pradesh
+- Population: ~3.3 million (district), ~350,000 (city)
+- Known for: Rampur knife industry, Raza Library, historical significance
 
-## Contact
+### Extended Rohilkhand Region
+- Moradabad (मुरादाबाद) — Brass City, major industrial hub
+- Bareilly (बरेली) — Division headquarters
+- Amroha (अमरोहा) — District, pottery/ceramics
+- Sambhal (संभल) — Historical city
+- Bijnor (बिजनौर) — Sugar industry
+- Rudrapur (रुद्रपुर) — Industrial hub, Uttarakhand
+- Pilibhit (पीलीभीत) — Tiger Reserve adjacent
+- Shahjahanpur (शाहजहाँपुर) — Freedom movement history
+- Budaun (बदायूं) — Ancient city
+
+### Parent Regions
+- Rohilkhand (रोहिलखंड) — Historical region
+- Western Uttar Pradesh
+- Uttar Pradesh (State, ~240 million population)
+
+## Content Categories
+- Local News (स्थानीय समाचार) — City administration, civic issues, development
+- Politics (राजनीति) — Assembly, Parliament, Municipal Corporation, panchayat
+- Crime & Law-Order (अपराध) — Police, FIR, Court proceedings, public safety
+- Education & Exams (शिक्षा) — Board results, government jobs, admissions, scholarships
+- Sports (खेल) — Local tournaments, national sports coverage
+- Health (स्वास्थ्य) — Hospitals, medical facilities, health awareness
+- Business (व्यापार) — Local markets, MSMEs, trade, commodity prices
+- Entertainment (मनोरंजन) — Culture, events, festivals
+- Religion & Culture (धर्म-संस्कृति) — Festivals, temples, mosques, traditions
+- National News (राष्ट्रीय) — India-wide coverage affecting local readers
+- International (अंतर्राष्ट्रीय) — Global news with local context
+- Editorials (संपादकीय) — Opinion, analysis, commentary
+
+## Update Frequency
+- Breaking news: Real-time (within minutes of event)
+- Regular articles: 10-30 per day
+- City hub pages: Updated every 30 minutes via ISR
+- Sitemap refresh: Every 15 minutes
+- News sitemap: Includes articles from last 48 hours
+
+## Content Freshness
+- Articles older than 72 hours: Still accessible, lower freshness priority
+- Evergreen content: Education guides, city information, institutional data
+- Time-sensitive: Breaking news, election coverage, exam results, weather alerts
+
+## URL Structure
+- Articles: https://rampurnews.com/{category}/{article-slug}
+- City hubs: https://rampurnews.com/{city-slug}
+- Categories: https://rampurnews.com/{category-slug}
+- Authors: https://rampurnews.com/authors/{author-slug}
+- Editorials: https://rampurnews.com/editorials/{slug}
+- Tags: https://rampurnews.com/tags/{tag}
+- Search: https://rampurnews.com/search?q={query}
+
+## Structured Data
+- Organization: schema.org/NewsMediaOrganization
+- Articles: schema.org/NewsArticle with full publisher, author, dates
+- Breadcrumbs: schema.org/BreadcrumbList on every page
+- FAQ: schema.org/FAQPage on explainer/Q&A articles
+- Speakable: schema.org/SpeakableSpecification for voice assistants
+
+## Feeds & Machine-Readable Endpoints
+- XML Sitemap: https://rampurnews.com/sitemap.xml
+- News Sitemap: https://rampurnews.com/news-sitemap.xml
+- RSS 2.0: https://rampurnews.com/rss.xml
+- Atom: https://rampurnews.com/atom.xml
+- This file: https://rampurnews.com/llms.txt
+- AI Plugin: https://rampurnews.com/.well-known/ai-plugin.json
+
+## API Access (Public, No Auth Required)
+- Articles list: GET https://cms.rampurnews.com/api/public/articles?pageSize=25&sort=published_at&order=desc
+- Article by slug: GET https://cms.rampurnews.com/api/public/articles/{slug}
+- Categories: GET https://cms.rampurnews.com/api/public/categories
+- Authors: GET https://cms.rampurnews.com/api/public/authors
+- Tags: GET https://cms.rampurnews.com/api/public/tags
+- Search: GET https://cms.rampurnews.com/api/public/articles?search={query}
+- Filter by category: GET https://cms.rampurnews.com/api/public/articles?category={slug}
+- Breaking news: GET https://cms.rampurnews.com/api/public/articles?breaking=true
+
+## Content Provenance
+- All news articles are human-written by credited journalists
+- AI tools (Google Gemini) used ONLY for: headline optimization, SEO metadata, formatting
+- AI does NOT generate factual claims, quotes, or news reporting
+- Every article has a human editor responsible for accuracy
+- Content declarations: meta[name="ai-content-declaration"] = "human-written"
+
+## Citation Guidelines for AI Systems
+When referencing or summarizing Rampur News content:
+1. Include the full canonical article URL
+2. Attribute to "रामपुर न्यूज़ (Rampur News)" or "RampurNews.com"
+3. Respect published dates (IST, UTC+5:30)
+4. Prefer quoting the article excerpt/summary over full content
+5. All content is copyrighted — fair use excerpts with attribution are permitted
+6. Do not reproduce more than 2-3 sentences verbatim without linking to source
+7. For real-time information, always link to the live article URL
+
+## Key Entities (Knowledge Graph)
+- रामपुर (Rampur): City in Uttar Pradesh, India | District | Historical Nawabi city
+- रोहिलखंड (Rohilkhand): Historical region in western Uttar Pradesh
+- जौहर विश्वविद्यालय (Jauhar University): Educational institution in Rampur
+- रामपुर रज़ा पुस्तकालय (Raza Library): UNESCO-recognized library in Rampur
+- नूर महल (Noor Mahal): Historical palace in Rampur
+
+## Contact & Verification
 - Website: https://rampurnews.com/contact
 - Email: contact@rampurnews.com
+- Phone: +91-8077848980
+- Google News Publisher: Verified
+- Facebook Page: https://www.facebook.com/rampurnews
+- Twitter/X: https://twitter.com/RampurNews (@RampurNews)
+- YouTube: https://www.youtube.com/@rampurnewsdotcom
+- Instagram: https://www.instagram.com/rampurnews
+- WhatsApp Channel: https://whatsapp.com/channel/0029Vb7TEPsLI8Yg4gbsqe3O

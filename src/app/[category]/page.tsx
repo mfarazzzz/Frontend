@@ -110,10 +110,26 @@ export default async function Page(props: {
     ],
   };
 
+  // ItemList JSON-LD for Google Carousel rich results
+  const articles = initialArticles?.data || [];
+  const itemListSchema = articles.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: articles.slice(0, 10).map((article: any, index: number) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: `${SITE_URL}/${article.category || slug}/${article.slug}`,
+      name: article.title,
+    })),
+  } : null;
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionPageSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      {itemListSchema && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }} />
+      )}
       <CategoryListing categorySlug={slug} initialArticles={initialArticles} />
     </>
   );

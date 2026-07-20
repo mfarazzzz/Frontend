@@ -65,6 +65,8 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
   const unoptimizedImage = article.image ? isLocalUpstreamImage(article.image) : false;
   const showImage = hasRealImage(article.image);
   const editorialLabel = getEditorialLabel(article);
+  // Use the best available date — publishedAt is the canonical field from the CMS API
+  const displayDate = article.publishedAt || article.publishedDate || "";
 
   if (variant === "hero") {
     return (
@@ -117,7 +119,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
                 <span>{article.author}</span>
                 <span className="flex items-center gap-1">
                   <Clock size={12} />
-                  {formatRelativeTimeHindi(article.publishedDate)}
+                  {formatRelativeTimeHindi(displayDate)}
                 </span>
               </div>
             </div>
@@ -186,7 +188,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
                 <span>{article.author}</span>
                 <span className="flex items-center gap-1">
                   <Clock size={12} />
-                  {formatRelativeTimeHindi(article.publishedDate)}
+                  {formatRelativeTimeHindi(displayDate)}
                 </span>
               </div>
             </div>
@@ -224,7 +226,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
             <span className="line-clamp-1">{article.author}</span>
             <span className="flex items-center gap-1">
               <Clock size={12} />
-              {formatRelativeTimeHindi(article.publishedDate)}
+              {formatRelativeTimeHindi(displayDate)}
             </span>
           </div>
         </div>
@@ -271,7 +273,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
             </h3>
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
               <Clock size={12} />
-              <span>{formatRelativeTimeHindi(article.publishedDate)}</span>
+              <span>{formatRelativeTimeHindi(displayDate)}</span>
             </div>
           </Link>
         </div>
@@ -305,7 +307,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
           </Link>
           <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
             <Clock size={12} />
-            <span>{formatRelativeTimeHindi(article.publishedDate)}</span>
+            <span>{formatRelativeTimeHindi(displayDate)}</span>
           </div>
         </div>
       </article>
@@ -334,7 +336,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
               {article.title}
             </h3>
             <span className="text-xs text-muted-foreground mt-1 block">
-              {formatRelativeTimeHindi(article.publishedDate)}
+              {formatRelativeTimeHindi(displayDate)}
             </span>
           </div>
         </Link>
@@ -390,7 +392,7 @@ const NewsCard = ({ article, variant = "default", imagePriority = false, asHero 
           <span className="text-xs text-muted-foreground">{article.author}</span>
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Clock size={12} />
-            {formatRelativeTimeHindi(article.publishedDate)}
+            {formatRelativeTimeHindi(displayDate)}
           </span>
         </div>
       </div>

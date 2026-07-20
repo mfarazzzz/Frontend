@@ -29,6 +29,26 @@ const normalizeHeadline = (value: string) =>
     .replace(/([!?]){2,}/g, "$1")
     .replace(/\s{2,}/g, " ")
     .trim();
+
+/** Extract YouTube video ID from URL (for VideoObject schema) */
+const extractVideoId = (url: string): string | null => {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.hostname === "youtu.be") {
+      return parsed.pathname.split("/").filter(Boolean)[0] || null;
+    }
+    if (parsed.hostname.includes("youtube.com")) {
+      if (parsed.pathname.startsWith("/embed/") || parsed.pathname.startsWith("/shorts/")) {
+        return parsed.pathname.split("/").filter(Boolean)[1] || null;
+      }
+      return parsed.searchParams.get("v") || null;
+    }
+  } catch { /* not a valid URL */ }
+  return null;
+};
 const isNonEmpty = (value?: string) =>
   typeof value === "string" && value.trim().length > 0;
 
@@ -523,6 +543,33 @@ export default async function Page(props: { params: Promise<PageParams> }) {
     url: absoluteCanonical,
   } : null;
 
+  // VideoObject schema for articles with YouTube embeds (Google Video rich results)
+  const videoSchema = (() => {
+    if (!canInjectSchema || article.videoType !== 'youtube' || !article.videoUrl) return null;
+    const videoId = extractVideoId(article.videoUrl);
+    if (!videoId) return null;
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      name: article.videoTitle || article.title,
+      description: article.excerpt || description,
+      thumbnailUrl: [
+        `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+        `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+      ],
+      uploadDate: article.publishedAt || article.publishedDate,
+      contentUrl: `https://www.youtube.com/watch?v=${videoId}`,
+      embedUrl: `https://www.youtube.com/embed/${videoId}`,
+      publisher: {
+        "@type": "Organization",
+        name: "रामपुर न्यूज़ | Rampur News",
+        logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` },
+      },
+      inLanguage: "hi-IN",
+    };
+  })();
+
   return (
     <>
       {newsArticleSchema ? (
@@ -547,6 +594,12 @@ export default async function Page(props: { params: Promise<PageParams> }) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }}
+        />
+      ) : null}
+      {videoSchema ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(videoSchema) }}
         />
       ) : null}
       <NewsDetail nextParams={{ category, slug }} initialArticle={article} />

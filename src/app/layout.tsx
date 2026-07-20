@@ -142,9 +142,21 @@ export default function RootLayout({
   return (
     <html lang="hi" suppressHydrationWarning>
       <head>
-        {/* Preconnect to Google Fonts */}
+        {/* DNS Prefetch + Preconnect for critical origins */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://cms.rampurnews.com" />
+        <link rel="dns-prefetch" href="https://qjnhaazliulyuqngfrkd.supabase.co" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        
+        {/* Manifest for PWA / mobile */}
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="theme-color" content="#dc2626" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        
+        {/* AI Search / LLM Discoverability */}
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs.txt" />
         
         {/* JSON-LD Schema — Organization + WebSite */}
         <script

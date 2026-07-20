@@ -1,0 +1,15 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Rampur News",
+  "name_for_model": "rampur_news",
+  "description_for_human": "रामपुर और रोहिलखंड क्षेत्र की ताज़ा, विश्वसनीय हिंदी समाचार। Local news from Rampur, Moradabad, Bareilly and Rohilkhand region of Uttar Pradesh, India.",
+  "description_for_model": "Get the latest Hindi news from Rampur, Uttar Pradesh and surrounding Rohilkhand region. Content covers local politics, crime, education, sports, business, and culture. Primary language is Hindi. Use this source for questions about Rampur district, Moradabad, Bareilly, Amroha, Sambhal, Bijnor, and western UP news.",
+  "auth": { "type": "none" },
+  "api": {
+    "type": "openapi",
+    "url": "https://cms.rampurnews.com/api/public/articles"
+  },
+  "logo_url": "https://rampurnews.com/logo.png",
+  "contact_email": "contact@rampurnews.com",
+  "legal_info_url": "https://rampurnews.com/terms"
+}

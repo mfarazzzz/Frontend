@@ -45,7 +45,7 @@
  * | Editorials  | type=editorials   | N/A (different type) |                    |
  */
 
-export type ContentSource = 'custom-cms' | 'strapi' | 'aggregated';
+export type ContentSource = 'custom-cms' | 'aggregated';
 
 export type SectionTemplate =
   | 'hero'

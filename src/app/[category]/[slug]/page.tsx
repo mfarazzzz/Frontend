@@ -1,8 +1,7 @@
 import NewsDetail from "../../../views/NewsDetail";
 import type { Metadata } from "next";
 import { cache } from "react";
-import { type CMSArticle, getCMSProvider } from "../../../services/cms";
-import { resolveBySlug } from "../../../services/cms/aggregator";
+import type { CMSArticle } from "../../../services/cms";
 import {
   deriveAiSeoSignals,
   getCategoryHindi,
@@ -77,17 +76,12 @@ const pruneSchema = (input: unknown): unknown => {
 };
 
 /**
- * Fetch article by slug — reads exclusively from Custom CMS (Supabase).
- * 
- * MIGRATION (2026-07-20): Strapi fallback disabled. All content now lives
- * in the Custom CMS after successful reconciliation.
- * To rollback: set ENABLE_STRAPI_AGGREGATION=true in environment.
+ * Fetch article by slug — reads exclusively from Custom CMS (cms.rampurnews.com).
  * 
  * Deduplicated with React cache() so generateMetadata and Page share a single
  * request per render pass. Never throws — returns null on any error.
  */
 const fetchArticle = cache(async (slug: string): Promise<CMSArticle | null> => {
-  // Custom CMS (single source of truth)
   try {
     // Use internal URL on server to avoid DNS hairpin issues
     const cmsBase = (
@@ -108,23 +102,6 @@ const fetchArticle = cache(async (slug: string): Promise<CMSArticle | null> => {
     }
   } catch {
     // Custom CMS unavailable
-  }
-
-  // Strapi fallback (enabled in 'hybrid' mode — default during migration)
-  if (process.env.CONTENT_PROVIDER_MODE !== 'custom') {
-    try {
-      const article = await getCMSProvider().getArticleBySlug(slug);
-      if (article) return article;
-    } catch {
-      // Strapi also failed
-    }
-
-    try {
-      const { data } = await resolveBySlug<any>('articles', slug);
-      if (data) return data as CMSArticle;
-    } catch {
-      // Both sources exhausted
-    }
   }
 
   console.warn(`[fetchArticle] no article for slug="${slug}" in CMS`);

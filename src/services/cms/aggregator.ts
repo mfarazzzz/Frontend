@@ -1,17 +1,11 @@
 /**
- * aggregator.ts — Content aggregation layer for the Frontend.
+ * aggregator.ts — Content fetching layer for the Frontend.
  *
- * Queries both Strapi (historical content) and Custom CMS (new content),
- * merges results, and presents a unified view.
- *
- * Design decisions:
- * - 5s timeout per source (per Requirement 7.1)
- * - Custom CMS wins on slug duplicates (rare safety net, not primary behavior)
- * - Single-source failure → serve from available source without visitor error
- * - Both sources down → return error
+ * Single source: Custom CMS at cms.rampurnews.com (Supabase-backed).
+ * Strapi is retired — all content lives in the Custom CMS.
  */
 
-export type ContentSource = 'strapi' | 'custom-cms';
+export type ContentSource = 'custom-cms';
 
 export interface AggregatedItem {
   [key: string]: unknown;
@@ -32,7 +26,6 @@ export interface AggregatedListResponse<T = AggregatedItem> {
       total: number;
     };
     sources: {
-      strapi: { total: number; available: boolean };
       customCms: { total: number; available: boolean };
     };
   };
@@ -43,33 +36,10 @@ export interface AggregatedItemResponse<T = AggregatedItem> {
   meta: { resolvedFrom: ContentSource | null };
 }
 
-
 // ─── Configuration ────────────────────────────────────────────────────────────
-
-/**
- * Content Provider Mode — controls where the frontend reads content from.
- * 
- * Modes:
- *   'custom'  — Only Custom CMS. Strapi is never called. (target state)
- *   'hybrid'  — Custom CMS first, Strapi fallback. (default, safe for transition)
- *   'strapi'  — Only Strapi. Emergency rollback mode.
- * 
- * Set via: CONTENT_PROVIDER_MODE env var.
- * Default: 'hybrid' (safest during migration period).
- */
-export type ContentProviderMode = 'custom' | 'hybrid' | 'strapi';
-
-export function getContentProviderMode(): ContentProviderMode {
-  const raw = (process.env.CONTENT_PROVIDER_MODE || 'hybrid').toLowerCase().trim();
-  if (raw === 'custom') return 'custom';
-  if (raw === 'strapi') return 'strapi';
-  return 'hybrid';
-}
 
 function getCustomCmsUrl(): string {
   // Server-side: prefer internal URL (avoids DNS hairpin issues on same-server deployments)
-  // The CUSTOM_CMS_INTERNAL_URL should point to the CMS's internal address (e.g., http://localhost:3000)
-  // when both frontend and CMS run on the same server.
   if (typeof window === 'undefined') {
     const internalUrl = process.env.CUSTOM_CMS_INTERNAL_URL;
     if (internalUrl) return internalUrl.replace(/\/+$/, '');
@@ -79,19 +49,6 @@ function getCustomCmsUrl(): string {
     process.env.CUSTOM_CMS_URL ||
     'https://cms.rampurnews.com'
   ).replace(/\/+$/, '');
-}
-
-function getStrapiUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.STRAPI_API_URL ||
-    process.env.NEXT_PUBLIC_STRAPI_API_URL ||
-    'http://localhost:1337/api'
-  ).replace(/\/+$/, '');
-}
-
-function getStrapiToken(): string | undefined {
-  return process.env.STRAPI_API_TOKEN || process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
 }
 
 // ─── Fetch utilities ──────────────────────────────────────────────────────────
@@ -144,143 +101,6 @@ async function fetchCustomCmsBySlug<T = any>(
   }
 }
 
-export async function fetchStrapi<T = any>(
-  contentType: string,
-  params: Record<string, string | number | undefined> = {},
-): Promise<FetchResult<T>> {
-  const url = new URL(`${getStrapiUrl()}/${contentType}`);
-  // Standard Strapi v4 pagination
-  url.searchParams.set('publicationState', 'live');
-  url.searchParams.set('pagination[withCount]', 'true');
-  if (params.page) url.searchParams.set('pagination[page]', String(params.page));
-  if (params.pageSize) url.searchParams.set('pagination[pageSize]', String(params.pageSize));
-  if (params.sort) url.searchParams.set('sort[0]', `${params.sort}:${params.order || 'desc'}`);
-  url.searchParams.set('populate', '*');
-
-  // Category filter — passed to API (may be ignored by custom controllers)
-  if (params.category) {
-    url.searchParams.set('filters[category][slug][$eq]', String(params.category));
-  }
-
-  // Search filter
-  if (params.search) {
-    url.searchParams.set('filters[title][$containsi]', String(params.search));
-  }
-
-  // Featured filter
-  if (params.featured) {
-    url.searchParams.set('filters[isFeatured][$eq]', 'true');
-  }
-
-  // Breaking filter
-  if (params.breaking) {
-    url.searchParams.set('filters[isBreaking][$eq]', 'true');
-  }
-
-  const headers: Record<string, string> = {};
-  const token = getStrapiToken();
-  if (token && token !== 'PASTE_YOUR_STRAPI_API_TOKEN_HERE') {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  try {
-    const res = await fetch(url.toString(), {
-      headers,
-      signal: AbortSignal.timeout(5000),
-      next: { revalidate: 30 },
-    } as RequestInit);
-    if (!res.ok) return { data: [], total: 0 };
-    const json = await res.json();
-    let data = (json.data ?? []).map((item: any) => normalizeStrapi(item));
-
-    // Client-side category filtering: the Strapi custom controller may ignore
-    // server-side filters. Apply category filter defensively on the client.
-    if (params.category) {
-      const targetCategory = String(params.category).toLowerCase();
-      data = data.filter((item: any) => {
-        const itemCategory = String(item?.category || '').toLowerCase();
-        return itemCategory === targetCategory;
-      });
-    }
-
-    // Use filtered data length as total when client-side filtering was applied,
-    // since Strapi's pagination.total doesn't account for our client-side filter.
-    const rawTotal = json.meta?.pagination?.total ?? data.length;
-    const total = params.category ? data.length : rawTotal;
-    return { data, total };
-  } catch {
-    return { data: [], total: 0 };
-  }
-}
-
-async function fetchStrapiBySlug<T = any>(
-  contentType: string,
-  slug: string,
-): Promise<T | null> {
-  const url = new URL(`${getStrapiUrl()}/${contentType}`);
-  url.searchParams.set('filters[slug][$eq]', slug);
-  url.searchParams.set('publicationState', 'live');
-  url.searchParams.set('populate', '*');
-
-  const headers: Record<string, string> = {};
-  const token = getStrapiToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
-
-  try {
-    const res = await fetch(url.toString(), {
-      headers,
-      signal: AbortSignal.timeout(5000),
-      next: { revalidate: 60 },
-    } as RequestInit);
-    if (!res.ok) return null;
-    const json = await res.json();
-    const item = json.data?.[0];
-    return item ? normalizeStrapi(item) : null;
-  } catch {
-    return null;
-  }
-}
-
-
-// ─── Normalization ────────────────────────────────────────────────────────────
-
-function normalizeStrapi(entity: any): any {
-  if (!entity) return null;
-  // Strapi v4: { id, attributes: { ... } } → flatten
-  // Strapi custom controller: { id, slug, category, ... } → already flat
-  const attrs = entity.attributes ?? entity;
-  const id = String(entity.id ?? entity.documentId ?? '');
-
-  // Handle category relation: may be { data: { attributes: { slug } } } or a plain string
-  let category = attrs.category;
-  let categoryHindi = attrs.categoryHindi;
-  if (category && typeof category === 'object') {
-    const catData = category.data;
-    if (catData && !Array.isArray(catData)) {
-      category = catData.attributes?.slug || catData.slug || '';
-      categoryHindi = catData.attributes?.titleHindi || catData.titleHindi || categoryHindi || '';
-    }
-  }
-
-  // Handle image relation: may be { data: { attributes: { url } } } or string
-  let image = attrs.image || attrs.featured_image || '';
-  if (image && typeof image === 'object') {
-    const imgData = image.data;
-    if (imgData && !Array.isArray(imgData)) {
-      image = imgData.attributes?.url || imgData.url || '';
-    }
-  }
-
-  return {
-    id,
-    ...attrs,
-    category: typeof category === 'string' ? category : '',
-    categoryHindi: categoryHindi || '',
-    image: typeof image === 'string' ? image : '',
-    publishedAt: attrs.publishedAt || attrs.publishedDate || attrs.created_at || '',
-  };
-}
-
 // ─── Aggregation ──────────────────────────────────────────────────────────────
 
 interface ListParams {
@@ -293,137 +113,74 @@ interface ListParams {
   [key: string]: string | number | undefined;
 }
 
-// Content type mapping: Frontend name → [custom-cms path, strapi path]
-const CONTENT_TYPE_MAP: Record<string, [string, string]> = {
-  articles: ['articles', 'articles'],
-  editorials: ['editorials', 'editorials'],
-  events: ['events', 'events'],
-  exams: ['exams', 'exams'],
-  holidays: ['holidays', 'holidays'],
-  institutions: ['institutions', 'institutions'],
-  places: ['places', 'places'],
-  restaurants: ['restaurants', 'restaurants'],
-  results: ['results', 'results'],
-  'education-news': ['education-news', 'education-news'],
+// Content type mapping: Frontend name → custom-cms path
+const CONTENT_TYPE_MAP: Record<string, string> = {
+  articles: 'articles',
+  editorials: 'editorials',
+  events: 'events',
+  exams: 'exams',
+  holidays: 'holidays',
+  institutions: 'institutions',
+  places: 'places',
+  restaurants: 'restaurants',
+  results: 'results',
+  'education-news': 'education-news',
 };
 
 /**
- * Fetch content from configured provider(s).
- * 
- * Mode behavior:
- *   'custom'  — Fetches only from Custom CMS. Fastest, no Strapi dependency.
- *   'hybrid'  — Fetches from Custom CMS first; if empty, falls back to Strapi.
- *   'strapi'  — Fetches only from Strapi. Emergency rollback.
+ * Fetch content from Custom CMS.
  */
 export async function getAggregatedList<T extends AggregatedItem = AggregatedItem>(
   contentType: string,
   params: ListParams = {},
 ): Promise<AggregatedListResponse<T>> {
   const { page = 1, pageSize = 25, ...rest } = params;
-  const [customPath, strapiPath] = CONTENT_TYPE_MAP[contentType] ?? [contentType, contentType];
-  const mode = getContentProviderMode();
+  const customPath = CONTENT_TYPE_MAP[contentType] ?? contentType;
 
-  // ─── Fetch from Custom CMS (unless mode is 'strapi') ───────────────────
-  let customResult = { data: [] as T[], total: 0 };
-  if (mode !== 'strapi') {
-    customResult = await fetchCustomCms<T>(customPath, { page, pageSize, ...rest })
-      .catch(() => ({ data: [] as T[], total: 0 }));
-  }
+  const result = await fetchCustomCms<T>(customPath, { page, pageSize, ...rest })
+    .catch(() => ({ data: [] as T[], total: 0 }));
 
-  // ─── Fetch from Strapi (in 'hybrid' or 'strapi' mode) ──────────────────
-  let strapiData = { data: [] as T[], total: 0 };
-  const customAvailable = customResult.data.length > 0 || customResult.total > 0;
+  const available = result.data.length > 0 || result.total > 0;
 
-  if (mode === 'strapi' || (mode === 'hybrid' && !customAvailable)) {
-    const fetchSize = mode === 'strapi' ? pageSize : pageSize * 2;
-    try {
-      strapiData = await fetchStrapi<T>(strapiPath, { page: 1, pageSize: fetchSize, ...rest });
-    } catch {
-      strapiData = { data: [], total: 0 };
-    }
-  }
-
-  const strapiAvailable = strapiData.data.length > 0 || strapiData.total > 0;
-
-  if (!customAvailable && !strapiAvailable) {
+  if (!available) {
     throw new Error(
       `Content source unavailable for "${contentType}". Please try again later.`,
     );
   }
 
-  // Tag items with source
-  const customItems = customResult.data.map((item) => ({ ...item, _source: 'custom-cms' as const }));
-  const strapiItems = strapiData.data.map((item) => ({ ...item, _source: 'strapi' as const }));
-
-  // Merge + deduplicate (only relevant when Strapi is enabled for rollback)
-  const slugsSeen = new Set<string>();
-  const merged = [...customItems, ...strapiItems]
-    .sort((a, b) => {
-      const dateA = new Date(
-        (a as any).published_at || (a as any).publishedAt || (a as any).created_at || 0,
-      ).getTime();
-      const dateB = new Date(
-        (b as any).published_at || (b as any).publishedAt || (b as any).created_at || 0,
-      ).getTime();
-      return dateB - dateA;
-    })
-    .filter((item) => {
-      const slug = item.slug;
-      if (!slug) return true;
-      if (slugsSeen.has(slug)) return false;
-      slugsSeen.add(slug);
-      return true;
-    }) as T[];
-
-  // When single-source (custom or strapi mode), use direct pagination
-  // When hybrid and both available, merge + deduplicate
-  const enableStrapi = mode === 'hybrid' && strapiAvailable;
-  const total = enableStrapi ? (customResult.total + strapiData.total) : (customAvailable ? customResult.total : strapiData.total);
-  const pageData = enableStrapi ? merged.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize) : merged;
+  const items = result.data.map((item) => ({ ...item, _source: 'custom-cms' as const }));
 
   return {
-    data: pageData,
+    data: items as T[],
     meta: {
-      pagination: { page, pageSize, pageCount: Math.ceil(total / pageSize), total },
+      pagination: {
+        page,
+        pageSize,
+        pageCount: Math.ceil(result.total / pageSize),
+        total: result.total,
+      },
       sources: {
-        strapi: { total: strapiData.total, available: strapiAvailable },
-        customCms: { total: customResult.total, available: customAvailable },
+        customCms: { total: result.total, available },
       },
     },
   };
 }
 
 /**
- * Resolve a single content item by slug.
- * Respects CONTENT_PROVIDER_MODE: custom, hybrid, or strapi.
+ * Resolve a single content item by slug from Custom CMS.
  */
 export async function resolveBySlug<T extends AggregatedItem = AggregatedItem>(
   contentType: string,
   slug: string,
 ): Promise<AggregatedItemResponse<T>> {
-  const [customPath, strapiPath] = CONTENT_TYPE_MAP[contentType] ?? [contentType, contentType];
-  const mode = getContentProviderMode();
+  const customPath = CONTENT_TYPE_MAP[contentType] ?? contentType;
 
-  // Custom CMS (primary source)
-  if (mode !== 'strapi') {
-    const customItem = await fetchCustomCmsBySlug<T>(customPath, slug);
-    if (customItem) {
-      return {
-        data: { ...customItem, _source: 'custom-cms' } as T,
-        meta: { resolvedFrom: 'custom-cms' },
-      };
-    }
-  }
-
-  // Strapi fallback (in hybrid or strapi mode)
-  if (mode === 'strapi' || mode === 'hybrid') {
-    const strapiItem = await fetchStrapiBySlug<T>(strapiPath, slug);
-    if (strapiItem) {
-      return {
-        data: { ...strapiItem, _source: 'strapi' } as T,
-        meta: { resolvedFrom: 'strapi' },
-      };
-    }
+  const item = await fetchCustomCmsBySlug<T>(customPath, slug);
+  if (item) {
+    return {
+      data: { ...item, _source: 'custom-cms' } as T,
+      meta: { resolvedFrom: 'custom-cms' },
+    };
   }
 
   return { data: null, meta: { resolvedFrom: null } };

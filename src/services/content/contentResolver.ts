@@ -10,7 +10,7 @@
  * - Logging for debugging
  */
 
-import { getAggregatedList, fetchCustomCms, fetchStrapi } from '@/services/cms/aggregator';
+import { getAggregatedList, fetchCustomCms } from '@/services/cms/aggregator';
 import { getCMSProvider } from '@/services/cms';
 import type { CMSArticle, CMSEditorial } from '@/services/cms/types';
 import type { HomepageSectionConfig, ContentSource } from './homepageConfig';
@@ -220,10 +220,6 @@ async function fetchFromSource(
     }
     case 'custom-cms': {
       const result = await fetchCustomCms<any>('articles', params);
-      return (result.data || []) as CMSArticle[];
-    }
-    case 'strapi': {
-      const result = await fetchStrapi<any>('articles', params);
       return (result.data || []) as CMSArticle[];
     }
     default:

@@ -28,7 +28,6 @@ import {
 import type { PaginatedResponse } from './types';
 import { getCMSConfig } from './index';
 import type { CMSConfig } from './provider';
-import { createStrapiExtendedProvider } from './strapiExtendedProvider';
 
 // Helper function for filtering and pagination
 const applyFiltersAndPagination = <T extends { id: string }>(
@@ -902,17 +901,6 @@ let cachedProvider: ExtendedCMSProvider | null = null;
 
 export const getExtendedCMSProvider = (): ExtendedCMSProvider => {
   const config = getCMSConfig();
-  if (config.provider === 'strapi' && (config.baseUrl || typeof window !== 'undefined')) {
-    const key = `${config.provider}:${config.baseUrl}:${config.apiKey || ''}`;
-    if (!cachedProvider || cachedProviderKey !== key) {
-      cachedProviderKey = key;
-      cachedProvider = createStrapiExtendedProvider({
-        baseUrl: config.baseUrl || '',
-        apiToken: config.apiKey,
-      });
-    }
-    return cachedProvider;
-  }
   if (config.provider !== 'mock' && config.baseUrl) {
     const key = `${config.provider}:${config.baseUrl}:${config.apiKey || ''}`;
     if (!cachedProvider || cachedProviderKey !== key) {

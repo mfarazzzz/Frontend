@@ -1,7 +1,6 @@
 // React hooks for CMS operations
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  getCMSConfig,
   getCMSProvider,
   type CMSArticle,
   type ArticleQueryParams,
@@ -12,11 +11,6 @@ import {
   type CMSEditorial,
   type EditorialQueryParams,
 } from '@/services/cms';
-
-const getProviderKey = () => {
-  const config = getCMSConfig();
-  return `${config.provider}:${config.baseUrl || ''}:${config.apiKey || ''}`;
-};
 
 // Query keys
 export const cmsKeys = {
@@ -48,7 +42,7 @@ export const useArticles = (
 ) => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.articlesList(params), providerKey],
+    queryKey: [...cmsKeys.articlesList(params)],
     queryFn: () => getCMSProvider().getArticles(params),
     enabled: options?.enabled ?? true,
     initialData: options?.initialData,
@@ -58,7 +52,7 @@ export const useArticles = (
 export const useHeroArticles = (limit = 15, options?: { initialData?: CMSArticle[] }) => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.hero(), providerKey],
+    queryKey: [...cmsKeys.hero()],
     queryFn: () => getCMSProvider().getHeroArticles(limit),
     initialData: options?.initialData,
   });
@@ -67,7 +61,7 @@ export const useHeroArticles = (limit = 15, options?: { initialData?: CMSArticle
 export const useArticle = (id: string) => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.article(id), providerKey],
+    queryKey: [...cmsKeys.article(id)],
     queryFn: () => getCMSProvider().getArticleById(id),
     enabled: !!id,
   });
@@ -76,7 +70,7 @@ export const useArticle = (id: string) => {
 export const useArticleBySlug = (slug: string) => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.articleBySlug(slug), providerKey],
+    queryKey: [...cmsKeys.articleBySlug(slug)],
     queryFn: () => getCMSProvider().getArticleBySlug(slug),
     enabled: !!slug,
   });
@@ -85,7 +79,7 @@ export const useArticleBySlug = (slug: string) => {
 export const useFeaturedArticles = (limit = 5, options?: { initialData?: CMSArticle[] }) => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.featured(), providerKey],
+    queryKey: [...cmsKeys.featured()],
     queryFn: () => getCMSProvider().getFeaturedArticles(limit),
     initialData: options?.initialData,
   });
@@ -94,7 +88,7 @@ export const useFeaturedArticles = (limit = 5, options?: { initialData?: CMSArti
 export const useBreakingNews = (limit = 5) => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.breaking(), providerKey],
+    queryKey: [...cmsKeys.breaking()],
     queryFn: () => getCMSProvider().getBreakingNews(limit),
     staleTime: 60 * 1000, // Consider data fresh for 1 minute
     refetchInterval: 2 * 60 * 1000, // Re-fetch every 2 minutes for live ticker updates
@@ -105,7 +99,7 @@ export const useBreakingNews = (limit = 5) => {
 export const useTrendingArticles = (limit = 5) => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.trending(), providerKey],
+    queryKey: [...cmsKeys.trending()],
     queryFn: () => getCMSProvider().getTrendingArticles(limit),
   });
 };
@@ -125,7 +119,7 @@ export const useArticlesByCategory = (
 export const useSearchArticles = (query: string, limit = 20) => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.articles(), 'search', query, providerKey],
+    queryKey: [...cmsKeys.articles(), 'search', query],
     queryFn: () => getCMSProvider().searchArticles(query, limit),
     enabled: query.length > 2,
   });
@@ -135,7 +129,7 @@ export const useSearchArticles = (query: string, limit = 20) => {
 export const useEditorials = (params?: EditorialQueryParams) => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.editorialsList(params), providerKey],
+    queryKey: [...cmsKeys.editorialsList(params)],
     queryFn: () => getCMSProvider().getEditorials(params),
   });
 };
@@ -180,7 +174,7 @@ export const useDeleteArticle = () => {
 export const useCategories = () => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.categories(), providerKey],
+    queryKey: [...cmsKeys.categories()],
     queryFn: () => getCMSProvider().getCategories(),
   });
 };
@@ -223,7 +217,7 @@ export const useDeleteCategory = () => {
 export const useAuthors = () => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.authors(), providerKey],
+    queryKey: [...cmsKeys.authors()],
     queryFn: () => getCMSProvider().getAuthors(),
   });
 };
@@ -265,7 +259,7 @@ export const useDeleteAuthor = () => {
 export const useTags = () => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.tags(), providerKey],
+    queryKey: [...cmsKeys.tags()],
     queryFn: () => getCMSProvider().getTags(),
   });
 };
@@ -274,7 +268,7 @@ export const useTags = () => {
 export const useCMSSettings = () => {
   const providerKey = getProviderKey();
   return useQuery({
-    queryKey: [...cmsKeys.settings(), providerKey],
+    queryKey: [...cmsKeys.settings()],
     queryFn: () => getCMSProvider().getSettings(),
   });
 };

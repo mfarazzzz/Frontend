@@ -52,8 +52,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  // ─── CMS-managed redirects ──────────────────────────────────────────────────
+  // ─── Legacy /authors/[slug] → /author/[slug] redirect ─────────────────────
   const pathname = request.nextUrl.pathname;
+  const authorsMatch = pathname.match(/^\/authors\/([^/]+)$/);
+  if (authorsMatch) {
+    const authorSlug = authorsMatch[1];
+    const destination = new URL(`/author/${authorSlug}`, request.url);
+    return NextResponse.redirect(destination, 301);
+  }
+
+  // ─── CMS-managed redirects ──────────────────────────────────────────────────
   // Skip Next.js internal routes, static assets, and localhost dev
   if (!pathname.startsWith('/_next') && !pathname.startsWith('/api') && !pathname.includes('.')) {
     try {

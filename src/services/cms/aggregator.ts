@@ -304,8 +304,11 @@ export async function getAggregatedList<T extends AggregatedItem = AggregatedIte
   const { page = 1, pageSize = 25, ...rest } = params;
   const [customPath] = CONTENT_TYPE_MAP[contentType] ?? [contentType, contentType];
 
-  // ─── Feature flag: re-enable Strapi aggregation for rollback ────────────
-  const enableStrapi = process.env.ENABLE_STRAPI_AGGREGATION === 'true';
+  // ─── Feature flag: Strapi aggregation as fallback ────────────────────────
+  // Default: TRUE (Strapi provides fallback when Custom CMS is unreachable)
+  // Set ENABLE_STRAPI_AGGREGATION=false ONLY after confirming the production
+  // server can reach the Custom CMS via CUSTOM_CMS_INTERNAL_URL.
+  const enableStrapi = process.env.ENABLE_STRAPI_AGGREGATION !== 'false';
 
   // Fetch from Custom CMS (primary and only source)
   const customResult = await fetchCustomCms<T>(customPath, { page, pageSize, ...rest })
@@ -392,8 +395,8 @@ export async function resolveBySlug<T extends AggregatedItem = AggregatedItem>(
     };
   }
 
-  // ─── DEPRECATED: Strapi fallback (disabled, retained for rollback) ──────
-  const enableStrapi = process.env.ENABLE_STRAPI_AGGREGATION === 'true';
+  // ─── Strapi fallback (enabled by default until networking confirmed) ─────
+  const enableStrapi = process.env.ENABLE_STRAPI_AGGREGATION !== 'false';
   if (enableStrapi) {
     const strapiItem = await fetchStrapiBySlug<T>(strapiPath, slug);
     if (strapiItem) {

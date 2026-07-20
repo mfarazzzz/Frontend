@@ -90,8 +90,8 @@ const fetchArticle = cache(async (slug: string): Promise<CMSArticle | null> => {
     // Custom CMS unavailable
   }
 
-  // Deprecated Strapi fallback (only active when feature flag is set)
-  if (process.env.ENABLE_STRAPI_AGGREGATION === 'true') {
+  // Strapi fallback (enabled until Custom CMS networking confirmed on server)
+  if (process.env.ENABLE_STRAPI_AGGREGATION !== 'false') {
     try {
       const article = await getCMSProvider().getArticleBySlug(slug);
       if (article) return article;

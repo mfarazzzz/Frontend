@@ -1,177 +1,269 @@
-# Homepage & Category Architecture Documentation
+# Rampur News — System Architecture
 
-## Data Flow — Single Source of Truth
+**Last updated:** 2026-07-20  
+**Version:** v2 (Post-Strapi migration)
+
+---
+
+## Overview
+
+Rampur News is a Hindi-language news platform serving रामपुर district and Uttar Pradesh. The system consists of three main components:
 
 ```
-All listing pages (Homepage, Category, Tags, City)
-  └── Aggregator (src/services/cms/aggregator.ts)
-        ├── fetchCustomCms() → cms.rampurnews.com/api/public/articles
-        └── fetchStrapi() → api.rampur.cloud/api/articles
-              └── Client-side category filtering (workaround for Strapi custom controller)
+┌─────────────────────────────────────────────────────────────────┐
+│                        FRONTEND                                   │
+│  Next.js 15 (App Router) — rampurnews.com                        │
+│                                                                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │
+│  │  Pages/Views  │  │  API Routes  │  │  Content Gateway     │   │
+│  │  (SSR/ISR)   │──│  (/api/*)    │──│  (single abstraction)│   │
+│  └──────────────┘  └──────────────┘  └──────────┬───────────┘   │
+└─────────────────────────────────────────────────┬───────────────┘
+                                                  │
+                                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    CUSTOM CMS (Enterprise Content Platform)        │
+│  Next.js + Supabase — cms.rampurnews.com                          │
+│                                                                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │
+│  │  Admin UI    │  │  Public API  │  │  Webhook Dispatcher   │   │
+│  │  (editorial) │  │  /api/public │  │  (revalidation)      │   │
+│  └──────────────┘  └──────────────┘  └──────────────────────┘   │
+└─────────────────────────────────────────────────┬───────────────┘
+                                                  │
+                                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      SUPABASE (Database + Storage)                 │
+│  PostgreSQL — qjnhaazliulyuqngfrkd.supabase.co                   │
+│                                                                   │
+│  ┌───────────┐  ┌────────────┐  ┌───────────┐  ┌─────────────┐ │
+│  │ cms_*     │  │ Supabase   │  │ RLS       │  │ Realtime    │ │
+│  │ tables    │  │ Storage    │  │ Policies  │  │ (future)    │ │
+│  └───────────┘  └────────────┘  └───────────┘  └─────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Why One Pipeline?
+---
 
-Strapi's custom controller ignores `filters[category][slug][$eq]`. The aggregator
-applies client-side category filtering after fetch. Any code path that calls
-`getCMSProvider().getArticles()` directly with a category filter will get ZERO results
-for most categories. The aggregator is the ONLY correct path for category-filtered listings.
+## Request Flow
 
-## Request Flows
+### Article Page (`/{category}/{slug}`)
+
+```
+Browser → Next.js SSR
+           ↓
+         fetchArticle(slug)
+           ↓
+         GET cms.rampurnews.com/api/public/articles/{slug}
+           ↓
+         CMS API → Supabase (cms_articles JOIN cms_categories, cms_authors, cms_media)
+           ↓
+         Returns: { title, content (HTML), category, author, image, SEO, schema }
+           ↓
+         Next.js renders page + JSON-LD + OpenGraph
+           ↓
+         ISR cache (revalidate: 60s)
+```
 
 ### Homepage
-```
-GET /
-  └── page.tsx (Server Component)
-        └── getHomepageData() (homepageService.ts)
-              ├── homepageConfig.ts → Section definitions (templates, sources, categories)
-              ├── contentResolver.ts → Fetches each section via aggregator
-              │     └── fetchFromSource()
-              │           ├── 'aggregated' → getAggregatedList()
-              │           ├── 'custom-cms' → fetchCustomCms()
-              │           └── 'strapi' → fetchStrapi()
-              ├── Hero strategy (featured-first, breaking-first, latest)
-              ├── Hero dedup (first 5 displayed slugs removed from later sections)
-              └── Cross-section dedup (earlier sections win)
-                    └── Index.tsx → Renders with varied templates per section
-```
 
-### Category Page (e.g., /rampur, /up, /national)
 ```
-GET /rampur
-  └── src/app/rampur/page.tsx (Static route)
-        └── CategoryPageServer (src/lib/categoryPage.tsx)
-              └── getAggregatedList('articles', { category: 'rampur' })
-                    └── Passes initialArticles to CategoryListing
-
-CategoryListing (Client Component)
-  ├── Page 1: Uses server-provided initialArticles (no refetch)
-  └── Page 2+: Fetches from /api/category-articles?category=rampur&page=2
-                  └── getAggregatedList() (same aggregator pipeline)
+Browser → Next.js SSR
+           ↓
+         getHomepageData()
+           ↓
+         Content Gateway → getContent('articles', { category: X, pageSize: Y })
+           ↓ (parallel for all sections)
+         CMS Public API (paginated, filtered by category)
+           ↓
+         Deduplication engine (cross-section)
+           ↓
+         Render hero + category sections + sidebar
 ```
 
-### Dynamic Category Route ([category])
-```
-GET /politics (or any slug matching categories.ts)
-  └── src/app/[category]/page.tsx
-        └── getAggregatedList('articles', { category: slug })
-              └── Falls back to getCMSProvider() ONLY if aggregator throws
-                    └── CategoryListing
-```
+### Publish Flow
 
-### Article Detail Page
 ```
-GET /rampur/article-slug
-  └── src/app/[category]/[slug]/page.tsx
-        └── resolveBySlug('articles', slug)
-              ├── Custom CMS first → /api/public/articles/{slug}
-              └── Strapi fallback → /api/articles?filters[slug][$eq]={slug}
-```
-
-### Tags Page
-```
-GET /tags/some-tag
-  └── getAggregatedList('articles', { search: decoded })
-        └── CategoryListing
+Editor → CMS Admin → Save + Publish
+           ↓
+         workflow.ts: transitionContent('article', id, 'published')
+           ↓
+         Supabase: UPDATE cms_articles SET status='published', published_at=NOW()
+           ↓
+         webhook.ts: dispatchRevalidation()
+           ↓
+         POST rampurnews.com/api/revalidate { paths: ['/', '/rampur', '/rampur/slug'] }
+           ↓
+         Next.js: revalidatePath() → ISR cache purged
+           ↓
+         Next visitor gets fresh content
 ```
 
-### City Hub
-```
-GET /city/shahjahanpur
-  └── getAggregatedList('articles', { search: cityNameHindi })
-        └── CategoryListing
-```
+---
 
-## CMS Sources
+## CMS Data Model
 
-### Custom CMS (Supabase)
-- URL: `cms.rampurnews.com/api/public/*`
-- Auth: None (public API)
-- Content: New articles (active CMS)
-- Status: Active
+### Core Tables
 
-### Strapi (Legacy)
-- URL: `api.rampur.cloud/api/*`
-- Auth: Optional Bearer token
-- Content: Historical articles (~100 across 9 categories)
-- Known Bug: Custom controller ignores category filters
-- Workaround: Client-side filtering in aggregator's `fetchStrapi()`
+| Table | Purpose | Records |
+|-------|---------|---------|
+| `cms_articles` | News articles with editorial workflow | 102 |
+| `cms_categories` | Content categories (hierarchical) | 19 |
+| `cms_authors` | Author profiles | 3 |
+| `cms_tags` | Article tags | 115 |
+| `cms_media` | Media assets (images) | 109 |
+| `cms_editorials` | Opinion/editorial pieces | 15 |
+| `cms_article_tags` | Article ↔ Tag junction | 178 |
+| `cms_article_categories` | Article ↔ Category junction (multi-cat) | 0 |
+| `cms_content_versions` | Version history (rollback) | 115 |
 
-## Homepage Configuration
+### Article Schema (key fields)
 
-Edit `src/services/content/homepageConfig.ts` to change sections.
-
-### Section Templates (visual layouts)
-- `featured` → 1 large card + sidebar list
-- `grid` → 3-column equal cards
-- `compact-list` → Horizontal cards stacked vertically
-- `two-columns` → 2 stacked cards + 3 compact below
-- `timeline` → Numbered timeline with dots
-- `editorial-picks` → For editorials
-
-### Current Layout Order
-1. Hero (aggregated, all categories, featured-first strategy)
-2. रामपुर → featured
-3. उत्तर प्रदेश → grid
-4. आस-पास → two-columns
-5. राष्ट्रीय → compact-list
-6. खेल → grid
-7. शिक्षा-नौकरी → featured
-8. अंतर्राष्ट्रीय → compact-list
-9. धर्म-संस्कृति → two-columns
-10. संपादकीय → editorial-picks (compact-list rendering)
-
-### Ad Placement
-Ads appear after every 3rd section (not every section).
-Configurable via `showAdAfter` flag on section config.
-
-## Deduplication
-
-Three levels:
-1. **Within-source** (Aggregator): Dedup by slug, Custom CMS wins
-2. **Hero exclusion**: First 5 displayed hero slugs removed from category sections
-3. **Cross-section**: Articles in earlier sections removed from later ones
-
-## Error Handling
-
-- `Promise.allSettled` for all section fetches
-- Individual section failure → hidden (not crash)
-- Aggregator: if one CMS is down, serve from the other
-- Both CMSs down → empty section (no crash), error logged
-
-## Files & Responsibilities
-
-| File | Purpose |
-|------|---------|
-| `src/services/cms/aggregator.ts` | Dual-CMS fetch, merge, normalize, deduplicate |
-| `src/services/content/homepageConfig.ts` | Section definitions (templates, sources, counts) |
-| `src/services/content/contentResolver.ts` | Fetches sections using aggregator, logs results |
-| `src/services/content/homepageService.ts` | Orchestrates homepage (hero, sections, sidebar) |
-| `src/lib/categoryPage.tsx` | Shared server component for all category routes |
-| `src/app/api/category-articles/route.ts` | Client-side pagination via aggregator |
-| `src/views/CategoryListing.tsx` | Category page UI (client, trusts server data) |
-| `src/views/Index.tsx` | Homepage rendering with varied templates |
-| `src/components/CategorySection.tsx` | Section component with 6 template variants |
-| `src/components/Sidebar.tsx` | Sidebar with trending, most-read, social |
-| `src/hooks/useCMS.ts` | Client hooks (used for article detail, NOT listings) |
-| `src/services/cms/index.ts` | CMS provider (Strapi REST adapter) |
-
-## Debug Endpoint
-
-`GET /api/debug/data-flow?category=rampur`
-
-Returns comparison of:
-- Aggregator pipeline (correct)
-- Custom CMS directly
-- Strapi directly (with client-side filter)
-- getCMSProvider().getArticles() (broken for category filter)
-
-## Future: CMS-Controlled Homepage
-
-`fetchHomepageConfigFromCMS()` is a stub ready for:
-```
-GET cms.rampurnews.com/api/public/homepage-config
-Response: { sections: HomepageSectionConfig[] }
+```sql
+cms_articles (
+  id UUID PRIMARY KEY,
+  slug TEXT UNIQUE,           -- URL identifier (never changes)
+  title TEXT,                 -- Hindi headline
+  short_headline TEXT,        -- 65-char SEO headline
+  excerpt TEXT,               -- Summary (shown in lists)
+  content TEXT,               -- Full HTML body (<p>, <h2>, <strong>)
+  category_id UUID FK,        -- Primary category
+  author_id UUID FK,          -- Author profile
+  featured_image_id UUID FK,  -- Hero image
+  status TEXT,                -- draft | pending_review | approved | published | archived
+  published_at TIMESTAMPTZ,   -- Publication timestamp
+  -- SEO
+  seo_title, seo_description, og_title, og_description, canonical_url, schema_json
+  -- Flags
+  is_featured, is_breaking, is_editors_pick, discover_eligible
+  -- Metrics
+  views, shares, read_time
+)
 ```
 
-When implemented, editors can reorder/add/remove sections without code changes.
+---
+
+## Content Gateway
+
+The Content Gateway (`src/services/content/gateway.ts`) is the single abstraction layer between frontend pages and the CMS.
+
+```typescript
+import { getContent, getArticleBySlug } from '@/services/content/gateway';
+
+// List articles by category
+const articles = await getContent('articles', { category: 'rampur', pageSize: 10 });
+
+// Fetch single article
+const article = await getArticleBySlug('some-article-slug');
+```
+
+### Provider switching
+
+The gateway reads from the Custom CMS by default. Set `CONTENT_PROVIDER=strapi` to rollback (requires Strapi infrastructure running).
+
+---
+
+## Homepage Builder
+
+Defined in `src/services/content/homepageConfig.ts`:
+
+```
+Hero (8 articles, featured-first strategy)
+  ↓
+Rampur section (7 articles, featured template)
+  ↓
+UP section (6 articles, grid template)
+  ↓
+Nearby (7 articles, two-columns)
+  ↓
+National (7 articles, compact-list)
+  ↓
+Sports, Education, International, Religion, Editorials
+```
+
+Each section declares: category, article count, visual template, and data source.
+
+---
+
+## Search
+
+Full-text search via CMS API:
+```
+GET /api/public/articles?search={query}&pageSize=20
+```
+
+Backed by PostgreSQL `ILIKE` on title, slug, and short_headline fields.
+
+---
+
+## Media Pipeline
+
+| Stage | Location | Status |
+|-------|----------|--------|
+| Upload | CMS Admin → Supabase Storage | Active |
+| Processing | Sharp (resize, WebP variants) | Active |
+| Serving | Supabase CDN (new) / api.rampur.cloud (legacy) | Mixed |
+| Legacy images | 100 images on api.rampur.cloud | Pending migration |
+
+After media migration completes, all images will be served from Supabase Storage CDN.
+
+---
+
+## Editorial Workflow
+
+```
+Draft → Pending Review → Approved → Published → Archived
+  ↑                                      │
+  └──────────────────────────────────────┘ (back to draft)
+```
+
+- Any status → Draft is always valid
+- Publishing: sets `published_at`, creates version snapshot, dispatches revalidation webhook
+- RBAC: super_admin, admin, editor, author, contributor roles
+
+---
+
+## Deployment
+
+### Frontend (rampurnews.com)
+- **Host:** Hostinger VPS
+- **Runtime:** Next.js standalone (PM2)
+- **Port:** Behind nginx reverse proxy
+- **Cache:** ISR (30–60s revalidation) + CDN
+
+### CMS (cms.rampurnews.com)
+- **Host:** Same VPS
+- **Runtime:** Next.js (PM2, port 3000)
+- **Database:** Supabase (remote PostgreSQL)
+- **Storage:** Supabase Storage (remote)
+
+### Revalidation
+- On publish: CMS → `POST rampurnews.com/api/revalidate` with paths
+- Secret: `REVALIDATION_SECRET` shared between CMS and frontend
+- Retry: 5 attempts with exponential backoff
+
+---
+
+## Rollback Strategy
+
+### Content rollback
+- All modified articles have version snapshots in `cms_content_versions`
+- Backup tables: `cms_articles_backup_20260720`, `cms_editorials_backup_20260720`
+
+### Frontend rollback
+- Set `ENABLE_STRAPI_AGGREGATION=true` → aggregator resumes dual-fetch
+- All Strapi provider code is retained (disabled, not deleted)
+- PM2 restart applies immediately
+
+---
+
+## Migration History
+
+| Date | Event |
+|------|-------|
+| 2026-02 | Strapi deployed as initial CMS |
+| 2026-06 | Custom CMS (Supabase) created |
+| 2026-07 | Content reconciliation: 100 articles migrated with full body HTML |
+| 2026-07-20 | Frontend switched to single-source CMS (Strapi disabled) |
+| Pending | Media migration to Supabase Storage |
+| Pending | Strapi full retirement |

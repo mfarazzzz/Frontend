@@ -57,13 +57,17 @@ const pruneSchema = (input: unknown): unknown => {
 };
 
 /**
- * Fetch article by slug — checks Custom CMS (Supabase) first via direct URL,
- * then falls back to Strapi for historical content.
+ * Fetch article by slug — reads exclusively from Custom CMS (Supabase).
+ * 
+ * MIGRATION (2026-07-20): Strapi fallback disabled. All content now lives
+ * in the Custom CMS after successful reconciliation.
+ * To rollback: set ENABLE_STRAPI_AGGREGATION=true in environment.
+ * 
  * Deduplicated with React cache() so generateMetadata and Page share a single
  * request per render pass. Never throws — returns null on any error.
  */
 const fetchArticle = cache(async (slug: string): Promise<CMSArticle | null> => {
-  // Direct Custom CMS fetch (hardcoded URL to avoid any env var issues)
+  // Custom CMS (single source of truth)
   try {
     const cmsUrl = `https://cms.rampurnews.com/api/public/articles/${encodeURIComponent(slug)}`;
     const res = await fetch(cmsUrl, {
@@ -77,26 +81,27 @@ const fetchArticle = cache(async (slug: string): Promise<CMSArticle | null> => {
       }
     }
   } catch {
-    // Custom CMS unavailable — continue to Strapi fallback
+    // Custom CMS unavailable
   }
 
-  // Strapi fallback for historical content
-  try {
-    const article = await getCMSProvider().getArticleBySlug(slug);
-    if (article) return article;
-  } catch {
-    // Strapi also failed
+  // Deprecated Strapi fallback (only active when feature flag is set)
+  if (process.env.ENABLE_STRAPI_AGGREGATION === 'true') {
+    try {
+      const article = await getCMSProvider().getArticleBySlug(slug);
+      if (article) return article;
+    } catch {
+      // Strapi also failed
+    }
+
+    try {
+      const { data } = await resolveBySlug<any>('articles', slug);
+      if (data) return data as CMSArticle;
+    } catch {
+      // Both sources exhausted
+    }
   }
 
-  // Final fallback: aggregator (tries both sources with timeout)
-  try {
-    const { data } = await resolveBySlug<any>('articles', slug);
-    if (data) return data as CMSArticle;
-  } catch {
-    // Both sources exhausted
-  }
-
-  console.warn(`[fetchArticle] no article for slug="${slug}" in any source`);
+  console.warn(`[fetchArticle] no article for slug="${slug}" in CMS`);
   return null;
 });
 

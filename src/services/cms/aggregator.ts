@@ -281,51 +281,56 @@ const CONTENT_TYPE_MAP: Record<string, [string, string]> = {
 };
 
 /**
- * Fetch content from both sources and merge.
- * Newest first, deduplicate by slug (Custom CMS wins on rare collisions).
+ * Fetch content from the Custom CMS (single source of truth).
+ * 
+ * MIGRATION NOTE (2026-07-20): Strapi dual-fetch has been disabled.
+ * The Custom CMS now contains all reconciled content (100 articles with
+ * full body HTML, categories, authors, tags, editorials).
+ * 
+ * The Strapi fetch code is preserved below (commented) for rollback.
+ * To re-enable dual-source: set ENABLE_STRAPI_AGGREGATION=true in env.
  */
 export async function getAggregatedList<T extends AggregatedItem = AggregatedItem>(
   contentType: string,
   params: ListParams = {},
 ): Promise<AggregatedListResponse<T>> {
   const { page = 1, pageSize = 25, ...rest } = params;
-  const [customPath, strapiPath] = CONTENT_TYPE_MAP[contentType] ?? [contentType, contentType];
+  const [customPath] = CONTENT_TYPE_MAP[contentType] ?? [contentType, contentType];
 
-  // Fetch 2x pageSize from each to improve merge quality
-  const fetchSize = pageSize * 2;
+  // ─── Feature flag: re-enable Strapi aggregation for rollback ────────────
+  const enableStrapi = process.env.ENABLE_STRAPI_AGGREGATION === 'true';
 
-  const [customResult, strapiResult] = await Promise.allSettled([
-    fetchCustomCms<T>(customPath, { page: 1, pageSize: fetchSize, ...rest }),
-    fetchStrapi<T>(strapiPath, { page: 1, pageSize: fetchSize, ...rest }),
-  ]);
+  // Fetch from Custom CMS (primary and only source)
+  const customResult = await fetchCustomCms<T>(customPath, { page, pageSize, ...rest })
+    .catch(() => ({ data: [] as T[], total: 0 }));
 
-  const customData =
-    customResult.status === 'fulfilled' ? customResult.value : { data: [] as T[], total: 0 };
-  const strapiData =
-    strapiResult.status === 'fulfilled' ? strapiResult.value : { data: [] as T[], total: 0 };
+  let strapiData = { data: [] as T[], total: 0 };
 
-  const customAvailable = customData.data.length > 0 || customData.total > 0;
-  const strapiAvailable = strapiData.data.length > 0 || strapiData.total > 0;
-
-  // Both sources completely down — throw so callers can display an error
-  if (!customAvailable && !strapiAvailable) {
-    const customFailed = customResult.status === 'rejected';
-    const strapiFailed = strapiResult.status === 'rejected';
-    if (customFailed && strapiFailed) {
-      throw new Error(
-        `Both content sources are unavailable for "${contentType}". Please try again later.`,
-      );
+  // ─── DEPRECATED: Strapi fetch (disabled, retained for rollback) ─────────
+  if (enableStrapi) {
+    const [, strapiPath] = CONTENT_TYPE_MAP[contentType] ?? [contentType, contentType];
+    const fetchSize = pageSize * 2;
+    try {
+      strapiData = await fetchStrapi<T>(strapiPath, { page: 1, pageSize: fetchSize, ...rest });
+    } catch {
+      strapiData = { data: [], total: 0 };
     }
   }
 
-  // Tag each item with source
-  const customItems = customData.data.map((item) => ({ ...item, _source: 'custom-cms' as const }));
+  const customAvailable = customResult.data.length > 0 || customResult.total > 0;
+  const strapiAvailable = strapiData.data.length > 0 || strapiData.total > 0;
+
+  if (!customAvailable && !strapiAvailable) {
+    throw new Error(
+      `Content source unavailable for "${contentType}". Please try again later.`,
+    );
+  }
+
+  // Tag items with source
+  const customItems = customResult.data.map((item) => ({ ...item, _source: 'custom-cms' as const }));
   const strapiItems = strapiData.data.map((item) => ({ ...item, _source: 'strapi' as const }));
 
-  // Merge: newest first, deduplicate by slug (Custom CMS wins on rare collisions)
-  // NOTE: True slug collisions between sources should be extremely rare because:
-  // 1. The architecture is split-by-time: historical content stays in Strapi, new in Custom CMS
-  // 2. This dedup is a safety net for the edge case where a new article re-uses a Strapi slug
+  // Merge + deduplicate (only relevant when Strapi is enabled for rollback)
   const slugsSeen = new Set<string>();
   const merged = [...customItems, ...strapiItems]
     .sort((a, b) => {
@@ -345,10 +350,9 @@ export async function getAggregatedList<T extends AggregatedItem = AggregatedIte
       return true;
     }) as T[];
 
-  // Paginate the merged result
-  const start = (page - 1) * pageSize;
-  const pageData = merged.slice(start, start + pageSize);
-  const total = customData.total + strapiData.total;
+  // When single-source (normal operation), use CMS pagination directly
+  const total = enableStrapi ? (customResult.total + strapiData.total) : customResult.total;
+  const pageData = enableStrapi ? merged.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize) : merged;
 
   return {
     data: pageData,
@@ -356,7 +360,7 @@ export async function getAggregatedList<T extends AggregatedItem = AggregatedIte
       pagination: { page, pageSize, pageCount: Math.ceil(total / pageSize), total },
       sources: {
         strapi: { total: strapiData.total, available: strapiAvailable },
-        customCms: { total: customData.total, available: customAvailable },
+        customCms: { total: customResult.total, available: customAvailable },
       },
     },
   };
@@ -364,7 +368,7 @@ export async function getAggregatedList<T extends AggregatedItem = AggregatedIte
 
 /**
  * Resolve a single content item by slug.
- * Checks Custom CMS first, falls back to Strapi.
+ * Reads from Custom CMS only. Strapi fallback disabled (retained for rollback).
  */
 export async function resolveBySlug<T extends AggregatedItem = AggregatedItem>(
   contentType: string,
@@ -372,7 +376,7 @@ export async function resolveBySlug<T extends AggregatedItem = AggregatedItem>(
 ): Promise<AggregatedItemResponse<T>> {
   const [customPath, strapiPath] = CONTENT_TYPE_MAP[contentType] ?? [contentType, contentType];
 
-  // Custom CMS first (new content lives here)
+  // Custom CMS (single source of truth after reconciliation)
   const customItem = await fetchCustomCmsBySlug<T>(customPath, slug);
   if (customItem) {
     return {
@@ -381,13 +385,16 @@ export async function resolveBySlug<T extends AggregatedItem = AggregatedItem>(
     };
   }
 
-  // Fallback to Strapi (historical content)
-  const strapiItem = await fetchStrapiBySlug<T>(strapiPath, slug);
-  if (strapiItem) {
-    return {
-      data: { ...strapiItem, _source: 'strapi' } as T,
-      meta: { resolvedFrom: 'strapi' },
-    };
+  // ─── DEPRECATED: Strapi fallback (disabled, retained for rollback) ──────
+  const enableStrapi = process.env.ENABLE_STRAPI_AGGREGATION === 'true';
+  if (enableStrapi) {
+    const strapiItem = await fetchStrapiBySlug<T>(strapiPath, slug);
+    if (strapiItem) {
+      return {
+        data: { ...strapiItem, _source: 'strapi' } as T,
+        meta: { resolvedFrom: 'strapi' },
+      };
+    }
   }
 
   return { data: null, meta: { resolvedFrom: null } };

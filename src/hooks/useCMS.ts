@@ -92,10 +92,15 @@ export const useFeaturedArticles = (limit = 5, options?: { initialData?: CMSArti
 };
 
 export const useBreakingNews = (limit = 5) => {
-  const providerKey = getProviderKey();
   return useQuery({
     queryKey: [...cmsKeys.breaking()],
-    queryFn: () => getCMSProvider().getBreakingNews(limit),
+    queryFn: async () => {
+      // Fetch via same-origin proxy to avoid CORS issues with client-side requests
+      const res = await fetch('/api/breaking-news', { cache: 'no-store' });
+      if (!res.ok) return [];
+      const json = await res.json();
+      return (json?.data || []).slice(0, limit);
+    },
     staleTime: 60 * 1000, // Consider data fresh for 1 minute
     refetchInterval: 2 * 60 * 1000, // Re-fetch every 2 minutes for live ticker updates
     refetchIntervalInBackground: true, // Keep fetching even when tab is not focused

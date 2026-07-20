@@ -47,6 +47,13 @@ export interface AggregatedItemResponse<T = AggregatedItem> {
 // ─── Configuration ────────────────────────────────────────────────────────────
 
 function getCustomCmsUrl(): string {
+  // Server-side: prefer internal URL (avoids DNS hairpin issues on same-server deployments)
+  // The CUSTOM_CMS_INTERNAL_URL should point to the CMS's internal address (e.g., http://localhost:3000)
+  // when both frontend and CMS run on the same server.
+  if (typeof window === 'undefined') {
+    const internalUrl = process.env.CUSTOM_CMS_INTERNAL_URL;
+    if (internalUrl) return internalUrl.replace(/\/+$/, '');
+  }
   return (
     process.env.NEXT_PUBLIC_CUSTOM_CMS_URL ||
     process.env.CUSTOM_CMS_URL ||

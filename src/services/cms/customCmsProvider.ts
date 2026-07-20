@@ -28,11 +28,18 @@ import type {
   PaginatedResponse,
 } from './types';
 
-const CMS_BASE_URL = (
-  process.env.NEXT_PUBLIC_CUSTOM_CMS_URL ||
-  process.env.CUSTOM_CMS_URL ||
-  'https://cms.rampurnews.com'
-).replace(/\/+$/, '');
+const CMS_BASE_URL = (() => {
+  // Server-side: prefer internal URL to avoid DNS hairpin issues on same-server deployments
+  if (typeof window === 'undefined') {
+    const internalUrl = process.env.CUSTOM_CMS_INTERNAL_URL;
+    if (internalUrl) return internalUrl.replace(/\/+$/, '');
+  }
+  return (
+    process.env.NEXT_PUBLIC_CUSTOM_CMS_URL ||
+    process.env.CUSTOM_CMS_URL ||
+    'https://cms.rampurnews.com'
+  ).replace(/\/+$/, '');
+})();
 
 async function fetchJson<T>(url: string): Promise<T | null> {
   try {

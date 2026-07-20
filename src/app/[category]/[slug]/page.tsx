@@ -69,7 +69,13 @@ const pruneSchema = (input: unknown): unknown => {
 const fetchArticle = cache(async (slug: string): Promise<CMSArticle | null> => {
   // Custom CMS (single source of truth)
   try {
-    const cmsUrl = `https://cms.rampurnews.com/api/public/articles/${encodeURIComponent(slug)}`;
+    // Use internal URL on server to avoid DNS hairpin issues
+    const cmsBase = (
+      process.env.CUSTOM_CMS_INTERNAL_URL ||
+      process.env.NEXT_PUBLIC_CUSTOM_CMS_URL ||
+      'https://cms.rampurnews.com'
+    ).replace(/\/+$/, '');
+    const cmsUrl = `${cmsBase}/api/public/articles/${encodeURIComponent(slug)}`;
     const res = await fetch(cmsUrl, {
       next: { revalidate: 60 },
       headers: { Accept: 'application/json' },

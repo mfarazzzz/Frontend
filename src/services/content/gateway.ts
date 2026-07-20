@@ -87,6 +87,11 @@ function getActiveProvider(): ContentProvider {
 }
 
 function getCustomCmsUrl(): string {
+  // Server-side: prefer internal URL to avoid DNS hairpin issues
+  if (typeof window === 'undefined') {
+    const internalUrl = process.env.CUSTOM_CMS_INTERNAL_URL;
+    if (internalUrl) return internalUrl.replace(/\/+$/, '');
+  }
   return (
     process.env.NEXT_PUBLIC_CUSTOM_CMS_URL ||
     process.env.CUSTOM_CMS_URL ||

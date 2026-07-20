@@ -1,6 +1,7 @@
 // React hooks for CMS operations
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  getCMSConfig,
   getCMSProvider,
   type CMSArticle,
   type ArticleQueryParams,
@@ -11,6 +12,11 @@ import {
   type CMSEditorial,
   type EditorialQueryParams,
 } from '@/services/cms';
+
+const getProviderKey = () => {
+  const config = getCMSConfig();
+  return `${config.provider}:${config.baseUrl || ''}`;
+};
 
 // Query keys
 export const cmsKeys = {

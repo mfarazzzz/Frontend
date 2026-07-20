@@ -259,7 +259,7 @@ export function createCustomCmsProvider(): CMSProvider {
 
     // ─── Authors ──────────────────────────────────────────────────────────────
     async getAuthors(): Promise<CMSAuthor[]> {
-      const response = await fetchJson<any>(buildUrl('/authors', { pageSize: 100 }));
+      const response = await fetchJson<any>(buildUrl('/authors', { pageSize: 100, sort: 'created_at', order: 'desc' }));
       return (response?.data || []).map(mapAuthor);
     },
 

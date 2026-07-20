@@ -29,15 +29,17 @@ export async function GET() {
     detail: provider.url,
   });
 
-  // 2. Feature flag state
-  const strapiEnabled = process.env.ENABLE_STRAPI_AGGREGATION === "true";
+  // 2. Provider mode
+  const mode = process.env.CONTENT_PROVIDER_MODE || 'hybrid';
   checks.push({
-    name: "strapi_aggregation_flag",
-    status: strapiEnabled ? "warn" : "pass",
-    value: strapiEnabled ? "ENABLED (dual-source)" : "DISABLED (single-source CMS)",
-    detail: strapiEnabled
-      ? "Strapi fallback is active — not fully migrated"
-      : "Custom CMS is the sole content source",
+    name: "content_provider_mode",
+    status: mode === 'custom' ? "pass" : mode === 'hybrid' ? "warn" : "fail",
+    value: mode,
+    detail: mode === 'custom' 
+      ? "Custom CMS only — Strapi fully retired"
+      : mode === 'hybrid'
+      ? "Custom CMS + Strapi fallback (migration in progress)"
+      : "Emergency Strapi-only mode",
   });
 
   // 3. Article count
@@ -203,15 +205,15 @@ export async function GET() {
 
   return NextResponse.json({
     timestamp: new Date().toISOString(),
-    migration_phase: strapiEnabled ? "dual-source (rollback mode)" : "single-source CMS (production)",
+    migration_phase: mode === 'custom' ? "single-source CMS (production)" : mode === 'hybrid' ? "hybrid (CMS + Strapi fallback)" : "strapi-only (emergency)",
     provider: provider.provider,
     summary: { total: checks.length, passed, warned, failed },
     score: `${Math.round((passed / checks.length) * 100)}%`,
     checks,
     environment: {
-      CONTENT_PROVIDER: process.env.CONTENT_PROVIDER || "custom-cms",
-      ENABLE_STRAPI_AGGREGATION: strapiEnabled,
+      CONTENT_PROVIDER_MODE: mode,
       CUSTOM_CMS_URL: provider.url,
+      CUSTOM_CMS_INTERNAL_URL: process.env.CUSTOM_CMS_INTERNAL_URL || "(not set)",
     },
   });
 }

@@ -46,6 +46,26 @@ export interface AggregatedItemResponse<T = AggregatedItem> {
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
+/**
+ * Content Provider Mode — controls where the frontend reads content from.
+ * 
+ * Modes:
+ *   'custom'  — Only Custom CMS. Strapi is never called. (target state)
+ *   'hybrid'  — Custom CMS first, Strapi fallback. (default, safe for transition)
+ *   'strapi'  — Only Strapi. Emergency rollback mode.
+ * 
+ * Set via: CONTENT_PROVIDER_MODE env var.
+ * Default: 'hybrid' (safest during migration period).
+ */
+export type ContentProviderMode = 'custom' | 'hybrid' | 'strapi';
+
+export function getContentProviderMode(): ContentProviderMode {
+  const raw = (process.env.CONTENT_PROVIDER_MODE || 'hybrid').toLowerCase().trim();
+  if (raw === 'custom') return 'custom';
+  if (raw === 'strapi') return 'strapi';
+  return 'hybrid';
+}
+
 function getCustomCmsUrl(): string {
   // Server-side: prefer internal URL (avoids DNS hairpin issues on same-server deployments)
   // The CUSTOM_CMS_INTERNAL_URL should point to the CMS's internal address (e.g., http://localhost:3000)
@@ -288,38 +308,34 @@ const CONTENT_TYPE_MAP: Record<string, [string, string]> = {
 };
 
 /**
- * Fetch content from the Custom CMS (single source of truth).
+ * Fetch content from configured provider(s).
  * 
- * MIGRATION NOTE (2026-07-20): Strapi dual-fetch has been disabled.
- * The Custom CMS now contains all reconciled content (100 articles with
- * full body HTML, categories, authors, tags, editorials).
- * 
- * The Strapi fetch code is preserved below (commented) for rollback.
- * To re-enable dual-source: set ENABLE_STRAPI_AGGREGATION=true in env.
+ * Mode behavior:
+ *   'custom'  — Fetches only from Custom CMS. Fastest, no Strapi dependency.
+ *   'hybrid'  — Fetches from Custom CMS first; if empty, falls back to Strapi.
+ *   'strapi'  — Fetches only from Strapi. Emergency rollback.
  */
 export async function getAggregatedList<T extends AggregatedItem = AggregatedItem>(
   contentType: string,
   params: ListParams = {},
 ): Promise<AggregatedListResponse<T>> {
   const { page = 1, pageSize = 25, ...rest } = params;
-  const [customPath] = CONTENT_TYPE_MAP[contentType] ?? [contentType, contentType];
+  const [customPath, strapiPath] = CONTENT_TYPE_MAP[contentType] ?? [contentType, contentType];
+  const mode = getContentProviderMode();
 
-  // ─── Feature flag: Strapi aggregation as fallback ────────────────────────
-  // Default: TRUE (Strapi provides fallback when Custom CMS is unreachable)
-  // Set ENABLE_STRAPI_AGGREGATION=false ONLY after confirming the production
-  // server can reach the Custom CMS via CUSTOM_CMS_INTERNAL_URL.
-  const enableStrapi = process.env.ENABLE_STRAPI_AGGREGATION !== 'false';
+  // ─── Fetch from Custom CMS (unless mode is 'strapi') ───────────────────
+  let customResult = { data: [] as T[], total: 0 };
+  if (mode !== 'strapi') {
+    customResult = await fetchCustomCms<T>(customPath, { page, pageSize, ...rest })
+      .catch(() => ({ data: [] as T[], total: 0 }));
+  }
 
-  // Fetch from Custom CMS (primary and only source)
-  const customResult = await fetchCustomCms<T>(customPath, { page, pageSize, ...rest })
-    .catch(() => ({ data: [] as T[], total: 0 }));
-
+  // ─── Fetch from Strapi (in 'hybrid' or 'strapi' mode) ──────────────────
   let strapiData = { data: [] as T[], total: 0 };
+  const customAvailable = customResult.data.length > 0 || customResult.total > 0;
 
-  // ─── DEPRECATED: Strapi fetch (disabled, retained for rollback) ─────────
-  if (enableStrapi) {
-    const [, strapiPath] = CONTENT_TYPE_MAP[contentType] ?? [contentType, contentType];
-    const fetchSize = pageSize * 2;
+  if (mode === 'strapi' || (mode === 'hybrid' && !customAvailable)) {
+    const fetchSize = mode === 'strapi' ? pageSize : pageSize * 2;
     try {
       strapiData = await fetchStrapi<T>(strapiPath, { page: 1, pageSize: fetchSize, ...rest });
     } catch {
@@ -327,7 +343,6 @@ export async function getAggregatedList<T extends AggregatedItem = AggregatedIte
     }
   }
 
-  const customAvailable = customResult.data.length > 0 || customResult.total > 0;
   const strapiAvailable = strapiData.data.length > 0 || strapiData.total > 0;
 
   if (!customAvailable && !strapiAvailable) {
@@ -360,8 +375,10 @@ export async function getAggregatedList<T extends AggregatedItem = AggregatedIte
       return true;
     }) as T[];
 
-  // When single-source (normal operation), use CMS pagination directly
-  const total = enableStrapi ? (customResult.total + strapiData.total) : customResult.total;
+  // When single-source (custom or strapi mode), use direct pagination
+  // When hybrid and both available, merge + deduplicate
+  const enableStrapi = mode === 'hybrid' && strapiAvailable;
+  const total = enableStrapi ? (customResult.total + strapiData.total) : (customAvailable ? customResult.total : strapiData.total);
   const pageData = enableStrapi ? merged.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize) : merged;
 
   return {
@@ -378,26 +395,28 @@ export async function getAggregatedList<T extends AggregatedItem = AggregatedIte
 
 /**
  * Resolve a single content item by slug.
- * Reads from Custom CMS only. Strapi fallback disabled (retained for rollback).
+ * Respects CONTENT_PROVIDER_MODE: custom, hybrid, or strapi.
  */
 export async function resolveBySlug<T extends AggregatedItem = AggregatedItem>(
   contentType: string,
   slug: string,
 ): Promise<AggregatedItemResponse<T>> {
   const [customPath, strapiPath] = CONTENT_TYPE_MAP[contentType] ?? [contentType, contentType];
+  const mode = getContentProviderMode();
 
-  // Custom CMS (single source of truth after reconciliation)
-  const customItem = await fetchCustomCmsBySlug<T>(customPath, slug);
-  if (customItem) {
-    return {
-      data: { ...customItem, _source: 'custom-cms' } as T,
-      meta: { resolvedFrom: 'custom-cms' },
-    };
+  // Custom CMS (primary source)
+  if (mode !== 'strapi') {
+    const customItem = await fetchCustomCmsBySlug<T>(customPath, slug);
+    if (customItem) {
+      return {
+        data: { ...customItem, _source: 'custom-cms' } as T,
+        meta: { resolvedFrom: 'custom-cms' },
+      };
+    }
   }
 
-  // ─── Strapi fallback (enabled by default until networking confirmed) ─────
-  const enableStrapi = process.env.ENABLE_STRAPI_AGGREGATION !== 'false';
-  if (enableStrapi) {
+  // Strapi fallback (in hybrid or strapi mode)
+  if (mode === 'strapi' || mode === 'hybrid') {
     const strapiItem = await fetchStrapiBySlug<T>(strapiPath, slug);
     if (strapiItem) {
       return {

@@ -12,7 +12,7 @@
  * Remove or protect before production deployment.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getAggregatedList, fetchCustomCms, fetchStrapi } from "@/services/cms/aggregator";
+import { getAggregatedList, fetchCustomCms } from "@/services/cms/aggregator";
 import { getCMSProvider } from "@/services/cms";
 
 export const dynamic = "force-dynamic";

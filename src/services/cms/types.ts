@@ -139,6 +139,8 @@ export interface CMSAuthor {
   avatar?: string;
   coverImage?: string;
   bio?: string;
+  bioHindi?: string;
+  shortBio?: string;
   designation?: string;
   profession?: string;
   otherRoles?: string;
@@ -151,7 +153,7 @@ export interface CMSAuthor {
   whatsappUrl?: string;
   knowsAbout?: any;
   socialLinks?: any;
-  role: 'admin' | 'editor' | 'author' | 'contributor';
+  role: 'admin' | 'editor' | 'author' | 'advertiser';
 }
 
 export interface CMSTag {

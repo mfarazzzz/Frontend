@@ -76,8 +76,13 @@ export const metadata: Metadata = {
     images: ["https://rampurnews.com/og-image.jpg"],
   },
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/logo.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/logo.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GSC_VERIFICATION_TOKEN,

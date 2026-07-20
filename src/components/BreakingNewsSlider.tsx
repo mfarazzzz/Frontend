@@ -20,27 +20,33 @@ const BreakingNewsSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  const slideCount = breakingNews.length;
+
   const nextSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % breakingNews.length);
-  }, [breakingNews.length]);
+    if (slideCount <= 0) return;
+    setCurrentIndex((prev) => (prev + 1) % slideCount);
+  }, [slideCount]);
 
   const prevSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + breakingNews.length) % breakingNews.length);
-  }, [breakingNews.length]);
+    if (slideCount <= 0) return;
+    setCurrentIndex((prev) => (prev - 1 + slideCount) % slideCount);
+  }, [slideCount]);
 
+  // Reset index when data changes
   useEffect(() => {
-    if (currentIndex >= breakingNews.length) {
+    if (slideCount > 0 && currentIndex >= slideCount) {
       setCurrentIndex(0);
     }
-  }, [currentIndex, breakingNews.length]);
+  }, [currentIndex, slideCount]);
 
+  // Autoplay with proper cleanup
   useEffect(() => {
-    if (isPaused || breakingNews.length <= 1) return;
+    if (isPaused || slideCount <= 1) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % breakingNews.length);
+      setCurrentIndex((prev) => (prev + 1) % slideCount);
     }, 6000);
     return () => clearInterval(interval);
-  }, [isPaused, breakingNews.length]);
+  }, [isPaused, slideCount]);
 
   if (breakingNews.length === 0) return null;
 

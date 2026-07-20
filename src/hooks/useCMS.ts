@@ -96,6 +96,9 @@ export const useBreakingNews = (limit = 5) => {
   return useQuery({
     queryKey: [...cmsKeys.breaking(), providerKey],
     queryFn: () => getCMSProvider().getBreakingNews(limit),
+    staleTime: 60 * 1000, // Consider data fresh for 1 minute
+    refetchInterval: 2 * 60 * 1000, // Re-fetch every 2 minutes for live ticker updates
+    refetchIntervalInBackground: true, // Keep fetching even when tab is not focused
   });
 };
 

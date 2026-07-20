@@ -1,174 +1,238 @@
 /**
- * Homepage Service — orchestrates data fetching for the entire homepage.
+ * Homepage Service — orchestrates data fetching via the Homepage Pipeline.
  *
- * Single entry point that:
- * 1. Reads homepage config
- * 2. Fetches all sections in parallel
- * 3. Deduplicates across sections
- * 4. Returns structured data ready for rendering
+ * Pipeline stages:
+ *   FETCH → NORMALIZE → SCORE → RANK → PIN → DEDUP → TRIM → RENDER
+ *
+ * Every generation gets:
+ * - A correlation ID (for tracing user-reported issues)
+ * - Per-stage telemetry (for performance monitoring)
+ * - Configurable dedup policies (for editorial control)
  */
 
 import { getHomepageSections } from './homepageConfig';
 import type { HomepageSectionConfig } from './homepageConfig';
-import {
-  fetchAllHomepageSections,
-  deduplicateAcrossSections,
-  getContentLogs,
-} from './contentResolver';
+import { fetchAllHomepageSections, getContentLogs } from './contentResolver';
 import type { SectionData } from './contentResolver';
+import {
+  createPipelineContext,
+  recordStage,
+  finalizeTelemetry,
+  formatTelemetry,
+  runDeduplication,
+  scoreArticle,
+  buildMetrics,
+  DEFAULT_PIPELINE_CONFIG,
+} from './pipeline';
+import type { PipelineConfig, PipelineMetrics, PipelineContext } from './pipeline';
 import { getCMSProvider } from '@/services/cms';
 import { getAggregatedList } from '@/services/cms/aggregator';
 import type { CMSArticle } from '@/services/cms/types';
+
+// ─── Public Types ─────────────────────────────────────────────────────────────
 
 export interface HomepageData {
   /** Hero articles (latest across all categories) */
   heroArticles: CMSArticle[];
   /** Sections in display order (with their articles) */
-  sections: Array<{
-    config: HomepageSectionConfig;
-    data: SectionData;
-  }>;
+  sections: Array<{ config: HomepageSectionConfig; data: SectionData }>;
   /** Trending articles for sidebar */
   trendingArticles: CMSArticle[];
   /** Today's top stories for sidebar */
   todaysTop: CMSArticle[];
   /** Most-read articles in last 24h for sidebar */
   mostRead24h: CMSArticle[];
-  /** Debug info (only logged server-side) */
-  _debug?: {
-    totalFetchTime: number;
-    sectionsLoaded: number;
-    sectionsFailed: number;
-    logs: unknown[];
+  /** Pipeline generation metadata */
+  _pipeline?: {
+    correlationId: string;
+    metrics: PipelineMetrics;
   };
 }
 
+// ─── Main Entry Point ─────────────────────────────────────────────────────────
+
 /**
- * Fetch all homepage data in a single call.
- * This is the main entry point for page.tsx.
+ * Generate homepage data through the full pipeline.
+ *
+ * @param configOverride - Optional pipeline config override (for testing or A/B)
  */
-export async function getHomepageData(): Promise<HomepageData> {
-  const startTime = Date.now();
+export async function getHomepageData(
+  configOverride?: Partial<PipelineConfig>,
+): Promise<HomepageData> {
+  const config: PipelineConfig = { ...DEFAULT_PIPELINE_CONFIG, ...configOverride };
+  const ctx = createPipelineContext();
+  const pipelineStartMs = Date.now();
+
   const sections = getHomepageSections();
   const provider = getCMSProvider();
 
-  // Split hero section from category sections
   const heroConfig = sections.find((s) => s.id === 'hero');
   const categorySections = sections.filter((s) => s.id !== 'hero');
 
-  // Parallel fetch: hero, category sections, sidebar data
+  // ─── STAGE 1: FETCH ─────────────────────────────────────────────────────────
+  const fetchStart = Date.now();
+
   const [heroResult, sectionMap, trendingResult, todaysTopResult, mostRead24hResult] =
     await Promise.all([
-      // Hero — uses hero strategy from config
       heroConfig
         ? getAggregatedList('articles', {
-            pageSize: heroConfig.articleCount * 2, // Fetch extra for filtering
+            pageSize: heroConfig.articleCount * 2,
             sort: 'publishedAt',
             order: 'desc',
           }).catch(() => ({ data: [] as CMSArticle[] }))
         : Promise.resolve({ data: [] as CMSArticle[] }),
 
-      // All category sections in parallel
       fetchAllHomepageSections(categorySections),
 
-      // Sidebar: trending (most viewed) — from both CMS sources
-      getAggregatedList('articles', {
-        pageSize: 8,
-        sort: 'views',
-        order: 'desc',
-      })
+      getAggregatedList('articles', { pageSize: 8, sort: 'views', order: 'desc' })
         .then((r) => (r.data || []) as unknown as CMSArticle[])
         .catch(() => provider.getTrendingArticles(8).catch(() => [] as CMSArticle[])),
 
-      // Sidebar: today's top (breaking/featured)
-      provider
-        .getBreakingNews(5)
-        .catch(() => [] as CMSArticle[]),
+      provider.getBreakingNews(5).catch(() => [] as CMSArticle[]),
 
-      // Sidebar: most-read in 24h
       provider
-        .getArticles({
-          status: 'published',
-          sinceHours: 24,
-          orderBy: 'views',
-          order: 'desc',
-          limit: 5,
-        })
+        .getArticles({ status: 'published', sinceHours: 24, orderBy: 'views', order: 'desc', limit: 5 })
         .then((r) => r.data)
         .catch(() => [] as CMSArticle[]),
     ]);
 
-  // Apply hero strategy
-  let heroArticles = (heroResult as any).data || [];
-  const strategy = heroConfig?.heroStrategy || 'latest';
+  recordStage(ctx, 'fetch', fetchStart);
 
-  if (strategy === 'featured-first') {
-    // Featured/breaking articles first, then fill with latest
-    const featured = heroArticles.filter((a: CMSArticle) => a.isFeatured || a.isBreaking);
-    const nonFeatured = heroArticles.filter((a: CMSArticle) => !a.isFeatured && !a.isBreaking);
-    heroArticles = [...featured, ...nonFeatured].slice(0, heroConfig?.articleCount || 8);
-  } else if (strategy === 'breaking-first') {
-    const breaking = heroArticles.filter((a: CMSArticle) => a.isBreaking);
-    const nonBreaking = heroArticles.filter((a: CMSArticle) => !a.isBreaking);
-    heroArticles = [...breaking, ...nonBreaking].slice(0, heroConfig?.articleCount || 8);
+  // ─── STAGE 2: NORMALIZE ─────────────────────────────────────────────────────
+  const normalizeStart = Date.now();
+
+  let rawHeroArticles: CMSArticle[] = (heroResult as any).data || [];
+  const rawHeroCount = rawHeroArticles.length;
+
+  // Ensure all articles have consistent date fields
+  rawHeroArticles = rawHeroArticles.map((a) => ({
+    ...a,
+    publishedAt: a.publishedAt || a.publishedDate || '',
+    publishedDate: a.publishedDate || a.publishedAt || '',
+  }));
+
+  recordStage(ctx, 'normalize', normalizeStart);
+
+  // ─── STAGE 3: SCORE ─────────────────────────────────────────────────────────
+  const scoreStart = Date.now();
+
+  let heroArticles: CMSArticle[];
+
+  if (config.scoringEnabled) {
+    const now = Date.now();
+    const scored = rawHeroArticles.map((a) => scoreArticle(a, now));
+    scored.sort((a, b) => b.score - a.score);
+    heroArticles = scored.map((s) => s.article).slice(0, heroConfig?.articleCount || 8);
   } else {
-    // 'latest' or 'editor-pinned' — just take top N
-    heroArticles = heroArticles.slice(0, heroConfig?.articleCount || 8);
+    heroArticles = rawHeroArticles;
   }
 
-  // Deduplicate: only the DISPLAYED hero articles (first 5) should not appear in category sections.
-  // We fetch 8 but only display primary (1) + secondary (4) = 5 in the hero grid.
-  const displayedHeroCount = 5;
-  const displayedHeroSlugs = new Set(
-    heroArticles.slice(0, displayedHeroCount).map((a: CMSArticle) => a.slug).filter(Boolean),
-  );
+  recordStage(ctx, 'score', scoreStart);
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[Homepage Dedup] Hero has ${heroArticles.length} articles, displaying ${displayedHeroCount}, ${displayedHeroSlugs.size} slugs to dedup`);
-  }
+  // ─── STAGE 4: RANK (hero strategy) ─────────────────────────────────────────
+  const rankStart = Date.now();
 
-  // Remove only DISPLAYED hero duplicates from category sections
-  for (const [sectionId, data] of sectionMap) {
-    const before = data.articles.length;
-    data.articles = data.articles.filter(
-      (article) => !article.slug || !displayedHeroSlugs.has(article.slug),
-    );
-    const removed = before - data.articles.length;
-    if (removed > 0 && process.env.NODE_ENV === 'development') {
-      console.log(`[Homepage Dedup] Removed ${removed} hero duplicates from "${sectionId}"`);
+  if (!config.scoringEnabled) {
+    const strategy = heroConfig?.heroStrategy || 'latest';
+
+    if (strategy === 'featured-first') {
+      const featured = heroArticles.filter((a) => a.isFeatured || a.isBreaking);
+      const nonFeatured = heroArticles.filter((a) => !a.isFeatured && !a.isBreaking);
+      heroArticles = [...featured, ...nonFeatured].slice(0, heroConfig?.articleCount || 8);
+    } else if (strategy === 'breaking-first') {
+      const breaking = heroArticles.filter((a) => a.isBreaking);
+      const nonBreaking = heroArticles.filter((a) => !a.isBreaking);
+      heroArticles = [...breaking, ...nonBreaking].slice(0, heroConfig?.articleCount || 8);
+    } else {
+      heroArticles = heroArticles.slice(0, heroConfig?.articleCount || 8);
     }
   }
 
-  // Cross-section deduplication (prevents same article in multiple categories)
+  recordStage(ctx, 'rank', rankStart);
+
+  // ─── STAGE 5: PIN (placeholder for editor pinning) ──────────────────────────
+  const pinStart = Date.now();
+  // Future: apply editor-pinned articles to specific positions
+  // For now, this is a no-op stage that exists for pipeline completeness
+  recordStage(ctx, 'pin', pinStart);
+
+  // ─── STAGE 6: DEDUP (configurable) ─────────────────────────────────────────
+  const dedupStart = Date.now();
   const sectionOrder = categorySections.map((s) => s.id);
-  const dedupedMap = deduplicateAcrossSections(sectionMap, sectionOrder);
 
-  // Build final ordered sections
-  const orderedSections = categorySections.map((config) => ({
-    config,
-    data: dedupedMap.get(config.id) || {
-      sectionId: config.id,
-      articles: [],
-      source: config.preferredSource,
-    },
-  }));
+  // Extract articles from section data
+  const articleMap = new Map<string, CMSArticle[]>();
+  const fetchedCounts = new Map<string, number>();
+  for (const [id, data] of sectionMap) {
+    articleMap.set(id, data.articles);
+    fetchedCounts.set(id, data.articles.length);
+  }
 
-  const totalFetchTime = Date.now() - startTime;
-  const sectionsLoaded = orderedSections.filter((s) => s.data.articles.length > 0).length;
-  const sectionsFailed = orderedSections.filter((s) => s.data.error).length;
+  const dedupResult = runDeduplication({
+    heroArticles,
+    sectionMap: articleMap,
+    sectionConfigs: categorySections,
+    sectionOrder,
+    config: config.dedup,
+    displayedHeroCount: config.displayedHeroCount,
+  });
 
-  // Log in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[Homepage] Loaded in ${totalFetchTime}ms | ${sectionsLoaded} sections with content | ${sectionsFailed} failed`);
-    const contentLogs = getContentLogs();
-    contentLogs.forEach((log) => {
-      if (log.error) {
-        console.warn(`  [${log.sectionId}] ERROR: ${log.error}`);
-      } else {
-        console.log(`  [${log.sectionId}] ${log.source} → ${log.articleCount} articles (${log.timing}ms)`);
-      }
+  recordStage(ctx, 'dedup', dedupStart);
+
+  // ─── STAGE 7: TRIM (apply final article counts) ─────────────────────────────
+  const trimStart = Date.now();
+
+  const sectionResultsForMetrics = new Map<string, { fetched: number; afterDedup: number; final: number; category: string | null }>();
+
+  // Rebuild section map with deduplicated + trimmed articles
+  const finalSectionMap = new Map<string, SectionData>();
+  for (const sectionConfig of categorySections) {
+    const dedupedArticles = dedupResult.sections.get(sectionConfig.id) || [];
+    const trimmed = dedupedArticles.slice(0, sectionConfig.articleCount);
+    const originalData = sectionMap.get(sectionConfig.id);
+
+    finalSectionMap.set(sectionConfig.id, {
+      sectionId: sectionConfig.id,
+      articles: trimmed,
+      source: originalData?.source || sectionConfig.preferredSource,
+      error: originalData?.error,
+    });
+
+    sectionResultsForMetrics.set(sectionConfig.id, {
+      fetched: fetchedCounts.get(sectionConfig.id) || 0,
+      afterDedup: dedupedArticles.length,
+      final: trimmed.length,
+      category: sectionConfig.category,
     });
   }
+
+  recordStage(ctx, 'trim', trimStart);
+
+  // ─── Finalize ───────────────────────────────────────────────────────────────
+  finalizeTelemetry(ctx);
+
+  const orderedSections = categorySections.map((cfg) => ({
+    config: cfg,
+    data: finalSectionMap.get(cfg.id) || { sectionId: cfg.id, articles: [], source: cfg.preferredSource },
+  }));
+
+  // Build structured metrics
+  const metrics = buildMetrics(
+    ctx,
+    heroArticles,
+    config.displayedHeroCount,
+    rawHeroCount,
+    sectionResultsForMetrics,
+    dedupResult.stats,
+    {
+      trending: trendingResult.length,
+      todaysTop: todaysTopResult.length,
+      mostRead: mostRead24hResult.length,
+    },
+  );
+
+  // ─── Logging ────────────────────────────────────────────────────────────────
+  logPipelineResults(ctx, metrics, dedupResult.details);
 
   return {
     heroArticles,
@@ -176,9 +240,48 @@ export async function getHomepageData(): Promise<HomepageData> {
     trendingArticles: trendingResult,
     todaysTop: todaysTopResult,
     mostRead24h: mostRead24hResult,
-    _debug:
-      process.env.NODE_ENV === 'development'
-        ? { totalFetchTime, sectionsLoaded, sectionsFailed, logs: getContentLogs() }
-        : undefined,
+    _pipeline: {
+      correlationId: ctx.correlationId,
+      metrics,
+    },
   };
+}
+
+// ─── Logging ──────────────────────────────────────────────────────────────────
+
+function logPipelineResults(
+  ctx: PipelineContext,
+  metrics: PipelineMetrics,
+  dedupDetails: Array<{ sectionId: string; pass: string; removedSlugs: string[]; remaining: number }>,
+): void {
+  // Always log correlation + timing (compact, single line)
+  console.log(
+    `[Homepage] ID:${ctx.correlationId} | ${ctx.telemetry.totalDurationMs}ms | ` +
+    `Hero:${metrics.hero.displayed} | Sections:${metrics.sections.filter((s) => s.final > 0).length} | ` +
+    `Dedup:-${metrics.dedup.totalRemoved} (+${metrics.dedup.keptInOwnCategory} kept-own)`,
+  );
+
+  // Verbose logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log(formatTelemetry(ctx));
+
+    if (dedupDetails.length > 0) {
+      console.log(`  [Dedup Details]`);
+      for (const d of dedupDetails) {
+        console.log(`    ${d.sectionId} (${d.pass}): -${d.removedSlugs.length} [${d.removedSlugs.join(', ')}] → ${d.remaining} remain`);
+      }
+    }
+
+    const contentLogs = getContentLogs();
+    if (contentLogs.length > 0) {
+      console.log(`  [Content Resolution]`);
+      for (const log of contentLogs) {
+        if (log.error) {
+          console.warn(`    [${log.sectionId}] ERROR: ${log.error}`);
+        } else {
+          console.log(`    [${log.sectionId}] ${log.source} → ${log.articleCount} articles (${log.timing}ms)`);
+        }
+      }
+    }
+  }
 }

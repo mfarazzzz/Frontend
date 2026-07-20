@@ -191,8 +191,16 @@ export function createCustomCmsProvider(): CMSProvider {
     },
 
     async getBreakingNews(limit = 5): Promise<CMSArticle[]> {
+      // First try to get articles explicitly marked as breaking
       const response = await fetchJson<any>(buildUrl('/articles', { pageSize: limit, breaking: 'true', sort: 'published_at', order: 'desc' }));
-      return (response?.data || []).map(mapArticle);
+      const breakingArticles = (response?.data || []).map(mapArticle);
+
+      if (breakingArticles.length > 0) return breakingArticles;
+
+      // Fallback: if no breaking articles found, return the latest published articles
+      // so the ticker always shows fresh content
+      const fallback = await fetchJson<any>(buildUrl('/articles', { pageSize: limit, sort: 'published_at', order: 'desc' }));
+      return (fallback?.data || []).map(mapArticle);
     },
 
     async getTodaysTopNews(limit = 5): Promise<CMSArticle[]> {

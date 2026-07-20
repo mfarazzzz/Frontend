@@ -190,8 +190,12 @@ async function fetchFromSource(
   config: HomepageSectionConfig,
   source: ContentSource,
 ): Promise<CMSArticle[]> {
+  // Fetch extra articles to compensate for post-fetch cross-section deduplication.
+  const fetchExtra = config.duplicatePolicy === 'remove' ? 3 : 0;
+  const fetchSize = config.articleCount + fetchExtra;
+
   const params: Record<string, string | number | undefined> = {
-    pageSize: config.articleCount,
+    pageSize: fetchSize,
     sort: (config.queryParams?.sort as string) || 'publishedAt',
     order: (config.queryParams?.order as string) || 'desc',
   };

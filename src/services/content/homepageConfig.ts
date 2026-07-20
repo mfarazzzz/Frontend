@@ -13,6 +13,36 @@
  * - how many articles to fetch
  * - hero selection strategy
  * - duplicate policy
+ *
+ * ─── CONTENT OWNERSHIP & DEDUPLICATION RULES ──────────────────────────────────
+ *
+ * The homepage applies a two-pass deduplication strategy:
+ *
+ * Pass 1 — Hero vs Category Sections:
+ *   Rule: An article that appears in the Hero is KEPT in its own category section.
+ *         It is only removed from UNRELATED category sections.
+ *   Why:  On a local news portal, the biggest Rampur story should appear in both
+ *         the Hero (prominence) and the Rampur section (discoverability).
+ *
+ * Pass 2 — Cross-section dedup:
+ *   Rule: An article can only appear in ONE category section. First section (by
+ *         config order) wins.
+ *   Why:  Prevents repetition when a slug appears in multiple Strapi categories.
+ *
+ * Section ownership table:
+ *
+ * | Section      | Source           | Dedup from Hero? | Notes                    |
+ * |-------------|------------------|------------------|--------------------------|
+ * | Hero        | All categories    | N/A (is hero)    | Featured-first strategy  |
+ * | Rampur      | category=rampur   | Only unrelated   | Keeps own rampur stories |
+ * | UP          | category=up       | Only unrelated   | Keeps own UP stories     |
+ * | Nearby      | category=nearby   | Only unrelated   | Keeps own nearby stories |
+ * | National    | category=national | Only unrelated   | Keeps own national news  |
+ * | Sports      | category=sports   | Only unrelated   | Keeps own sports news    |
+ * | Education   | category=education-jobs | Only unrelated |                     |
+ * | International| category=international | Only unrelated |                    |
+ * | Religion    | category=religion-culture | Only unrelated |                  |
+ * | Editorials  | type=editorials   | N/A (different type) |                    |
  */
 
 export type ContentSource = 'custom-cms' | 'strapi' | 'aggregated';

@@ -392,7 +392,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
   );
   const modifiedDate = article.modifiedDate || article.publishedDate || "";
   const schemaImageUrl = toAbsoluteUrl(article.image || "") || imageUrl;
-  const schemaAuthorName = (article.author || "").trim();
+  const schemaAuthorName = (article.author || "Rampur News Desk").trim();
   const schemaPublishedDate = (
     article.publishedDate ||
     article.publishedAt ||

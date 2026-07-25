@@ -48,7 +48,7 @@ export async function generateMetadata(props: {
     editorial.canonicalUrl || `${SITE_URL}/editorials/${editorial.slug}`;
   const imageUrl = editorial.image && editorial.image !== "/placeholder.svg"
     ? editorial.image
-    : `${SITE_URL}/og-image.jpg`;
+    : `${SITE_URL}/og-image.png`;
   const keywords = editorial.newsKeywords
     ? editorial.newsKeywords.split(",").map((k: string) => k.trim()).filter(Boolean)
     : ["संपादकीय", "रामपुर", "Rampur News"];

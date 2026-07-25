@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     "रामपुर के प्रसिद्ध स्थान - ऐतिहासिक, धार्मिक और दर्शनीय स्थल | रामपुर न्यूज़",
   description:
     "रामपुर के सभी प्रसिद्ध स्थान - रज़ा पुस्तकालय, जामा मस्जिद, ऐतिहासिक इमारतें और दर्शनीय स्थलों की पूरी जानकारी।",
+  robots: { index: false, follow: true },
   alternates: {
     canonical: "/food-lifestyle/places",
   },

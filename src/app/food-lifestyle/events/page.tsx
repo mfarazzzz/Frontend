@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "रामपुर के आगामी कार्यक्रम और इवेंट्स | रामपुर न्यूज़",
   description:
     "रामपुर के सभी आगामी सांस्कृतिक, धार्मिक, खेल और मनोरंजन कार्यक्रमों की जानकारी। तारीख, समय, स्थान और टिकट की जानकारी।",
+  robots: { index: false, follow: true },
   alternates: {
     canonical: "/food-lifestyle/events",
   },

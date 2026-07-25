@@ -18,13 +18,13 @@ export const metadata: Metadata = {
     url: `${SITE_URL}/videos`,
     siteName: "रामपुर न्यूज़ | Rampur News",
     locale: "hi_IN",
-    images: [{ url: `${SITE_URL}/og-image.jpg`, width: 1200, height: 630, alt: "Rampur News Videos" }],
+    images: [{ url: `${SITE_URL}/og-image.png`, width: 1200, height: 630, alt: "Rampur News Videos" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "वीडियो | रामपुर न्यूज़",
     description: "रामपुर न्यूज़ के सभी नवीनतम यूट्यूब वीडियो एक ही जगह देखें।",
-    images: [`${SITE_URL}/og-image.jpg`],
+    images: [`${SITE_URL}/og-image.png`],
   },
 };
 

@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "शिक्षा समाचार - परीक्षा अपडेट, छात्रवृत्ति, एडमिशन | रामपुर न्यूज़",
   description:
     "ताज़ा शिक्षा समाचार - यूपी बोर्ड, परीक्षा अपडेट, रिजल्ट न्यूज़, छात्रवृत्ति और एडमिशन की सभी जानकारी एक जगह।",
+  robots: { index: false, follow: true },
   alternates: {
     canonical: "/education-jobs/news",
   },

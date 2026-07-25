@@ -166,13 +166,13 @@ export async function generateMetadata(props: { params: Promise<PageParams> }): 
       description,
       url: canonicalUrl,
       siteName: "रामपुर न्यूज़ | Rampur News",
-      images: author.avatar ? [author.avatar] : [`${SITE_URL}/og-image.jpg`],
+      images: author.avatar ? [author.avatar] : [`${SITE_URL}/og-image.png`],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: author.avatar ? [author.avatar] : [`${SITE_URL}/og-image.jpg`],
+      images: author.avatar ? [author.avatar] : [`${SITE_URL}/og-image.png`],
     },
   };
 }

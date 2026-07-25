@@ -91,7 +91,7 @@ const getAuthorArticles = cache(async (author: CMSAuthor): Promise<{
       slug: a.slug,
       category: a.category,
       categoryHindi: a.categoryHindi || '',
-      image: a.image || '/og-image.jpg',
+      image: a.image || '/og-image.png',
       excerpt: a.excerpt || stripHtmlToText(a.content || '').slice(0, 140),
       publishedDate: a.publishedAt || a.publishedDate || '',
       views: a.views || 0,
@@ -164,7 +164,7 @@ export async function generateMetadata(props: { params: Promise<PageParams> }): 
   const description = profile.shortBio
     || `${name} is a ${designation} at रामपुर न्यूज़ covering ${profile.beat || 'news'}.`;
   const canonicalUrl = `${SITE_URL}/author/${slug}`;
-  const image = profile.profileImage || `${SITE_URL}/og-image.jpg`;
+  const image = profile.profileImage || `${SITE_URL}/og-image.png`;
 
   const keywords = [
     name,

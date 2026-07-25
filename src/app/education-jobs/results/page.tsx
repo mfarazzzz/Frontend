@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "रिजल्ट कैलेंडर 2026 | बोर्ड और प्रतियोगी परिणाम - रामपुर न्यूज़",
   description:
     "बोर्ड परीक्षा, सरकारी भर्ती और प्रतियोगी परीक्षाओं के परिणामों की तिथियां और अपडेट। रिजल्ट कैलेंडर 2026 - रामपुर न्यूज़।",
+  robots: { index: false, follow: true },
   alternates: {
     canonical: "/education-jobs/results",
   },

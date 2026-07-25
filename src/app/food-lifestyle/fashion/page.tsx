@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "रामपुर की बेहतरीन कपड़े और फैशन की दुकानें | रामपुर न्यूज़",
   description:
     "रामपुर की सभी प्रसिद्ध कपड़े की दुकानें, साड़ी एम्पोरियम, ब्रांडेड शोरूम और फैशन बुटीक की जानकारी। पते, फोन नंबर और विशेषताएं।",
+  robots: { index: false, follow: true },
   alternates: {
     canonical: "/food-lifestyle/fashion",
   },

@@ -23,7 +23,7 @@ export const buildCategoryMetadata = (slug: string): Metadata => {
       siteName: "रामपुर न्यूज़ | Rampur News",
       images: [
         {
-          url: `${SITE_URL}/og-image.jpg`,
+          url: `${SITE_URL}/og-image.png`,
           width: 1200,
           height: 630,
           alt: title,
@@ -34,7 +34,7 @@ export const buildCategoryMetadata = (slug: string): Metadata => {
       card: "summary_large_image",
       title,
       description,
-      images: [`${SITE_URL}/og-image.jpg`],
+      images: [`${SITE_URL}/og-image.png`],
     },
   };
 };

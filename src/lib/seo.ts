@@ -9,7 +9,7 @@ export const SITE_URL = (
 ).replace(/\/+$/, "");
 
 export const SITE_NAME = "रामपुर न्यूज़ | Rampur News";
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
 export const DEFAULT_OG_IMAGE_ALT = "रामपुर न्यूज़ | Rampur News";
 
 /** Ensure a path becomes an absolute URL */

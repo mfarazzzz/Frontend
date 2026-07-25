@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     siteName: "रामपुर न्यूज़ | Rampur News",
     images: [
       {
-        url: "https://rampurnews.com/og-image.jpg",
+        url: "https://rampurnews.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Rampur News",
@@ -181,7 +181,7 @@ export default async function Page() {
               height: 768,
             },
           },
-          image: heroPrimary.image || `${siteUrl}/og-image.jpg`,
+          image: heroPrimary.image || `${siteUrl}/og-image.png`,
           inLanguage: "hi-IN",
           articleSection: heroPrimary.categoryHindi,
         }

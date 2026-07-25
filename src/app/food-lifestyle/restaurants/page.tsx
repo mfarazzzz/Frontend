@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "रामपुर के बेहतरीन रेस्तरां और खाने की जगहें | रामपुर न्यूज़",
   description:
     "रामपुर के सभी प्रसिद्ध रेस्तरां, ढाबे, मिठाई की दुकानें और स्ट्रीट फूड की पूरी जानकारी। पते, फोन नंबर, रेटिंग और विशेषताएं।",
+  robots: { index: false, follow: true },
   alternates: {
     canonical: "/food-lifestyle/restaurants",
   },

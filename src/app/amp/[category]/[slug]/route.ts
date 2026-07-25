@@ -3,7 +3,7 @@ import { getCMSProvider } from "@/services/cms";
 import { stripHtmlToText, truncateText } from "@/lib/utils";
 
 const SITE_URL = "https://rampurnews.com";
-const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
+const DEFAULT_IMAGE = `${SITE_URL}/og-image.png`;
 const toAbsoluteUrl = (value?: string) => {
   const raw = (value || "").trim();
   if (!raw) return "";

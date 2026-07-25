@@ -87,7 +87,7 @@ export function buildPersonSchema(profile: PublisherProfile) {
     jobTitle: profile.designation,
     description: profile.shortBio || profile.fullBiography?.slice(0, 300),
     url,
-    image: profile.profileImage || `${SITE_URL}/og-image.jpg`,
+    image: profile.profileImage || `${SITE_URL}/og-image.png`,
     worksFor: {
       '@type': 'NewsMediaOrganization',
       '@id': `${SITE_URL}/#organization`,

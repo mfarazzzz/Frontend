@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "परीक्षा कैलेंडर 2026 | शिक्षा और नौकरियां - रामपुर न्यूज़",
   description:
     "यूपी बोर्ड, सरकारी नौकरी और प्रतियोगी परीक्षाओं की तारीखें। परीक्षा कैलेंडर 2026 - रामपुर न्यूज़।",
+  robots: { index: false, follow: true },
   alternates: {
     canonical: "/education-jobs/exams",
   },

@@ -13,7 +13,7 @@ import { extractLocationTags, getLocationBySlug } from "@/data/locations";
 import { generateArticleKeywords, buildArticleSeoTitle } from "@/lib/seo-keywords";
 
 const SITE_URL = "https://rampurnews.com";
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
 const buildOgImageUrl = (title: string) =>
   `${SITE_URL}/api/og?title=${encodeURIComponent(title)}`;
 const toAbsoluteUrl = (value?: string) => {

@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "संस्थान और कॉलेज डायरेक्टरी | शिक्षा - रामपुर न्यूज़",
   description:
     "रामपुर और आसपास के कॉलेज, स्कूल, यूनिवर्सिटी और कोचिंग की जानकारी। एड्रेस, संपर्क, कोर्स और सुविधाएं।",
+  robots: { index: false, follow: true },
   alternates: {
     canonical: "/education-jobs/institutions",
   },

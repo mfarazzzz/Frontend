@@ -11,7 +11,6 @@
  */
 import { NextResponse } from "next/server";
 import { getCMSProvider } from "@/services/cms";
-import { YOUTUBE_CHANNELS, uploadsPlaylistId } from "@/config/youtube";
 
 export const dynamic = "force-dynamic";
 
@@ -94,57 +93,12 @@ export async function GET() {
   </url>`);
     }
 
-    // Also add latest videos from the YouTube channel (not embedded in articles)
-    const channelId = YOUTUBE_CHANNELS[0]?.id;
-    if (channelId) {
-      try {
-        const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channelId)}`;
-        const feedRes = await fetch(feedUrl, { signal: AbortSignal.timeout(5000) });
-        if (feedRes.ok) {
-          const xml = await feedRes.text();
-          const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
-          let match: RegExpExecArray | null;
-          let count = 0;
-
-          while ((match = entryRegex.exec(xml)) !== null && count < 20) {
-            const entry = match[1];
-            const idMatch = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/);
-            const titleMatch = entry.match(/<title>([\s\S]*?)<\/title>/);
-            const publishedMatch = entry.match(/<published>(.*?)<\/published>/);
-            const descMatch = entry.match(/<media:description>([\s\S]*?)<\/media:description>/);
-
-            const id = idMatch?.[1]?.trim();
-            const title = titleMatch?.[1]?.trim();
-            const published = publishedMatch?.[1]?.trim();
-            const desc = descMatch?.[1]?.trim();
-
-            if (id && title) {
-              // Link to the /videos page as the hosting URL
-              const videoPageUrl = `${SITE_URL}/videos`;
-              const thumbUrl = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-
-              entries.push(`
-  <url>
-    <loc>${esc(videoPageUrl)}</loc>
-    <video:video>
-      <video:thumbnail_loc>${esc(thumbUrl)}</video:thumbnail_loc>
-      <video:title>${esc(title)}</video:title>
-      <video:description>${esc((desc || title).slice(0, 2048))}</video:description>
-      <video:player_loc allow_embed="yes">https://www.youtube.com/embed/${id}</video:player_loc>
-      <video:publication_date>${published || new Date().toISOString()}</video:publication_date>
-      <video:family_friendly>yes</video:family_friendly>
-      <video:live>no</video:live>
-      <video:platform relationship="allow">web mobile tv</video:platform>
-    </video:video>
-  </url>`);
-              count++;
-            }
-          }
-        }
-      } catch {
-        // YouTube feed unavailable — skip channel videos
-      }
-    }
+    // NOTE: Only article-embedded videos are included in the video sitemap.
+    // Channel-only videos (not embedded in articles) are NOT listed here because:
+    // - They don't have dedicated "watch pages" on rampurnews.com
+    // - Google requires each video URL to be a page primarily about that video
+    // - Channel videos are already indexed via YouTube itself
+    // This fixes the GSC "Video isn't on a watch page" error.
   } catch (error) {
     console.error("[video-sitemap] Error:", error);
   }

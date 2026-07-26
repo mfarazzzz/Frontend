@@ -25,12 +25,18 @@ const ShareButtons = ({
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
   const encodedText = encodeURIComponent(`${title}\n\n${description}`);
-  
+
+  // UTM-tagged URLs for tracking social traffic in Google Analytics
+  const utmUrl = (source: string, medium: string = 'social') => {
+    const separator = url.includes('?') ? '&' : '?';
+    return encodeURIComponent(`${url}${separator}utm_source=${source}&utm_medium=${medium}&utm_campaign=share`);
+  };
+
   const shareLinks = {
-    whatsapp: `https://wa.me/?text=${encodedText}%0A%0A${encodedUrl}`,
-    telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-    twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+    whatsapp: `https://wa.me/?text=${encodedText}%0A%0A${utmUrl('whatsapp')}`,
+    telegram: `https://t.me/share/url?url=${utmUrl('telegram')}&text=${encodedTitle}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${utmUrl('facebook')}`,
+    twitter: `https://twitter.com/intent/tweet?url=${utmUrl('twitter')}&text=${encodedTitle}`,
   };
   
   const handleCopyLink = async () => {

@@ -103,9 +103,9 @@ const organizationSchema = {
     height: 768,
   },
   sameAs: [
-    "https://www.facebook.com/rampurnews",
+    "https://www.facebook.com/profile.php?id=61586930678729",
     "https://twitter.com/RampurNews",
-    "https://www.instagram.com/rampurnews",
+    "https://www.instagram.com/rampurnewsdotcom",
     "https://www.youtube.com/@rampurnewsdotcom",
     "https://whatsapp.com/channel/0029Vb7TEPsLI8Yg4gbsqe3O",
   ],
@@ -159,6 +159,10 @@ export default function RootLayout({
         <meta name="theme-color" content="#dc2626" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+        {/* Facebook Page & Instant Articles optimization */}
+        <meta property="fb:pages" content="61586930678729" />
+        <meta property="article:publisher" content="https://www.facebook.com/profile.php?id=61586930678729" />
         
         {/* AI Search / LLM Discoverability */}
         <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs.txt" />

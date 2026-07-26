@@ -81,6 +81,8 @@ const Footer = () => {
                 href="https://www.facebook.com/profile.php?id=61586930678729"
                 className="w-9 h-9 flex items-center justify-center bg-primary/20 hover:bg-primary rounded-full transition-colors"
                 aria-label="Facebook"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <Facebook size={18} />
               </a>
@@ -99,9 +101,11 @@ const Footer = () => {
                 <Youtube size={18} />
               </a>
               <a
-                href="#"
+                href="https://www.instagram.com/rampurnewsdotcom"
                 className="w-9 h-9 flex items-center justify-center bg-primary/20 hover:bg-primary rounded-full transition-colors"
                 aria-label="Instagram"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <Instagram size={18} />
               </a>

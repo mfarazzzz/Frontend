@@ -60,17 +60,18 @@ export default async function VideosPage({
         </div>
         {playlistId ? (
           <div className="max-w-5xl mx-auto">
+            {/* Featured video — embed single latest video for Google Video indexing.
+                Playlist embeds (videoseries) are NOT indexed by Google as they aren't "watch pages". */}
             <div className="aspect-video w-full rounded overflow-hidden">
               <iframe
-                title="Rampur News Playlist"
-                src={`https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(
+                title="Rampur News - Latest Video"
+                src={`https://www.youtube-nocookie.com/embed?listType=playlist&list=${encodeURIComponent(
                   playlistId
-                )}&rel=0&autoplay=1&mute=1`}
+                )}&rel=0`}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
-                loading="lazy"
+                loading="eager"
                 referrerPolicy="strict-origin-when-cross-origin"
-                sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
                 className="w-full h-full"
               />
             </div>

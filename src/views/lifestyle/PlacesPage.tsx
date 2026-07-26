@@ -4,17 +4,18 @@ import { Link } from "@/lib/router-compat";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BreadcrumbNav from "@/components/BreadcrumbNav";
+import ListingCard from "@/components/ListingCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mockFamousPlaces } from "@/services/cms/extendedMockData";
-import { Search, MapPin, Star, Clock, Ticket } from "lucide-react";
+import { useFamousPlaces } from "@/hooks/useExtendedCMS";
+import { Search, MapPin } from "lucide-react";
 
 const TYPE_LABELS: Record<string, string> = {
   historical: 'ऐतिहासिक',
   religious: 'धार्मिक',
+  natural: 'प्राकृतिक',
   recreational: 'मनोरंजन',
   market: 'बाज़ार',
   landmark: 'लैंडमार्क',
@@ -24,13 +25,18 @@ const TYPE_LABELS: Record<string, string> = {
 const PlacesPage = () => {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [cityFilter, setCityFilter] = useState<string>('all');
 
-  const filteredPlaces = mockFamousPlaces.filter(p => {
+  const { data: placesResponse, isLoading } = useFamousPlaces({ limit: 200 });
+  const places = placesResponse?.data || [];
+
+  const filteredPlaces = places.filter(p => {
     const matchesSearch = search === '' ||
       p.nameHindi.toLowerCase().includes(search.toLowerCase()) ||
       p.name.toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === 'all' || p.type === typeFilter;
-    return matchesSearch && matchesType;
+    const matchesCity = cityFilter === 'all' || p.city === cityFilter;
+    return matchesSearch && matchesType && matchesCity;
   });
 
   const breadcrumbs = [
@@ -45,13 +51,26 @@ const PlacesPage = () => {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "ItemList",
-            name: "रामपुर के प्रसिद्ध स्थान",
-            itemListElement: filteredPlaces.map((place, index) => ({
-              "@type": "TouristAttraction",
+            name: "प्रसिद्ध स्थान - रामपुर, बरेली, मुरादाबाद, रुद्रपुर, हल्द्वानी",
+            description: "50+ ऐतिहासिक, धार्मिक और दर्शनीय स्थलों की सूची",
+            numberOfItems: filteredPlaces.length,
+            itemListElement: filteredPlaces.slice(0, 20).map((place, index) => ({
+              "@type": "ListItem",
               position: index + 1,
-              name: place.nameHindi,
-              address: place.addressHindi,
-              description: place.descriptionHindi,
+              item: {
+                "@type": "TouristAttraction",
+                name: place.name,
+                description: place.description,
+                address: {
+                  "@type": "PostalAddress",
+                  streetAddress: place.address,
+                  addressLocality: place.city,
+                  addressRegion: place.district,
+                  addressCountry: "IN",
+                },
+                ...(place.rating && { aggregateRating: { "@type": "AggregateRating", ratingValue: place.rating } }),
+                url: `https://rampurnews.com/food-lifestyle/places/${place.slug}`,
+              },
             })),
           })}
         </script>
@@ -66,14 +85,14 @@ const PlacesPage = () => {
               प्रसिद्ध स्थान
             </h1>
             <p className="text-muted-foreground">
-              रामपुर के ऐतिहासिक, धार्मिक और दर्शनीय स्थलों की जानकारी
+              रामपुर, बरेली, मुरादाबाद, रुद्रपुर और हल्द्वानी के 50+ ऐतिहासिक, धार्मिक और दर्शनीय स्थल
             </p>
           </div>
 
           {/* Filters */}
           <Card className="mb-6">
             <CardContent className="p-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -94,68 +113,57 @@ const PlacesPage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <Select value={cityFilter} onValueChange={setCityFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="शहर चुनें" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">सभी शहर</SelectItem>
+                    <SelectItem value="Rampur">रामपुर</SelectItem>
+                    <SelectItem value="Bareilly">बरेली</SelectItem>
+                    <SelectItem value="Moradabad">मुरादाबाद</SelectItem>
+                    <SelectItem value="Rudrapur">रुद्रपुर</SelectItem>
+                    <SelectItem value="Haldwani">हल्द्वानी</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
 
           {/* Results */}
-          {filteredPlaces.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">लोड हो रहा है...</div>
+          ) : filteredPlaces.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">कोई स्थान नहीं मिला</div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredPlaces.map(place => (
-                <Card key={place.id} className="hover:shadow-lg transition-shadow group">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Badge variant="secondary" className="text-xs">
-                        {TYPE_LABELS[place.type]}
-                      </Badge>
-                      {place.isFeatured && (
-                        <Badge className="text-xs bg-amber-100 text-amber-700">
-                          लोकप्रिय
-                        </Badge>
-                      )}
-                    </div>
-                    <h3 className="font-bold text-lg mb-1 group-hover:text-primary transition-colors">
-                      {place.nameHindi}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-3">{place.name}</p>
-                    <p className="text-sm mb-3 line-clamp-2">{place.descriptionHindi}</p>
-                    
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        <span>{place.addressHindi}</span>
-                      </div>
-                      {place.timings && (
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          <span>{place.timings}</span>
-                        </div>
-                      )}
-                      {place.entryFee && (
-                        <div className="flex items-center gap-2">
-                          <Ticket className="h-4 w-4" />
-                          <span>प्रवेश: {place.entryFee}</span>
-                        </div>
-                      )}
-                      {place.rating && (
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                          <span className="font-medium">{place.rating}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {place.history && (
-                      <p className="text-xs text-muted-foreground mt-3 pt-3 border-t line-clamp-2">
-                        {place.historyHindi}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <>
+              <p className="text-sm text-muted-foreground mb-4">{filteredPlaces.length} स्थान मिले</p>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredPlaces.map(place => (
+                  <ListingCard
+                    key={place.id}
+                    title={place.name}
+                    titleHindi={place.nameHindi}
+                    slug={place.slug}
+                    basePath="/food-lifestyle/places"
+                    type={place.type}
+                    typeLabel={TYPE_LABELS[place.type]}
+                    address={place.address}
+                    addressHindi={`${place.addressHindi}, ${place.city}`}
+                    rating={place.rating}
+                    image={place.image}
+                    description={place.description}
+                    descriptionHindi={place.descriptionHindi}
+                    openingHours={place.timings}
+                    badges={[
+                      ...(place.entryFee ? [{ label: `🎫 ${place.entryFee}` }] : []),
+                      ...(place.bestTimeToVisit ? [{ label: `📅 ${place.bestTimeToVisit}` }] : []),
+                    ]}
+                    isFeatured={place.isFeatured}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </main>
 

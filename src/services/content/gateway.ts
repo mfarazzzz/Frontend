@@ -2,20 +2,15 @@
  * Content Gateway — Single abstraction layer for all content reads.
  *
  * This is the ONLY entry point for fetching published content on the frontend.
- * It delegates to the active provider (Custom CMS) and can be swapped
- * via feature flags without changing any consumer code.
+ * It delegates to the Custom CMS (Supabase-backed) API.
  *
  * Architecture:
- *   Page/Component → ContentGateway → Provider (Custom CMS / Supabase)
- *
- * Feature flags:
- *   CONTENT_PROVIDER=custom-cms  (default, production)
- *   CONTENT_PROVIDER=strapi      (rollback only — requires STRAPI env vars)
+ *   Page/Component → ContentGateway → Custom CMS API
  *
  * @module ContentGateway
  */
 
-export type ContentProvider = 'custom-cms' | 'strapi';
+export type ContentProvider = 'custom-cms';
 
 export interface GatewayArticle {
   id: string;
@@ -81,8 +76,6 @@ export interface GatewayListParams {
 // ─── Configuration ────────────────────────────────────────────────────────────
 
 function getActiveProvider(): ContentProvider {
-  const env = process.env.CONTENT_PROVIDER || 'custom-cms';
-  if (env === 'strapi') return 'strapi';
   return 'custom-cms';
 }
 

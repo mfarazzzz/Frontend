@@ -111,6 +111,7 @@ export async function GET() {
   let fashionStores: any[] = [];
   let places: any[] = [];
   let shoppingCentres: any[] = [];
+  let institutionsList: any[] = [];
 
   try {
     const provider = getCMSProvider();
@@ -124,6 +125,7 @@ export async function GET() {
       fashionRes,
       placesRes,
       shoppingRes,
+      institutionsRes,
     ] = await Promise.all([
       provider.getArticles({ status: "published", limit: 5000, orderBy: "publishedDate", order: "desc" }),
       provider.getCategories(),
@@ -134,6 +136,7 @@ export async function GET() {
       (provider as any).getFashionStores?.({ limit: 500 }).catch(() => ({ data: [] })) || Promise.resolve({ data: [] }),
       (provider as any).getFamousPlaces?.({ limit: 500 }).catch(() => ({ data: [] })) || Promise.resolve({ data: [] }),
       (provider as any).getShoppingCentres?.({ limit: 500 }).catch(() => ({ data: [] })) || Promise.resolve({ data: [] }),
+      (provider as any).getInstitutions?.({ limit: 500 }).catch(() => ({ data: [] })) || Promise.resolve({ data: [] }),
     ]);
 
     arts = articlesRes?.data || [];
@@ -145,6 +148,7 @@ export async function GET() {
     fashionStores = fashionRes?.data || [];
     places = placesRes?.data || [];
     shoppingCentres = shoppingRes?.data || [];
+    institutionsList = institutionsRes?.data || [];
   } catch (err) {
     // CMS unreachable — return valid static-only sitemap, never 500 to crawlers
     console.error("[sitemap] CMS fetch failed:", err);
@@ -288,6 +292,20 @@ export async function GET() {
     const url = `${SITE}/food-lifestyle/shopping/${slug}`;
     const imagePart = s.image
       ? `\n    <image:image>\n      <image:loc>${esc(s.image)}</image:loc>\n      <image:title>${esc(s.name || s.title || "")}</image:title>\n    </image:image>`
+      : "";
+    entries.push(
+      `\n  <url>\n    <loc>${esc(url)}</loc>\n    <lastmod>${iso(dateStr)}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>${imagePart}\n  </url>`,
+    );
+  }
+
+  // ── Education: Institutions ───────────────────────────────────────────────
+  for (const inst of (institutionsList || [])) {
+    const slug = (inst?.slug || "").trim();
+    if (!slug) continue;
+    const dateStr = inst?.updatedAt || inst?.createdAt || now.toISOString();
+    const url = `${SITE}/education-jobs/institutions/${slug}`;
+    const imagePart = inst.image
+      ? `\n    <image:image>\n      <image:loc>${esc(inst.image)}</image:loc>\n      <image:title>${esc(inst.name || inst.title || "")}</image:title>\n    </image:image>`
       : "";
     entries.push(
       `\n  <url>\n    <loc>${esc(url)}</loc>\n    <lastmod>${iso(dateStr)}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>${imagePart}\n  </url>`,

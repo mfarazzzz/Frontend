@@ -4,26 +4,25 @@ import ShoppingPage from "@/views/lifestyle/Shopping";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "रामपुर के शॉपिंग सेंटर, मॉल और प्रसिद्ध स्थान | रामपुर न्यूज़",
+  title: "शॉपिंग मॉल, बाज़ार और मार्केट - रामपुर बरेली मुरादाबाद 2026 | रामपुर न्यूज़",
   description:
-    "रामपुर के सभी शॉपिंग मॉल, बाजार, मार्केट और प्रसिद्ध ऐतिहासिक स्थानों की जानकारी। पते, समय और सुविधाएं।",
-  robots: { index: false, follow: true },
+    "रामपुर, बरेली, मुरादाबाद, रुद्रपुर और हल्द्वानी के 80+ शॉपिंग मॉल, बाज़ार, मार्केट और प्लाज़ा। पते, समय, सुविधाएं और पार्किंग जानकारी।",
   alternates: {
-    canonical: "/food-lifestyle/shopping",
+    canonical: "https://rampurnews.com/food-lifestyle/shopping",
   },
   openGraph: {
     type: "website",
-    title: "रामपुर के शॉपिंग सेंटर, मॉल और प्रसिद्ध स्थान | रामपुर न्यूज़",
+    title: "शॉपिंग मॉल, बाज़ार और मार्केट - रामपुर, बरेली, मुरादाबाद, रुद्रपुर, हल्द्वानी",
     description:
-      "रामपुर के सभी शॉपिंग मॉल, बाजार, मार्केट और प्रसिद्ध ऐतिहासिक स्थानों की जानकारी। पते, समय और सुविधाएं।",
-    url: "/food-lifestyle/shopping",
+      "80+ शॉपिंग मॉल, बाज़ार और मार्केट की पूरी जानकारी। Wave Mall, Walkway Mall, JAGS City Mall और Butler Plaza।",
+    url: "https://rampurnews.com/food-lifestyle/shopping",
     siteName: "रामपुर न्यूज़ | Rampur News",
   },
   twitter: {
     card: "summary_large_image",
-    title: "रामपुर के शॉपिंग सेंटर, मॉल और प्रसिद्ध स्थान | रामपुर न्यूज़",
+    title: "शॉपिंग मॉल और बाज़ार डायरेक्टरी 2026 | रामपुर न्यूज़",
     description:
-      "रामपुर के सभी शॉपिंग मॉल, बाजार, मार्केट और प्रसिद्ध ऐतिहासिक स्थानों की जानकारी। पते, समय और सुविधाएं।",
+      "रामपुर, बरेली, मुरादाबाद, रुद्रपुर, हल्द्वानी के शॉपिंग मॉल, बाज़ार और मार्केट।",
   },
 };
 

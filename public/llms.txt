@@ -59,6 +59,31 @@
 - International (अंतर्राष्ट्रीय) — Global news with local context
 - Editorials (संपादकीय) — Opinion, analysis, commentary
 
+## Local Directory (Microsite)
+A comprehensive local business and institution directory covering the Rohilkhand-Terai corridor:
+- Educational Institutions: 250+ colleges, schools, universities, coaching centers, polytechnics, ITIs
+  - URL: https://rampurnews.com/education-jobs/institutions
+  - Detail: https://rampurnews.com/education-jobs/institutions/{slug}
+- Restaurants & Dining: 100+ restaurants, cafes, sweet shops, dhabas, street food
+  - URL: https://rampurnews.com/food-lifestyle/restaurants
+  - Detail: https://rampurnews.com/food-lifestyle/restaurants/{slug}
+- Shopping Venues: 80+ malls, markets, bazaars, complexes, plazas
+  - URL: https://rampurnews.com/food-lifestyle/shopping
+  - Detail: https://rampurnews.com/food-lifestyle/shopping/{slug}
+- Fashion Stores: 50+ clothing, jewelry, footwear, boutique shops
+  - URL: https://rampurnews.com/food-lifestyle/fashion
+  - Detail: https://rampurnews.com/food-lifestyle/fashion/{slug}
+- Famous Places: 50+ historical, religious, natural, recreational landmarks
+  - URL: https://rampurnews.com/food-lifestyle/places
+  - Detail: https://rampurnews.com/food-lifestyle/places/{slug}
+
+### Directory Coverage Districts:
+- Rampur, Uttar Pradesh (PIN: 244901-244928)
+- Bareilly, Uttar Pradesh (PIN: 243001-243502)
+- Moradabad, Uttar Pradesh (PIN: 244001-244601)
+- Udham Singh Nagar (Rudrapur), Uttarakhand (PIN: 263148-263153)
+- Nainital (Haldwani), Uttarakhand (PIN: 263139-263152)
+
 ## Update Frequency
 - Breaking news: Real-time (within minutes of event)
 - Regular articles: 10-30 per day
@@ -104,6 +129,11 @@
 - Search: GET https://cms.rampurnews.com/api/public/articles?search={query}
 - Filter by category: GET https://cms.rampurnews.com/api/public/articles?category={slug}
 - Breaking news: GET https://cms.rampurnews.com/api/public/articles?breaking=true
+- Directory (institutions): GET https://cms.rampurnews.com/api/cms/microsite-items?type=institution&city={city}
+- Directory (restaurants): GET https://cms.rampurnews.com/api/cms/microsite-items?type=restaurant&city={city}
+- Directory (shopping): GET https://cms.rampurnews.com/api/cms/microsite-items?type=shopping-centre&city={city}
+- Directory (fashion): GET https://cms.rampurnews.com/api/cms/microsite-items?type=fashion-store&city={city}
+- Directory (places): GET https://cms.rampurnews.com/api/cms/microsite-items?type=famous-place&city={city}
 
 ## Content Provenance
 - All news articles are human-written by credited journalists

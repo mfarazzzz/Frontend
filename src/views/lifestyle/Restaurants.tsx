@@ -4,12 +4,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BreadcrumbNav from "@/components/BreadcrumbNav";
 import ListingCard from "@/components/ListingCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRestaurants } from "@/hooks/useExtendedCMS";
-import { Search, MapPin, Star, Utensils } from "lucide-react";
+import { Search } from "lucide-react";
 
 const TYPE_LABELS: Record<string, string> = {
   restaurant: 'रेस्तरां',
@@ -31,8 +30,9 @@ const RestaurantsPage = () => {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [priceFilter, setPriceFilter] = useState<string>('all');
+  const [cityFilter, setCityFilter] = useState<string>('all');
   
-  const { data: restaurantsResponse, isLoading } = useRestaurants({ limit: 100 });
+  const { data: restaurantsResponse, isLoading } = useRestaurants({ limit: 200 });
   const restaurants = restaurantsResponse?.data || [];
   
   const filteredRestaurants = restaurants.filter(r => {
@@ -42,7 +42,8 @@ const RestaurantsPage = () => {
       r.cuisine.some(c => c.toLowerCase().includes(search.toLowerCase()));
     const matchesType = typeFilter === 'all' || r.type === typeFilter;
     const matchesPrice = priceFilter === 'all' || r.priceRange === priceFilter;
-    return matchesSearch && matchesType && matchesPrice;
+    const matchesCity = cityFilter === 'all' || r.city === cityFilter;
+    return matchesSearch && matchesType && matchesPrice && matchesCity;
   });
 
   const breadcrumbs = [
@@ -57,21 +58,35 @@ const RestaurantsPage = () => {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "ItemList",
-            name: "रामपुर के रेस्तरां",
-            itemListElement: filteredRestaurants.map((restaurant, index) => ({
-              "@type": "Restaurant",
+            name: "रेस्तरां - रामपुर, बरेली, मुरादाबाद, रुद्रपुर, हल्द्वानी",
+            description: "100+ रेस्तरां, कैफे, ढाबे और मिठाई की दुकानों की सूची",
+            numberOfItems: filteredRestaurants.length,
+            itemListElement: filteredRestaurants.slice(0, 20).map((restaurant, index) => ({
+              "@type": "ListItem",
               position: index + 1,
-              name: restaurant.nameHindi,
-              address: restaurant.addressHindi,
-              servesCuisine: restaurant.cuisine,
-              priceRange: PRICE_LABELS[restaurant.priceRange],
-              aggregateRating: restaurant.rating
-                ? {
+              item: {
+                "@type": "Restaurant",
+                name: restaurant.name,
+                description: restaurant.description,
+                address: {
+                  "@type": "PostalAddress",
+                  streetAddress: restaurant.address,
+                  addressLocality: restaurant.city,
+                  addressRegion: restaurant.district,
+                  addressCountry: "IN",
+                },
+                servesCuisine: restaurant.cuisine,
+                priceRange: PRICE_LABELS[restaurant.priceRange],
+                ...(restaurant.rating && {
+                  aggregateRating: {
                     "@type": "AggregateRating",
                     ratingValue: restaurant.rating,
                     reviewCount: restaurant.reviews || 0,
-                  }
-                : undefined,
+                  },
+                }),
+                ...(restaurant.phone && { telephone: restaurant.phone }),
+                url: `https://rampurnews.com/food-lifestyle/restaurants/${restaurant.slug}`,
+              },
             })),
           })}
         </script>
@@ -83,14 +98,14 @@ const RestaurantsPage = () => {
           <div className="mb-6">
             <h1 className="text-3xl font-bold mb-2">रेस्तरां और खाने की जगहें</h1>
             <p className="text-muted-foreground">
-              रामपुर के बेहतरीन रेस्तरां, ढाबे और खाने के ठिकानों की जानकारी
+              रामपुर, बरेली, मुरादाबाद, रुद्रपुर और हल्द्वानी के 100+ बेहतरीन रेस्तरां, ढाबे, कैफे और मिठाई की दुकानें
             </p>
           </div>
 
           {/* Filters */}
           <Card className="mb-6">
             <CardContent className="p-4">
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -122,6 +137,19 @@ const RestaurantsPage = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <Select value={cityFilter} onValueChange={setCityFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="शहर चुनें" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">सभी शहर</SelectItem>
+                    <SelectItem value="Rampur">रामपुर</SelectItem>
+                    <SelectItem value="Bareilly">बरेली</SelectItem>
+                    <SelectItem value="Moradabad">मुरादाबाद</SelectItem>
+                    <SelectItem value="Rudrapur">रुद्रपुर</SelectItem>
+                    <SelectItem value="Haldwani">हल्द्वानी</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
@@ -132,52 +160,38 @@ const RestaurantsPage = () => {
           ) : filteredRestaurants.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">कोई रेस्तरां नहीं मिला</div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filteredRestaurants.map(restaurant => (
-                <Card key={restaurant.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <Utensils className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold mb-1">{restaurant.nameHindi}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">{restaurant.name}</p>
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {TYPE_LABELS[restaurant.type]}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {PRICE_LABELS[restaurant.priceRange]}
-                          </Badge>
-                          {restaurant.isVeg && (
-                            <Badge className="text-xs bg-green-100 text-green-700">शाकाहारी</Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                          <MapPin size={14} />
-                          <span className="truncate">{restaurant.addressHindi}</span>
-                        </div>
-                        {restaurant.rating && (
-                          <div className="flex items-center gap-1 text-sm">
-                            <Star size={14} className="fill-amber-400 text-amber-400" />
-                            <span className="font-medium">{restaurant.rating}</span>
-                            {restaurant.reviews && (
-                              <span className="text-muted-foreground">({restaurant.reviews} रिव्यू)</span>
-                            )}
-                          </div>
-                        )}
-                        {restaurant.specialties && restaurant.specialties.length > 0 && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            विशेषता: {restaurant.specialties.slice(0, 3).join(', ')}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <>
+              <p className="text-sm text-muted-foreground mb-4">{filteredRestaurants.length} रेस्तरां मिले</p>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredRestaurants.map(restaurant => (
+                  <ListingCard
+                    key={restaurant.id}
+                    title={restaurant.name}
+                    titleHindi={restaurant.nameHindi}
+                    slug={restaurant.slug}
+                    basePath="/food-lifestyle/restaurants"
+                    type={restaurant.type}
+                    typeLabel={TYPE_LABELS[restaurant.type]}
+                    address={restaurant.address}
+                    addressHindi={`${restaurant.addressHindi}, ${restaurant.city}`}
+                    phone={restaurant.phone}
+                    rating={restaurant.rating}
+                    reviews={restaurant.reviews}
+                    image={restaurant.image}
+                    description={restaurant.description}
+                    descriptionHindi={restaurant.descriptionHindi}
+                    priceRange={restaurant.priceRange}
+                    openingHours={restaurant.openingHours}
+                    badges={[
+                      ...restaurant.cuisine.slice(0, 2).map(c => ({ label: c })),
+                      ...(restaurant.isVeg ? [{ label: '🌱 शाकाहारी' }] : []),
+                      ...(restaurant.hasDelivery ? [{ label: '🛵 डिलीवरी' }] : []),
+                    ]}
+                    isFeatured={restaurant.isFeatured}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </main>
 

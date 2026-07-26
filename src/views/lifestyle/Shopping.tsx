@@ -30,8 +30,9 @@ const PLACE_TYPE_LABELS: Record<string, string> = {
 const ShoppingPage = () => {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [cityFilter, setCityFilter] = useState<string>('all');
   
-  const { data: centresResponse, isLoading: loadingCentres } = useShoppingCentres({ limit: 100 });
+  const { data: centresResponse, isLoading: loadingCentres } = useShoppingCentres({ limit: 200 });
   const { data: placesResponse, isLoading: loadingPlaces } = useFamousPlaces({ limit: 100 });
   
   const shoppingCentres = centresResponse?.data || [];
@@ -42,14 +43,16 @@ const ShoppingPage = () => {
       c.nameHindi.toLowerCase().includes(search.toLowerCase()) ||
       c.name.toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === 'all' || c.type === typeFilter;
-    return matchesSearch && matchesType;
+    const matchesCity = cityFilter === 'all' || c.city === cityFilter;
+    return matchesSearch && matchesType && matchesCity;
   });
 
   const filteredPlaces = famousPlaces.filter(p => {
     const matchesSearch = search === '' || 
       p.nameHindi.toLowerCase().includes(search.toLowerCase()) ||
       p.name.toLowerCase().includes(search.toLowerCase());
-    return matchesSearch;
+    const matchesCity = cityFilter === 'all' || p.city === cityFilter;
+    return matchesSearch && matchesCity;
   });
 
   const breadcrumbs = [
@@ -70,14 +73,14 @@ const ShoppingPage = () => {
           <div className="mb-6">
             <h1 className="text-3xl font-bold mb-2">शॉपिंग सेंटर और प्रसिद्ध स्थान</h1>
             <p className="text-muted-foreground">
-              रामपुर के मॉल, बाजार और प्रमुख दर्शनीय स्थल
+              रामपुर, बरेली, मुरादाबाद, रुद्रपुर और हल्द्वानी के 80+ मॉल, बाज़ार और शॉपिंग सेंटर
             </p>
           </div>
 
           {/* Filters */}
           <Card className="mb-6">
             <CardContent className="p-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -96,6 +99,19 @@ const ShoppingPage = () => {
                     {Object.entries(TYPE_LABELS).map(([value, label]) => (
                       <SelectItem key={value} value={value}>{label}</SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+                <Select value={cityFilter} onValueChange={setCityFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="शहर चुनें" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">सभी शहर</SelectItem>
+                    <SelectItem value="Rampur">रामपुर</SelectItem>
+                    <SelectItem value="Bareilly">बरेली</SelectItem>
+                    <SelectItem value="Moradabad">मुरादाबाद</SelectItem>
+                    <SelectItem value="Rudrapur">रुद्रपुर</SelectItem>
+                    <SelectItem value="Haldwani">हल्द्वानी</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

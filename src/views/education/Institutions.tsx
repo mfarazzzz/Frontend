@@ -14,11 +14,13 @@ import { useInstitutions } from "@/hooks/useExtendedCMS";
 const InstitutionsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [cityFilter, setCityFilter] = useState<string>("all");
   
   const { data: institutionsData, isLoading } = useInstitutions({
     type: typeFilter !== "all" ? typeFilter : undefined,
+    city: cityFilter !== "all" ? cityFilter : undefined,
     search: searchQuery || undefined,
-    limit: 50,
+    limit: 100,
   });
   
   const institutions = institutionsData?.data || [];
@@ -33,17 +35,50 @@ const InstitutionsPage = () => {
     school: 'स्कूल',
     university: 'विश्वविद्यालय',
     coaching: 'कोचिंग',
-    vocational: 'व्यावसायिक',
+    vocational: 'पॉलिटेक्निक',
+    iti: 'आईटीआई',
+  };
+
+  // JSON-LD for EducationalOrganization list (SEO)
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "शैक्षणिक संस्थान - रामपुर, बरेली, मुरादाबाद, रुद्रपुर, हल्द्वानी",
+    "description": "250+ कॉलेज, स्कूल, विश्वविद्यालय, कोचिंग और ITI की सूची",
+    "numberOfItems": institutions.length,
+    "itemListElement": institutions.slice(0, 20).map((inst, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "EducationalOrganization",
+        "name": inst.name,
+        "description": inst.description,
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": inst.address,
+          "addressLocality": inst.city,
+          "addressRegion": inst.district,
+          "postalCode": inst.pincode,
+          "addressCountry": "IN",
+        },
+        ...(inst.phone && { "telephone": inst.phone }),
+        ...(inst.rating && { "aggregateRating": { "@type": "AggregateRating", "ratingValue": inst.rating, "reviewCount": inst.reviews || 1 } }),
+        "url": `https://rampurnews.com/education-jobs/institutions/${inst.slug}`,
+      },
+    })),
   };
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="शैक्षणिक संस्थान | कॉलेज, स्कूल, विश्वविद्यालय - रामपुर"
-        description="रामपुर और आस-पास के शैक्षणिक संस्थान - कॉलेज, स्कूल, विश्वविद्यालय की जानकारी। रामपुर न्यूज़।"
+        title="शैक्षणिक संस्थान | कॉलेज, स्कूल, विश्वविद्यालय - रामपुर, बरेली, मुरादाबाद"
+        description="रामपुर, बरेली, मुरादाबाद, रुद्रपुर और हल्द्वानी के 250+ शैक्षणिक संस्थान। कॉलेज, स्कूल, कोचिंग, ITI की जानकारी।"
         canonical="/education-jobs/institutions"
         ogType="website"
       />
+      
+      {/* JSON-LD Schema for ItemList */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }} />
       
       <Header />
       
@@ -53,7 +88,7 @@ const InstitutionsPage = () => {
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">शैक्षणिक संस्थान</h1>
           <p className="text-muted-foreground">
-            रामपुर और आस-पास के कॉलेज, स्कूल और विश्वविद्यालय
+            रामपुर, बरेली, मुरादाबाद, रुद्रपुर और हल्द्वानी के 250+ कॉलेज, स्कूल, कोचिंग और विश्वविद्यालय
           </p>
         </div>
         
@@ -78,7 +113,21 @@ const InstitutionsPage = () => {
               <SelectItem value="college">कॉलेज</SelectItem>
               <SelectItem value="university">विश्वविद्यालय</SelectItem>
               <SelectItem value="coaching">कोचिंग</SelectItem>
-              <SelectItem value="vocational">व्यावसायिक</SelectItem>
+              <SelectItem value="vocational">पॉलिटेक्निक</SelectItem>
+              <SelectItem value="iti">आईटीआई</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={cityFilter} onValueChange={setCityFilter}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="शहर चुनें" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">सभी शहर</SelectItem>
+              <SelectItem value="Rampur">रामपुर</SelectItem>
+              <SelectItem value="Bareilly">बरेली</SelectItem>
+              <SelectItem value="Moradabad">मुरादाबाद</SelectItem>
+              <SelectItem value="Rudrapur">रुद्रपुर</SelectItem>
+              <SelectItem value="Haldwani">हल्द्वानी</SelectItem>
             </SelectContent>
           </Select>
         </div>

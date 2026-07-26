@@ -655,14 +655,14 @@ const createRestExtendedProvider = (config: CMSConfig): ExtendedCMSProvider => {
   };
 
   const getItemBySlug = async <T>(moduleType: string, slug: string): Promise<T | null> => {
-    // Use the dedicated slug endpoint
+    // Use the dedicated slug endpoint: /api/public/microsite-items/{slug}
     const result = await fetchJson<any>(
       buildUrl(`/api/public/microsite-items/${encodeURIComponent(slug)}`),
       { method: 'GET', headers: { 'Content-Type': 'application/json' } }
     );
     if (!result) return null;
     const item = result.data || result;
-    if (!item) return null;
+    if (!item || (!item.id && !item.slug)) return null;
     // Flatten payload JSONB into top-level object
     if (item.payload && typeof item.payload === 'object') {
       return { ...item.payload, id: item.id, slug: item.slug } as T;

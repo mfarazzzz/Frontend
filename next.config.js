@@ -141,6 +141,10 @@ const nextConfig = {
         headers: [{ key: "Cache-Control", value: "public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400" }],
       },
       {
+        source: "/sitemap-index.xml",
+        headers: [{ key: "Cache-Control", value: "public, max-age=3600, s-maxage=7200" }],
+      },
+      {
         source: "/sitemap.xml",
         headers: [{ key: "Cache-Control", value: "public, max-age=900, s-maxage=3600" }],
       },

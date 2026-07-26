@@ -80,6 +80,21 @@ export async function POST(request: NextRequest) {
 
   console.log(`[IndexNow] Submitted ${urls.length} URLs:`, submitted);
 
+  // Also ping Google to re-crawl the sitemap (accelerates discovery of new pages)
+  try {
+    await fetch(
+      `https://www.google.com/ping?sitemap=${encodeURIComponent(`${SITE_URL}/sitemap.xml`)}`,
+      { method: "GET", signal: AbortSignal.timeout(5000) },
+    );
+    await fetch(
+      `https://www.google.com/ping?sitemap=${encodeURIComponent(`${SITE_URL}/news-sitemap.xml`)}`,
+      { method: "GET", signal: AbortSignal.timeout(5000) },
+    );
+    console.log("[IndexNow] Google sitemap ping sent.");
+  } catch {
+    // Non-blocking — Google ping is best-effort
+  }
+
   return NextResponse.json({
     success: true,
     urlsSubmitted: urls.length,

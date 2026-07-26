@@ -585,37 +585,94 @@ const createRestExtendedProvider = (config: CMSConfig): ExtendedCMSProvider => {
   };
 
   const getItems = async <T>(moduleType: string, params?: ExtendedQueryParams): Promise<PaginatedResponse<T>> => {
-    const query = buildQuery(moduleType, params);
-    const result = await fetchJson<PaginatedResponse<T>>(buildUrl('/microsite-items', query), {
+    // Use the public API endpoint (no auth required)
+    const query: Record<string, string | number | boolean | undefined> = {};
+    query.type = moduleType;
+    if (params?.limit) query.pageSize = params.limit;
+    if (params?.offset && params?.limit) query.page = Math.floor(params.offset / params.limit) + 1;
+    else query.page = 1;
+    if (params?.category) query.category = params.category;
+    if (params?.city) query.city = params.city;
+    if (params?.district) query.district = params.district;
+    if (params?.featured !== undefined) query.featured = String(params.featured);
+    if (params?.popular !== undefined) query.popular = String(params.popular);
+    if (params?.search) query.search = params.search;
+    if (params?.status) query.status = params.status;
+    if (params?.orderBy) query.sort = params.orderBy;
+    if (params?.order) query.order = params.order;
+
+    // Fetch a large page to allow client-side type filtering
+    // (until CMS is redeployed with type filter support)
+    const fetchSize = 100; // max allowed by the API
+    query.pageSize = fetchSize;
+
+    const result = await fetchJson<any>(buildUrl('/api/public/microsite-items', query), {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers: { 'Content-Type': 'application/json' },
     });
     if (!result) {
-      return {
-        data: [],
-        total: 0,
-        page: 1,
-        pageSize: params?.limit || 10,
-        totalPages: 0,
-      };
+      return { data: [], total: 0, page: 1, pageSize: params?.limit || 25, totalPages: 0 };
     }
-    return result;
+
+    // CMS returns { data: [...rows], pagination: { page, pageSize, pageCount, total } }
+    const rows = result.data || [];
+    const pagination = result.pagination || result.meta?.pagination || {};
+
+    // Flatten payload and apply client-side type filter as fallback
+    let data = rows
+      .filter((item: any) => item.type === moduleType)
+      .map((item: any) => {
+        if (item.payload && typeof item.payload === 'object') {
+          return { ...item.payload, id: item.id, slug: item.slug };
+        }
+        return item;
+      }) as T[];
+
+    // Apply client-side city filter if API didn't handle it
+    if (params?.city && data.length > 0) {
+      data = data.filter((item: any) => item.city === params.city);
+    }
+
+    // Apply client-side search filter
+    if (params?.search && data.length > 0) {
+      const q = params.search.toLowerCase();
+      data = data.filter((item: any) => {
+        const searchable = `${item.name || ''} ${item.nameHindi || ''} ${item.title || ''} ${item.titleHindi || ''}`.toLowerCase();
+        return searchable.includes(q);
+      });
+    }
+
+    const limit = params?.limit || 25;
+    const slicedData = data.slice(0, limit);
+
+    return {
+      data: slicedData,
+      total: data.length,
+      page: 1,
+      pageSize: limit,
+      totalPages: Math.ceil(data.length / limit),
+    };
   };
 
   const getItemBySlug = async <T>(moduleType: string, slug: string): Promise<T | null> => {
-    const result = await fetchJson<T | null>(
-      buildUrl(`/microsite-items/slug/${encodeURIComponent(slug)}`, { moduleType }),
-      {
-        method: 'GET',
-        headers: getAuthHeaders(),
-      }
+    // Use the dedicated slug endpoint
+    const result = await fetchJson<any>(
+      buildUrl(`/api/public/microsite-items/${encodeURIComponent(slug)}`),
+      { method: 'GET', headers: { 'Content-Type': 'application/json' } }
     );
-    return result;
+    if (!result) return null;
+    const item = result.data || result;
+    if (!item) return null;
+    // Flatten payload JSONB into top-level object
+    if (item.payload && typeof item.payload === 'object') {
+      return { ...item.payload, id: item.id, slug: item.slug } as T;
+    }
+    return item as T;
   };
 
   const createItem = async <T extends { id: string }>(moduleType: string, value: any): Promise<T> => {
     const payload = { ...(value || {}), moduleType };
-    const result = await fetchJson<T>(buildUrl('/microsite-items'), {
+    const result = await fetchJson<T>(buildUrl('/api/cms/microsite-items'), {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(payload),
@@ -627,7 +684,7 @@ const createRestExtendedProvider = (config: CMSConfig): ExtendedCMSProvider => {
   };
 
   const updateItem = async <T extends { id: string }>(id: string, value: any): Promise<T> => {
-    const result = await fetchJson<T>(buildUrl(`/microsite-items/${encodeURIComponent(id)}`), {
+    const result = await fetchJson<T>(buildUrl(`/api/cms/microsite-items/${encodeURIComponent(id)}`), {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(value || {}),
@@ -639,7 +696,7 @@ const createRestExtendedProvider = (config: CMSConfig): ExtendedCMSProvider => {
   };
 
   const deleteItem = async (id: string): Promise<void> => {
-    await fetchJson<null>(buildUrl(`/microsite-items/${encodeURIComponent(id)}`), {
+    await fetchJson<null>(buildUrl(`/api/cms/microsite-items/${encodeURIComponent(id)}`), {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });

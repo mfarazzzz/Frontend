@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "छुट्टियों का कैलेंडर 2026 | धार्मिक त्योहार और राष्ट्रीय अवकाश - रामपुर न्यूज़",
   description:
     "2026 के सभी धार्मिक त्योहार, राष्ट्रीय अवकाश और सार्वजनिक छुट्टियों की पूरी सूची। होली, दिवाली, ईद, क्रिसमस और अन्य महत्वपूर्ण त्योहारों की तारीखें।",
-  robots: { index: false, follow: true },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } },
   alternates: {
     canonical: "/religion-culture/holidays",
   },

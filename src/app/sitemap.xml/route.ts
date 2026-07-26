@@ -168,8 +168,9 @@ export async function GET() {
   for (const a of auths) {
     const slug = (a?.slug || "").trim();
     if (!slug) continue;
+    // Use canonical /author/{slug} path (middleware redirects /authors/ → /author/)
     entries.push(
-      `\n  <url>\n    <loc>${esc(`${SITE}/authors/${slug}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>`,
+      `\n  <url>\n    <loc>${esc(`${SITE}/author/${slug}`)}</loc>\n    <lastmod>${iso(now)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>`,
     );
   }
 

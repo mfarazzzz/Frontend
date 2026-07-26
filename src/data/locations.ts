@@ -73,6 +73,7 @@ export const LOCATIONS: Location[] = [
   { slug: 'pilibhit', nameHindi: 'पीलीभीत', nameEnglish: 'Pilibhit', region: 'rohilkhand', state: 'uttar-pradesh', isPrimary: false, district: 'Pilibhit', lat: 28.6316, lng: 79.8039 },
   { slug: 'shahjahanpur', nameHindi: 'शाहजहाँपुर', nameEnglish: 'Shahjahanpur', region: 'rohilkhand', state: 'uttar-pradesh', isPrimary: false, district: 'Shahjahanpur', lat: 27.8818, lng: 79.9058 },
   { slug: 'budaun', nameHindi: 'बदायूं', nameEnglish: 'Budaun', region: 'rohilkhand', state: 'uttar-pradesh', isPrimary: false, district: 'Budaun', lat: 28.0484, lng: 79.1200 },
+  { slug: 'haldwani', nameHindi: 'हल्द्वानी', nameEnglish: 'Haldwani', region: 'rohilkhand', state: 'uttarakhand', isPrimary: false, district: 'Nainital', lat: 29.2183, lng: 79.5130 },
 ];
 
 // ─── Lookup helpers ──────────────────────────────────────────────────────────

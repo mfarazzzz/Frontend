@@ -130,7 +130,7 @@ export async function generateMetadata(props: { params: Promise<PageParams> }): 
     ? "Author profile of Mohammad Faraz Raza Khan, Founder & Editor of rampurnews.com, advocate, engineer and digital media entrepreneur with 10+ years in tech and media."
     : truncateText(genericDescription, 155);
 
-  const canonicalPath = `/authors/${slug}`;
+  const canonicalPath = `/author/${slug}`;
   const canonicalUrl = `${SITE_URL}${canonicalPath}`;
 
   const keywords = isFaraz
@@ -186,7 +186,7 @@ const buildAuthorSchema = (author: CMSAuthor, slug: string) => {
     author.designation ||
     (isFaraz ? "Founder & Editor, rampurnews.com" : "Author at rampurnews.com");
 
-  const url = `${SITE_URL}/authors/${slug}`;
+  const url = `${SITE_URL}/author/${slug}`;
 
   const description = isFaraz
     ? "Founder and Editor of rampurnews.com, advocate (lawyer), engineer and digital media entrepreneur with more than ten years' experience in technology, business growth, EdTech, digital advertising and digital marketing."

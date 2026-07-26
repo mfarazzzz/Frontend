@@ -20,6 +20,11 @@ type PageParams = { slug: string };
 
 export const revalidate = 60;
 
+/** Pre-render all city hub pages at build time for faster indexing */
+export async function generateStaticParams() {
+  return getAllLocationSlugs().map((slug) => ({ slug }));
+}
+
 export async function generateMetadata(props: { params: Promise<PageParams> }): Promise<Metadata> {
   const { slug } = await props.params;
   const location = getLocationBySlug(slug);

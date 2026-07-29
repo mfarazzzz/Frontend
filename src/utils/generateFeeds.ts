@@ -1,8 +1,27 @@
 import type { CMSArticle } from "@/services/cms";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com";
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com").replace(/\/+$/, "");
 const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME || "रामपुर न्यूज़";
 const SITE_DESCRIPTION = "रामपुर न्यूज़ - रामपुर जिले और उत्तर प्रदेश की ताज़ा, विश्वसनीय खबरें। Breaking News, Local Updates, Education, Sports, Entertainment.";
+
+/**
+ * Normalize a canonical URL so it always uses the configured SITE_URL domain.
+ * Prevents GSC "url not allowed at this location" errors from www/non-www mismatches.
+ */
+const normalizeSiteUrl = (url: string): string => {
+  try {
+    const parsed = new URL(url);
+    const siteObj = new URL(SITE_URL);
+    const bareHost = parsed.hostname.replace(/^www\./, "");
+    const bareSiteHost = siteObj.hostname.replace(/^www\./, "");
+    if (bareHost === bareSiteHost) {
+      return `${SITE_URL}${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+  } catch {
+    // Not a valid URL — return as-is
+  }
+  return url;
+};
 
 type FeedArticle = Pick<
   CMSArticle,
@@ -26,9 +45,13 @@ export const getAllNewsSorted = (articles: FeedArticle[]): FeedArticle[] => {
 const buildCanonicalUrl = (article: FeedArticle) => {
   const canonical = (article.canonicalUrl || "").trim();
   if (canonical) {
-    return canonical.startsWith("http://") || canonical.startsWith("https://")
-      ? canonical
-      : `${SITE_URL}${canonical.startsWith("/") ? canonical : `/${canonical}`}`;
+    if (canonical.startsWith("http://") || canonical.startsWith("https://")) {
+      const normalized = normalizeSiteUrl(canonical);
+      // Skip URLs that don't belong to our site (e.g. example.com placeholders)
+      if (!normalized.startsWith(SITE_URL)) return "";
+      return normalized;
+    }
+    return `${SITE_URL}${canonical.startsWith("/") ? canonical : `/${canonical}`}`;
   }
   return `${SITE_URL}/${article.category}/${article.slug}`;
 };
@@ -173,6 +196,9 @@ export const generateNewsSitemap = (articles: FeedArticle[], hours: number = 48)
   const recentArticles = getRecentNews(articles, hours);
   
   const urlEntries = recentArticles.map((article) => {
+    const articleUrl = buildCanonicalUrl(article);
+    // Skip articles with invalid/external canonical URLs (e.g. example.com)
+    if (!articleUrl) return "";
     const keywords = [article.categoryHindi, "रामपुर", "उत्तर प्रदेश", "ताज़ा खबर"]
       .filter((value) => typeof value === "string" && value.trim().length > 0)
       .join(", ");
@@ -181,7 +207,7 @@ export const generateNewsSitemap = (articles: FeedArticle[], hours: number = 48)
     
     return `
   <url>
-    <loc>${buildCanonicalUrl(article)}</loc>
+    <loc>${articleUrl}</loc>
     <lastmod>${publishedIso}</lastmod>
     <news:news>
       <news:publication>
@@ -197,7 +223,7 @@ export const generateNewsSitemap = (articles: FeedArticle[], hours: number = 48)
       <image:caption>${escapeXml(article.title)}</image:caption>
     </image:image>
   </url>`;
-  }).join("");
+  }).filter(Boolean).join("");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"

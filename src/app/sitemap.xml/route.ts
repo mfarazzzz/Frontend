@@ -11,6 +11,27 @@ const esc = (s: string) =>
     c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === "&" ? "&amp;" : c === "'" ? "&apos;" : "&quot;",
   );
 
+/**
+ * Normalize a canonical URL so it always uses the configured SITE domain.
+ * This prevents GSC "url not allowed at this location" errors caused by
+ * www vs non-www or http vs https mismatches in the canonicalUrl field.
+ */
+const normalizeSiteUrl = (url: string): string => {
+  try {
+    const parsed = new URL(url);
+    const siteObj = new URL(SITE);
+    // If the URL's hostname is a variant of our site (www vs non-www), rewrite it
+    const bareHost = parsed.hostname.replace(/^www\./, "");
+    const bareSiteHost = siteObj.hostname.replace(/^www\./, "");
+    if (bareHost === bareSiteHost) {
+      return `${SITE}${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+  } catch {
+    // Not a valid URL — return as-is
+  }
+  return url;
+};
+
 const iso = (v: string | Date) => {
   const d = new Date(v);
   return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
@@ -211,11 +232,15 @@ export async function GET() {
     const canonical = (p?.canonicalUrl || "").trim();
     let url = "";
     if (canonical) {
-      url = canonical.startsWith("http") ? canonical : `${SITE}${canonical.startsWith("/") ? canonical : `/${canonical}`}`;
+      url = canonical.startsWith("http")
+        ? normalizeSiteUrl(canonical)
+        : `${SITE}${canonical.startsWith("/") ? canonical : `/${canonical}`}`;
     } else if (p?.category && p?.slug) {
       url = `${SITE}/${p.category}/${p.slug}`;
     }
     if (!url) continue;
+    // Skip URLs that don't belong to our site (e.g. example.com placeholders)
+    if (url.startsWith("http") && !url.startsWith(SITE)) continue;
     // Skip admin/api/tag paths
     if (/\/(admin|api\/|tags?)\//.test(url)) continue;
 

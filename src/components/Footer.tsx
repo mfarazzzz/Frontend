@@ -1,7 +1,7 @@
 "use client";
 
 import { Link } from "@/lib/router-compat";
-import { Facebook, Twitter, Youtube, Instagram, Mail, Phone, MapPin, Settings, MessageCircle, Send } from "lucide-react";
+import { Facebook, Twitter, Youtube, Instagram, Mail, Phone, MapPin, MessageCircle, Send } from "lucide-react";
 import { categories } from "@/data/categories";
 import AdSlotLazy from "./AdSlotLazy";
 
@@ -263,18 +263,6 @@ const Footer = () => {
               <Link to="/grievance" className="hover:text-primary transition-colors">
                 शिकायत निवारण
               </Link>
-              <Link to="/admin/ads" className="flex items-center gap-1 hover:text-primary transition-colors">
-                <Settings size={14} />
-                Ad Manager
-              </Link>
-              <a
-                href="https://cms.rampurnews.com/admin"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:text-primary transition-colors"
-              >
-                CMS Admin
-              </a>
             </div>
           </div>
         </div>

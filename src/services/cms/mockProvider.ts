@@ -80,7 +80,7 @@ const initializeStorage = () => {
       tagline: 'रामपुर की सबसे विश्वसनीय हिंदी समाचार वेबसाइट',
       socialLinks: {
         facebook: 'https://www.facebook.com/profile.php?id=61586930678729',
-        twitter: 'https://twitter.com/rampurnews',
+        twitter: 'https://x.com/rampur__news',
         youtube: 'https://www.youtube.com/@rampurnewsdotcom',
         whatsapp: 'https://whatsapp.com/channel/0029Vb7TEPsLI8Yg4gbsqe3O',
       },

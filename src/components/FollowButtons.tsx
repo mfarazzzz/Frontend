@@ -20,9 +20,9 @@ const FollowButtons = ({
   whatsappChannel = 'https://whatsapp.com/channel/0029Vb7TEPsLI8Yg4gbsqe3O',
   telegramChannel = 'https://t.me/rampurnewsofficial',
   facebookPage = 'https://www.facebook.com/profile.php?id=61586930678729',
-  twitterHandle = 'https://twitter.com/rampurnews',
+  twitterHandle = 'https://x.com/rampur__news',
   youtubeChannel = 'https://www.youtube.com/@rampurnewsdotcom',
-  instagramHandle = 'https://instagram.com/rampurnews',
+  instagramHandle = 'https://www.instagram.com/rampurnewsdotcom',
 }: FollowButtonsProps) => {
   
   const socialLinks = [

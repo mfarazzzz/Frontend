@@ -72,8 +72,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    site: "@RampurNews",
-    creator: "@RampurNews",
+    site: "@rampur__news",
+    creator: "@rampur__news",
     title: "रामपुर न्यूज़ | Rampur News",
     description:
       "रामपुर और उत्तर प्रदेश की ताज़ा खबरें: स्थानीय, शिक्षा, खेल, मनोरंजन और अधिक।",
@@ -115,7 +115,7 @@ const organizationSchema = {
   },
   sameAs: [
     "https://www.facebook.com/profile.php?id=61586930678729",
-    "https://twitter.com/RampurNews",
+    "https://x.com/rampur__news",
     "https://www.instagram.com/rampurnewsdotcom",
     "https://www.youtube.com/@rampurnewsdotcom",
     "https://whatsapp.com/channel/0029Vb7TEPsLI8Yg4gbsqe3O",

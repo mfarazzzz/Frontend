@@ -25,8 +25,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    site: "@RampurNews",
-    creator: "@RampurNews",
+    site: "@rampur__news",
+    creator: "@rampur__news",
   },
 };
 

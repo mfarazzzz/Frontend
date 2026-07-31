@@ -183,7 +183,7 @@ const Sidebar = ({ trendingArticles = [], todaysTop = [], mostRead = [] }: Sideb
             यूट्यूब
           </a>
           <a
-            href="https://instagram.com/RampurNews"
+            href="https://www.instagram.com/rampurnewsdotcom"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-[#f09433] via-[#e6683c] to-[#bc1888] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"

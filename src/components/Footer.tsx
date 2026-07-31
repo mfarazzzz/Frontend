@@ -87,9 +87,11 @@ const Footer = () => {
                 <Facebook size={18} />
               </a>
               <a
-                href="#"
+                href="https://x.com/rampur__news"
                 className="w-9 h-9 flex items-center justify-center bg-primary/20 hover:bg-primary rounded-full transition-colors"
                 aria-label="Twitter"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <Twitter size={18} />
               </a>

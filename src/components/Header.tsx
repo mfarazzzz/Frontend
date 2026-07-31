@@ -65,13 +65,13 @@ const Header = ({ showBreakingTicker = true }: { showBreakingTicker?: boolean })
             <a href="https://www.facebook.com/profile.php?id=61586930678729" className="hover:text-primary transition-colors" aria-label="Facebook">
               <Facebook size={16} />
             </a>
-            <a href="#" className="hover:text-primary transition-colors" aria-label="Twitter">
+            <a href="https://x.com/rampur__news" className="hover:text-primary transition-colors" aria-label="Twitter">
               <Twitter size={16} />
             </a>
             <a href="https://www.youtube.com/@rampurnewsdotcom" className="hover:text-primary transition-colors" aria-label="Youtube">
               <Youtube size={16} />
             </a>
-            <a href="#" className="hover:text-primary transition-colors" aria-label="Instagram">
+            <a href="https://www.instagram.com/rampurnewsdotcom" className="hover:text-primary transition-colors" aria-label="Instagram">
               <Instagram size={16} />
             </a>
           </div>

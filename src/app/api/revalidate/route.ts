@@ -14,6 +14,56 @@ import { getCMSProvider } from "@/services/cms";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://rampurnews.com").replace(/\/+$/, "");
+const INDEXNOW_KEY = process.env.INDEXNOW_KEY || "rampurnews-indexnow-key-2026";
+
+/**
+ * Fire-and-forget IndexNow submission for newly published/updated content.
+ * Notifies Bing, Yandex, and other participating search engines instantly.
+ * Also pings Google to re-crawl sitemaps (accelerates Discover/News inclusion).
+ */
+async function triggerIndexNow(paths: string[]): Promise<void> {
+  const urls = paths.slice(0, 50).map((p) =>
+    p.startsWith("http") ? p : `${SITE_URL}${p.startsWith("/") ? p : `/${p}`}`,
+  );
+
+  const payload = {
+    host: new URL(SITE_URL).hostname,
+    key: INDEXNOW_KEY,
+    keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
+    urlList: urls,
+  };
+
+  // Submit to IndexNow endpoints (Bing + API hub)
+  const endpoints = [
+    "https://api.indexnow.org/indexnow",
+    "https://www.bing.com/indexnow",
+  ];
+
+  await Promise.allSettled(
+    endpoints.map((endpoint) =>
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(5000),
+      }),
+    ),
+  );
+
+  // Ping Google to re-crawl sitemaps (accelerates Discover discovery)
+  await Promise.allSettled([
+    fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(`${SITE_URL}/sitemap.xml`)}`, {
+      method: "GET",
+      signal: AbortSignal.timeout(5000),
+    }),
+    fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(`${SITE_URL}/news-sitemap.xml`)}`, {
+      method: "GET",
+      signal: AbortSignal.timeout(5000),
+    }),
+  ]);
+}
+
 // ─── Token extraction ─────────────────────────────────────────────────────────
 // Supports multiple token locations for backwards compatibility:
 // - x-revalidate-token header (Custom CMS + new Strapi format)
@@ -72,8 +122,18 @@ export async function POST(request: NextRequest) {
           revalidated.push(path.trim());
         }
       }
+
+      // ─── Auto-trigger IndexNow for Google Discover / Bing instant indexing ──
+      // Fire-and-forget: don't block the revalidation response
+      const contentPaths = revalidated.filter(
+        (p) => p !== "/" && !p.includes("sitemap") && !p.startsWith("/api"),
+      );
+      if (contentPaths.length > 0) {
+        triggerIndexNow(contentPaths).catch(() => {});
+      }
+
       return NextResponse.json(
-        { revalidated: true, paths: revalidated, source: "custom-cms", now: Date.now() },
+        { revalidated: true, paths: revalidated, source: "custom-cms", indexNowTriggered: contentPaths.length > 0, now: Date.now() },
         { status: 200, headers: { "Cache-Control": "no-store" } },
       );
     }

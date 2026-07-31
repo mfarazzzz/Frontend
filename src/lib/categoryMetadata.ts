@@ -15,15 +15,27 @@ export const buildCategoryMetadata = (slug: string): Metadata => {
     title,
     description,
     alternates: { canonical: absolute },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
+    },
     openGraph: {
       type: "website",
       title,
       description,
       url: absolute,
       siteName: "रामपुर न्यूज़ | Rampur News",
+      locale: "hi_IN",
       images: [
         {
-          url: `${SITE_URL}/og-image.png`,
+          url: `${SITE_URL}/api/og?title=${encodeURIComponent(category?.titleHindi || slug)}`,
           width: 1200,
           height: 630,
           alt: title,
@@ -34,7 +46,10 @@ export const buildCategoryMetadata = (slug: string): Metadata => {
       card: "summary_large_image",
       title,
       description,
-      images: [`${SITE_URL}/og-image.png`],
+      images: [`${SITE_URL}/api/og?title=${encodeURIComponent(category?.titleHindi || slug)}`],
+    },
+    other: {
+      "googlebot-news": "index, follow",
     },
   };
 };

@@ -9,7 +9,7 @@
  * - Unpublished but featured articles
  */
 import { NextResponse } from "next/server";
-import { getAggregatedList, fetchCustomCms, fetchStrapi } from "@/services/cms/aggregator";
+import { getAggregatedList, fetchCustomCms } from "@/services/cms/aggregator";
 
 export const dynamic = "force-dynamic";
 
@@ -115,15 +115,14 @@ export async function GET() {
     }
 
     // Category distribution
-    const categoryDistribution: Record<string, { total: number; customCms: number; strapi: number; noImage: number }> = {};
+    const categoryDistribution: Record<string, { total: number; customCms: number; noImage: number }> = {};
     for (const article of articles) {
       const cat = article.category || "uncategorized";
       if (!categoryDistribution[cat]) {
-        categoryDistribution[cat] = { total: 0, customCms: 0, strapi: 0, noImage: 0 };
+        categoryDistribution[cat] = { total: 0, customCms: 0, noImage: 0 };
       }
       categoryDistribution[cat].total++;
-      if (article._source === "custom-cms") categoryDistribution[cat].customCms++;
-      else categoryDistribution[cat].strapi++;
+      categoryDistribution[cat].customCms++;
       if (!article.image) categoryDistribution[cat].noImage++;
     }
 

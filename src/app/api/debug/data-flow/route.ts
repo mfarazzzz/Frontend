@@ -98,41 +98,14 @@ export async function GET(request: NextRequest) {
     };
   }
 
-  // ─── Pipeline 3: Strapi directly (with category filter) ───
-  try {
-    const startStrapi = Date.now();
-    const strapiResult = await fetchStrapi("articles", {
-      category,
-      pageSize: 25,
-      sort: "publishedAt",
-      order: "desc",
-    });
-    const strapiTime = Date.now() - startStrapi;
-
-    results.pipelines = {
-      ...results.pipelines as object,
-      strapi: {
-        status: "OK",
-        timing: `${strapiTime}ms`,
-        articleCount: strapiResult.data.length,
-        total: strapiResult.total,
-        note: "Strapi custom controller may ignore category filter. Client-side filtering applied.",
-        sampleTitles: strapiResult.data.slice(0, 3).map((a: any) => ({
-          title: a.title?.substring(0, 60),
-          category: a.category,
-          slug: a.slug,
-        })),
-      },
-    };
-  } catch (error) {
-    results.pipelines = {
-      ...results.pipelines as object,
-      strapi: {
-        status: "ERROR",
-        error: (error as Error).message,
-      },
-    };
-  }
+  // ─── Pipeline 3: Strapi RETIRED — no longer queried ───
+  results.pipelines = {
+    ...results.pipelines as object,
+    strapi: {
+      status: "RETIRED",
+      note: "Strapi is retired. All content now served from Custom CMS (Supabase).",
+    },
+  };
 
   // ─── Pipeline 4: getCMSProvider().getArticles() — the BROKEN path ───
   // This is what useArticles hook was calling on category pages

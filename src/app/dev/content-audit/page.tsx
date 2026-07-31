@@ -32,7 +32,6 @@ interface SectionAudit {
   homepageCount: number;
   categoryPageCount: number;
   customCmsCount: number;
-  strapiCount: number;
   aggregatorCount: number;
   duplicatesInHomepage: number;
   match: boolean;
@@ -62,7 +61,6 @@ async function auditSection(sectionConfig: any): Promise<SectionAudit> {
   let homepageCount = 0;
   let categoryPageCount = 0;
   let customCmsCount = 0;
-  let strapiCount = 0;
   let aggregatorCount = 0;
 
   // 1. What does the aggregator return for this category?
@@ -77,7 +75,6 @@ async function auditSection(sectionConfig: any): Promise<SectionAudit> {
       });
       aggregatorCount = aggResult.data.length;
       customCmsCount = aggResult.meta.sources.customCms.total;
-      strapiCount = aggResult.meta.sources.strapi.total;
     } catch (e) {
       notes.push(`Aggregator error: ${(e as Error).message}`);
     }
@@ -133,7 +130,6 @@ async function auditSection(sectionConfig: any): Promise<SectionAudit> {
     homepageCount,
     categoryPageCount,
     customCmsCount,
-    strapiCount,
     aggregatorCount,
     duplicatesInHomepage: 0, // Will be computed after full dedup
     match,
@@ -288,7 +284,6 @@ export default async function ContentAuditPage() {
                 <th className="text-right p-2">Cat.Page</th>
                 <th className="text-right p-2">CMS Total</th>
                 <th className="text-right p-2">Custom</th>
-                <th className="text-right p-2">Strapi</th>
                 <th className="text-right p-2">Dupes</th>
                 <th className="text-right p-2">Time</th>
                 <th className="text-center p-2">Status</th>
@@ -304,7 +299,6 @@ export default async function ContentAuditPage() {
                   <td className="p-2 text-right">{audit.category ? audit.categoryPageCount : "—"}</td>
                   <td className="p-2 text-right">{audit.aggregatorCount}</td>
                   <td className="p-2 text-right text-blue-400">{audit.customCmsCount}</td>
-                  <td className="p-2 text-right text-purple-400">{audit.strapiCount}</td>
                   <td className="p-2 text-right text-orange-400">{audit.duplicatesInHomepage > 0 ? audit.duplicatesInHomepage : "—"}</td>
                   <td className="p-2 text-right text-gray-500">{audit.timing}ms</td>
                   <td className="p-2 text-center">
@@ -372,8 +366,7 @@ Homepage (page.tsx)
        ├─ Sections: fetchAllHomepageSections() [contentResolver.ts]
        │    └─ Each section: fetchFromSource(config)
        │         └─ getAggregatedList(articles, { category })
-       │              ├─ fetchCustomCms() → cms.rampurnews.com
-       │              └─ fetchStrapi() → api.rampur.cloud + CLIENT-SIDE FILTER
+       │              └─ fetchCustomCms() → cms.rampurnews.com
        └─ Sidebar: getTrendingArticles, getBreakingNews
 
 Category Page (/rampur, /up, etc.)

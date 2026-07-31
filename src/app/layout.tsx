@@ -38,9 +38,13 @@ export const metadata: Metadata = {
     "ai-content-declaration": "human-written",
     "perplexity-indexable": "true",
     robots: "max-image-preview:large",
+    "content-language": "hi",
   },
   alternates: {
     canonical: "/",
+    languages: {
+      "hi-IN": "/",
+    },
     types: {
       "application/rss+xml": [
         { url: "/rss.xml", title: "Rampur News RSS" },
@@ -98,9 +102,16 @@ const organizationSchema = {
   url: "https://rampurnews.com",
   logo: {
     "@type": "ImageObject",
-    url: "https://rampurnews.com/logo.png",
+    url: "https://rampurnews.com/Logo.png",
     width: 768,
     height: 768,
+    caption: "रामपुर न्यूज़ | Rampur News Logo",
+  },
+  image: {
+    "@type": "ImageObject",
+    url: "https://rampurnews.com/og-image.png",
+    width: 1200,
+    height: 630,
   },
   sameAs: [
     "https://www.facebook.com/profile.php?id=61586930678729",
@@ -112,11 +123,25 @@ const organizationSchema = {
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer service",
+    telephone: "+91-8077848980",
+    email: "contact@rampurnews.com",
     areaServed: "IN",
     availableLanguage: ["Hindi", "English"],
   },
-  foundingDate: "2024",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Rampur",
+    addressRegion: "Uttar Pradesh",
+    addressCountry: "IN",
+    postalCode: "244901",
+  },
+  foundingDate: "2024-01-01",
+  foundingLocation: {
+    "@type": "Place",
+    name: "Rampur, Uttar Pradesh, India",
+  },
   description: "रामपुर और रोहिलखंड क्षेत्र (मुरादाबाद, बरेली, अमरोहा, संभल, बिजनौर, पीलीभीत, शाहजहाँपुर, बदायूं) की ताज़ा, विश्वसनीय हिंदी खबरें।",
+  slogan: "रामपुर की विश्वसनीय आवाज़",
   areaServed: [
     { "@type": "City", name: "Rampur, Uttar Pradesh" },
     { "@type": "City", name: "Moradabad, Uttar Pradesh" },
@@ -134,9 +159,13 @@ const organizationSchema = {
   publishingPrinciples: "https://rampurnews.com/editorial-policy",
   correctionsPolicy: "https://rampurnews.com/corrections-policy",
   ethicsPolicy: "https://rampurnews.com/editorial-policy",
-  masthead: "https://rampurnews.com/about",
+  masthead: "https://rampurnews.com/our-team",
   ownershipFundingInfo: "https://rampurnews.com/ownership",
   actionableFeedbackPolicy: "https://rampurnews.com/contact",
+  diversityPolicy: "https://rampurnews.com/editorial-policy",
+  noBylinesPolicy: "https://rampurnews.com/editorial-policy",
+  unnamedSourcesPolicy: "https://rampurnews.com/editorial-policy",
+  verificationFactCheckingPolicy: "https://rampurnews.com/editorial-policy",
 };
 
 export default function RootLayout({

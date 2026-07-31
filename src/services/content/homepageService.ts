@@ -92,7 +92,7 @@ export async function getHomepageData(
 
       provider
         .getArticles({ status: 'published', sinceHours: 24, orderBy: 'views', order: 'desc', limit: 5 })
-        .then((r) => r.data)
+        .then((r) => r.data.length > 0 ? r.data : provider.getArticles({ status: 'published', sinceHours: 168, orderBy: 'views', order: 'desc', limit: 5 }).then((r2) => r2.data))
         .catch(() => [] as CMSArticle[]),
     ]);
 

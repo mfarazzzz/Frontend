@@ -163,6 +163,10 @@ export function createCustomCmsProvider(): CMSProvider {
       if (params?.breaking) query.breaking = 'true';
       if (params?.editorsPick) query.editorsPick = 'true';
       if (params?.search) query.search = params.search;
+      if (params?.sinceHours && Number(params.sinceHours) > 0) {
+        const since = new Date(Date.now() - Number(params.sinceHours) * 3600_000).toISOString();
+        query.published_after = since;
+      }
       if (params?.orderBy === 'views') query.sort = 'views';
       else query.sort = 'published_at';
       query.order = params?.order || 'desc';

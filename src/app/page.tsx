@@ -99,7 +99,12 @@ export default async function Page() {
               height: 768,
             },
           },
-          image: heroPrimary.image || `${siteUrl}/og-image.png`,
+          image: (() => {
+            const img = heroPrimary.image || "";
+            if (img.startsWith("http")) return img;
+            if (img.startsWith("/")) return `${siteUrl}${img}`;
+            return img ? `${siteUrl}/${img}` : `${siteUrl}/og-image.png`;
+          })(),
           inLanguage: "hi-IN",
           articleSection: heroPrimary.categoryHindi,
         }

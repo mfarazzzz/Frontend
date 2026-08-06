@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import ResultCalendarPage from "@/views/education/ResultCalendar";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // 5 min ISR
 
 export const metadata: Metadata = {
   title: "रिजल्ट कैलेंडर 2026 | बोर्ड और प्रतियोगी परिणाम - रामपुर न्यूज़",

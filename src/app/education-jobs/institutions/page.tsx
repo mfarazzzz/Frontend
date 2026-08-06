@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import InstitutionsPage from "@/views/education/Institutions";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // 1 hour ISR
 
 export const metadata: Metadata = {
   title: "कॉलेज, स्कूल और संस्थान डायरेक्टरी रामपुर बरेली मुरादाबाद 2026 | रामपुर न्यूज़",

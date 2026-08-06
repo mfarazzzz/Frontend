@@ -64,9 +64,9 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: ["/admin", "/api/admin", "/api/cms"],
       },
-      // Block known bad scraper bots
+      // Block known bad scraper bots (keeping SemrushBot/AhrefsBot unblocked for backlink monitoring)
       {
-        userAgent: ["CCBot", "SemrushBot", "AhrefsBot", "DotBot", "MJ12bot"],
+        userAgent: ["CCBot", "DotBot", "MJ12bot"],
         disallow: ["/"],
       },
     ],

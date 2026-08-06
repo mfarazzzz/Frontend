@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import ShoppingPage from "@/views/lifestyle/Shopping";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // 1 hour ISR
 
 export const metadata: Metadata = {
   title: "शॉपिंग मॉल, बाज़ार और मार्केट - रामपुर बरेली मुरादाबाद 2026 | रामपुर न्यूज़",

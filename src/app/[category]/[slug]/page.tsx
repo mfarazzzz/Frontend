@@ -507,7 +507,9 @@ export default async function Page(props: { params: Promise<PageParams> }) {
     : null;
 
   // Generate FAQ schema from article content (3-5 Q&A pairs)
-  const faqSchema = canInjectSchema ? generateFaqFromArticle(article, title, effectiveCategory) : null;
+  // NOTE: Disabled — Google severely limits FAQ rich results since Aug 2023.
+  // Mass FAQ schema on news articles can be seen as a spam signal.
+  const faqSchema = null;
 
   // Speakable schema for voice assistants and AI answer engines
   const speakableSchema = canInjectSchema ? {

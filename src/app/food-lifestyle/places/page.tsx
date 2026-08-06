@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import PlacesPage from "@/views/lifestyle/PlacesPage";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // 1 hour ISR
 
 export const metadata: Metadata = {
   title: "प्रसिद्ध स्थान और दर्शनीय स्थल - रामपुर बरेली मुरादाबाद 2026 | रामपुर न्यूज़",

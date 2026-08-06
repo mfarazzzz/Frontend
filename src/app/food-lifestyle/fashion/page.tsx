@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import FashionPage from "@/views/lifestyle/Fashion";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // 1 hour ISR
 
 export const metadata: Metadata = {
   title: "फैशन स्टोर, कपड़े और ज्वेलरी शॉप - रामपुर बरेली मुरादाबाद 2026 | रामपुर न्यूज़",

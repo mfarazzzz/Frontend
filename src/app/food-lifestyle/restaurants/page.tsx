@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import RestaurantsPage from "@/views/lifestyle/Restaurants";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // 1 hour ISR
 
 export const metadata: Metadata = {
   title: "बेस्ट रेस्तरां और खाने की जगहें रामपुर बरेली मुरादाबाद 2026 | रामपुर न्यूज़",

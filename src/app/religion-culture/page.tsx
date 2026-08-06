@@ -1,8 +1,6 @@
 import { CategoryPageServer } from "@/lib/categoryPage";
 import { buildCategoryMetadata } from "@/lib/categoryMetadata";
 
-export const dynamic = "force-dynamic";
-
 export const metadata = buildCategoryMetadata("religion-culture");
 export const revalidate = 30;
 

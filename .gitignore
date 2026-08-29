@@ -1,6 +1,9 @@
 .next/
 node_modules/
 .env*
+
+# TypeScript incremental build cache
+*.tsbuildinfo
 # Logs
 logs
 *.log

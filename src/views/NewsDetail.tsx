@@ -499,12 +499,34 @@ const NewsDetail = ({ nextParams, initialArticle }: NewsDetailProps) => {
             {/* Tags */}
             <div className="flex flex-wrap gap-2 mt-8 pt-6 border-t border-border">
               <span className="text-sm font-medium text-foreground">टैग:</span>
-              <Link 
-                to={`/${category}`}
-                className="px-3 py-1 bg-muted text-muted-foreground text-sm rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
-              >
-                {article.categoryHindi}
-              </Link>
+              {/* Category chip — only render when we have a non-empty category
+                  slug, otherwise the href would collapse to "/" */}
+              {effectiveCategory ? (
+                <Link
+                  to={`/${effectiveCategory}`}
+                  className="px-3 py-1 bg-muted text-muted-foreground text-sm rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  {article.categoryHindi || getCategoryHindi(effectiveCategory)}
+                </Link>
+              ) : null}
+              {/* Article tags — skip any tag whose slug resolves to empty so we
+                  never emit a link that points at "/" */}
+              {(Array.isArray(article.tags) ? article.tags : [])
+                .map((tag) => {
+                  const label = String(tag ?? "").trim();
+                  const tagSlug = encodeURIComponent(label);
+                  return { label, tagSlug };
+                })
+                .filter(({ label, tagSlug }) => label.length > 0 && tagSlug.length > 0)
+                .map(({ label, tagSlug }) => (
+                  <Link
+                    key={tagSlug}
+                    to={`/tags/${tagSlug}`}
+                    className="px-3 py-1 bg-muted text-muted-foreground text-sm rounded-full hover:bg-primary hover:text-primary-foreground transition-colors"
+                  >
+                    {label}
+                  </Link>
+                ))}
               <span className="px-3 py-1 bg-muted text-muted-foreground text-sm rounded-full">
                 रामपुर न्यूज़
               </span>

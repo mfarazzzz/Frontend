@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   description: "रामपुर न्यूज़ - रामपुर जिले और उत्तर प्रदेश की ताज़ा, विश्वसनीय खबरें। राजनीति, अपराध, शिक्षा, खेल, मनोरंजन और स्थानीय समाचार।",
   alternates: {
     canonical: "/",
+    languages: {
+      "hi-IN": "/",
+    },
   },
   openGraph: {
     type: "website",

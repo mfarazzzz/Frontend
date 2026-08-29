@@ -14,6 +14,18 @@ import { generateArticleKeywords, buildArticleSeoTitle } from "@/lib/seo-keyword
 
 const SITE_URL = "https://rampurnews.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
+const PUBLISHER_NAME = "रामपुर न्यूज़ | Rampur News";
+/** Canonical publisher block — kept identical across CMS-provided and generated schema. */
+const PUBLISHER_SCHEMA = {
+  "@type": "Organization",
+  name: PUBLISHER_NAME,
+  logo: {
+    "@type": "ImageObject",
+    url: `${SITE_URL}/logo.png`,
+    width: 768,
+    height: 768,
+  },
+} as const;
 const buildOgImageUrl = (title: string) =>
   `${SITE_URL}/api/og?title=${encodeURIComponent(title)}`;
 const toAbsoluteUrl = (value?: string) => {
@@ -441,6 +453,9 @@ export default async function Page(props: { params: Promise<PageParams> }) {
               ...schemaFromCms,
               mainEntityOfPage: { "@type": "WebPage", "@id": absoluteCanonical },
               url: absoluteCanonical,
+              // Normalize publisher so CMS-provided schema matches the generated
+              // fallback (CMS sometimes emits the short "Rampur News" name).
+              publisher: PUBLISHER_SCHEMA,
             }
           : canInjectSchema
             ? {
@@ -462,16 +477,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
                   ? modifiedDate
                   : schemaPublishedDate,
                 author: [{ "@type": "Person", name: schemaAuthorName }],
-                publisher: {
-                  "@type": "Organization",
-                  name: "रामपुर न्यूज़ | Rampur News",
-                  logo: {
-                    "@type": "ImageObject",
-                    url: "https://rampurnews.com/logo.png",
-                    width: 768,
-                    height: 768,
-                  },
-                },
+                publisher: PUBLISHER_SCHEMA,
                 isAccessibleForFree: true,
                 inLanguage: "hi-IN",
                 articleSection: isNonEmpty(article.categoryHindi)
@@ -540,11 +546,7 @@ export default async function Page(props: { params: Promise<PageParams> }) {
       uploadDate: article.publishedAt || article.publishedDate,
       contentUrl: `https://www.youtube.com/watch?v=${videoId}`,
       embedUrl: `https://www.youtube.com/embed/${videoId}`,
-      publisher: {
-        "@type": "Organization",
-        name: "रामपुर न्यूज़ | Rampur News",
-        logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` },
-      },
+      publisher: PUBLISHER_SCHEMA,
       inLanguage: "hi-IN",
     };
   })();

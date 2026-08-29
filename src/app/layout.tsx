@@ -40,11 +40,13 @@ export const metadata: Metadata = {
     robots: "max-image-preview:large",
     "content-language": "hi",
   },
+  // NOTE: Do NOT set alternates.canonical or alternates.languages here.
+  // Metadata defined in the root layout is INHERITED by every child route,
+  // which caused article pages to emit a canonical/hreflang pointing back to
+  // the homepage ("/"). Google then treated articles as duplicates of the
+  // homepage. Canonical is now set per-route: the homepage sets its own in
+  // src/app/page.tsx, and articles set theirs in generateMetadata.
   alternates: {
-    canonical: "/",
-    languages: {
-      "hi-IN": "/",
-    },
     types: {
       "application/rss+xml": [
         { url: "/rss.xml", title: "Rampur News RSS" },
